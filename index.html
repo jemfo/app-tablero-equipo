@@ -201,7 +201,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <label>Usuario</label><select id="loginUser"></select>
     <label>Contraseña</label>
     <input type="password" id="loginPass" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
-    <div style="color:#9a9a9a;font-size:11px;margin-top:6px">Demo: contraseña <b style="color:#ffd23f">1234</b> para todos.</div>
+    <div style="color:#9a9a9a;font-size:11px;margin-top:6px">Acceso restringido al equipo de Análisis Comercial.</div>
     <button class="primary" onclick="doLogin()">Ingresar</button>
     <div class="err" id="loginErr"></div>
   </div>
@@ -403,11 +403,13 @@ const _SB = window.supabase.createClient(
 );
 
 // ── Usuarios ─────────────────────────────────────────────────
+// Las contraseñas YA NO viven aquí: la autenticación la maneja Supabase Auth.
+// Aquí solo queda la metadata (email para login, nombre visible, rol, color).
 const USERS=[
-  {user:'juan',    pass:'1234',nombre:'Juan',    rol:'admin'},
-  {user:'maxi',    pass:'1234',nombre:'Maxi',    rol:'operador'},
-  {user:'diego',   pass:'1234',nombre:'Diego',   rol:'operador'},
-  {user:'invitado',pass:'1234',nombre:'Invitado',rol:'operador'},
+  {user:'juan',    email:'juan@equipo.local',    nombre:'Juan',    rol:'admin'},
+  {user:'maxi',    email:'maxi@equipo.local',    nombre:'Maxi',    rol:'operador'},
+  {user:'diego',   email:'diego@equipo.local',   nombre:'Diego',   rol:'operador'},
+  {user:'invitado',email:'invitado@equipo.local',nombre:'Invitado',rol:'operador'},
 ];
 
 // ── COLOR POR OPERADOR ───────────────────────────────────────
@@ -502,24 +504,50 @@ function toggleTheme(){applyTheme(document.body.classList.contains('light')?'dar
 function initLogin(){
   document.getElementById('loginUser').innerHTML=USERS.map(u=>`<option value="${u.user}">${u.nombre}</option>`).join('');
 }
-function doLogin(){
+async function doLogin(){
   const u=document.getElementById('loginUser').value;
-  const p=document.getElementById('loginPass').value.trim();
-  const found=USERS.find(x=>x.user===u&&x.pass===p);
-  if(!found){document.getElementById('loginErr').textContent='Usuario o contraseña incorrectos.';return;}
+  const p=document.getElementById('loginPass').value;
+  const errEl=document.getElementById('loginErr');
+  const meta=USERS.find(x=>x.user===u);
+  errEl.textContent='';
+  if(!meta){errEl.textContent='Usuario inválido.';return;}
+  const btn=document.querySelector('.login button.primary');
+  if(btn){btn.disabled=true;btn.textContent='Ingresando…';}
+  const{error}=await _SB.auth.signInWithPassword({email:meta.email,password:p});
+  if(btn){btn.disabled=false;btn.textContent='Ingresar';}
+  if(error){errEl.textContent='Usuario o contraseña incorrectos.';return;}
+  enterApp(meta);
+}
+// Muestra la app una vez autenticado (reutilizado por login y por restoreSession)
+function enterApp(found){
   SESSION=found;
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('appView').classList.remove('hidden');
   document.getElementById('curUser').textContent=found.nombre;
   document.getElementById('curRole').textContent=found.rol;
   document.getElementById('todayLabel').textContent=fmtDate(todayISO());
+  document.getElementById('loginPass').value='';
   // leyenda operadores
   document.getElementById('opLegend').innerHTML=USERS.map(u=>`<span style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="width:10px;height:10px;border-radius:50%;background:${opColor(u.user)};display:inline-block"></span>${u.nombre}</span>`).join('');
   applyRole();
   loadData().then(()=>startRealtime());
   showPage('equipo');
 }
-function logout(){SESSION=null;document.getElementById('appView').classList.add('hidden');document.getElementById('loginView').classList.remove('hidden');document.getElementById('loginPass').value='';}
+// Si hay una sesión de Supabase guardada, entra solo al recargar la página
+async function restoreSession(){
+  const{data}=await _SB.auth.getSession();
+  if(data&&data.session){
+    const meta=USERS.find(x=>x.email===data.session.user.email);
+    if(meta)enterApp(meta);
+  }
+}
+async function logout(){
+  await _SB.auth.signOut();
+  SESSION=null;
+  document.getElementById('appView').classList.add('hidden');
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('loginPass').value='';
+}
 const isAdmin=()=>SESSION&&SESSION.rol==='admin';
 function applyRole(){
   document.getElementById('tabMiOrden').style.display=isAdmin()?'block':'none';
@@ -928,6 +956,7 @@ const MO=(function(){
 // ── Init ──────────────────────────────────────────────────────
 initLogin();
 applyTheme(localStorage.getItem('oe_theme')||'dark');
+restoreSession();
 </script>
 </body>
 </html>
