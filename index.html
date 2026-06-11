@@ -362,13 +362,19 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
         <label class="muted">Ver:</label>
         <select id="viewMode" onchange="renderEquipo()">
-          <option value="estado">Por equipo</option>
           <option value="operador">Por operador</option>
+          <option value="estado">Por equipo</option>
         </select>
         <span id="filterOpWrap" style="display:flex;gap:10px;align-items:center">
           <label class="muted">Operador:</label>
           <select id="filterOp" onchange="renderEquipo()"><option value="">Todos</option></select>
         </span>
+        <label class="muted">Área:</label>
+        <select id="filterArea" onchange="renderEquipo()"><option value="">Todas</option></select>
+        <label class="muted">Prioridad:</label>
+        <select id="filterPrio" onchange="renderEquipo()"><option value="">Todas</option></select>
+        <input id="filterTxt" placeholder="Buscar tema o tarea…" oninput="renderEquipo()" style="min-width:170px">
+        <button onclick="clearFilters()" title="Limpiar todos los filtros" style="background:#94a3b8;color:#fff;border-color:#94a3b8">✕ Limpiar</button>
         <!-- leyenda colores operadores -->
         <div id="opLegend" style="display:flex;gap:10px;margin-left:12px;flex-wrap:wrap;align-items:center"></div>
       </div>
@@ -469,9 +475,9 @@ const USERS=[
 
 // ── COLOR POR OPERADOR ───────────────────────────────────────
 const OP_COLOR={
-  juan:    '#5b9bd5',   // azul
+  juan:    '#e07b39',   // naranja
   maxi:    '#4caf7d',   // verde
-  diego:   '#e07b39',   // naranja
+  diego:   '#5b9bd5',   // azul
   invitado:'#9b59b6',   // violeta
 };
 const opColor=u=>OP_COLOR[u]||'#5b9bd5';
@@ -479,7 +485,7 @@ const opColorBg=u=>{const c=opColor(u);return c+'28';};  // semi-transparente
 
 // ── Catálogos ─────────────────────────────────────────────────
 const AREAS      =['GER','COM','A.Com','DES','ARM','PROD','MKT'];
-const PRIORIDADES=['Urgente','Alta','Media','Normal'];
+const PRIORIDADES=['Normal','Media','Alta','Urgente'];
 const FRECUENCIAS=['Unica','Mensual','Semanal','Diaria'];
 const ESTADOS    =['Pendiente','En curso','Terminado','En Revisión','Recurrente'];
 const P_AREA ={GER:5,COM:4,'A.Com':4,DES:3,ARM:3,PROD:2,MKT:2};
@@ -673,11 +679,32 @@ function fillFilterOp(){
   sel.innerHTML='<option value="">Todos</option>'+USERS.filter(u=>!u.hidden).map(u=>`<option value="${u.user}">${u.nombre}</option>`).join('');
   sel.value=cur;
 }
+function fillFiltros(){
+  const fa=document.getElementById('filterArea');const ca=fa.value;
+  fa.innerHTML='<option value="">Todas</option>'+AREAS.map(a=>`<option value="${a}">${a}</option>`).join('');fa.value=ca;
+  const fp=document.getElementById('filterPrio');const cp=fp.value;
+  fp.innerHTML='<option value="">Todas</option>'+PRIORIDADES.map(p=>`<option value="${p}">${p}</option>`).join('');fp.value=cp;
+}
+function clearFilters(){
+  document.getElementById('filterArea').value='';
+  document.getElementById('filterPrio').value='';
+  document.getElementById('filterTxt').value='';
+  const fo=document.getElementById('filterOp');if(fo)fo.value='';
+  document.getElementById('viewMode').value='operador';
+  renderEquipo();
+}
 function renderEquipo(){
-  fillFilterOp();
+  fillFilterOp();fillFiltros();
   const mode=document.getElementById('viewMode').value;
   const fop=document.getElementById('filterOp').value;
-  let list=DATA.slice();if(fop)list=list.filter(t=>t.operador===fop);
+  const far=document.getElementById('filterArea').value;
+  const fpr=document.getElementById('filterPrio').value;
+  const ftx=document.getElementById('filterTxt').value.trim().toLowerCase();
+  let list=DATA.slice();
+  if(fop)list=list.filter(t=>t.operador===fop);
+  if(far)list=list.filter(t=>t.area===far);
+  if(fpr)list=list.filter(t=>t.prioridad===fpr);
+  if(ftx)list=list.filter(t=>((t.tema||'')+' '+(t.tareas||'')).toLowerCase().includes(ftx));
   // Vista "Por operador": el operador solo ve sus propios trabajos (el admin ve a todos)
   if(mode==='operador'&&!isAdmin())list=list.filter(t=>t.operador===SESSION.user);
   document.getElementById('equipoBody').innerHTML=mode==='estado'?kanbanHTML(list):byOpHTML(list);
@@ -745,11 +772,11 @@ function byOpHTML(list){
         <span style="font-weight:bold;color:${oc}">${u.nombre}</span>
         <span class="muted" style="font-size:11px">${act} activos / ${items.length} total</span>
       </div>
-      <div class="kanban">`;
+      <div class="kanban fit5">`;
     ESTADOS.forEach(est=>{
-      const its=items.filter(t=>t.estado===est);if(!its.length)return;
+      const its=items.filter(t=>t.estado===est);
       const ec=EST_COLOR[est]||'#888';
-      h+=`<div class="col" style="max-width:240px">
+      h+=`<div class="col" data-estado="${est}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
         <div class="col-hdr" style="border-top:3px solid ${ec}">
           <span class="col-title" style="color:${ec}">${est}</span>
           <span class="col-count">${its.length}</span>
@@ -812,7 +839,9 @@ function openTaskForm(id){
     const t=DATA.find(x=>x.id===id);if(!t)return;
     document.getElementById('modalTitle').textContent='Editar tarea';
     document.getElementById('f_tema').value=t.tema||'';document.getElementById('f_tareas').value=t.tareas||'';
-    document.getElementById('f_operador').value=t.operador;document.getElementById('f_area').value=t.area;
+    const _fop=document.getElementById('f_operador');
+    if(t.operador&&!Array.from(_fop.options).some(o=>o.value===t.operador))_fop.insertAdjacentHTML('beforeend',`<option value="${t.operador}">${nombreOp(t.operador)||t.operador}</option>`);
+    _fop.value=t.operador;document.getElementById('f_area').value=t.area;
     document.getElementById('f_prioridad').value=t.prioridad;document.getElementById('f_frecuencia').value=t.frecuencia;
     document.getElementById('f_finalizacion').value=t.finalizacion||'';
     document.getElementById('f_medio').value=t.medio||'';document.getElementById('f_link1').value=t.link1||'';document.getElementById('f_link2').value=t.link2||'';
