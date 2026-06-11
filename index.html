@@ -103,6 +103,8 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .th{position:relative;width:74px;height:74px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .th img{width:100%;height:100%;object-fit:cover;cursor:pointer}
 .th .x{position:absolute;top:0;right:0;background:rgba(0,0,0,.6);color:#fff;width:18px;height:18px;line-height:16px;text-align:center;cursor:pointer;border-bottom-left-radius:6px;font-size:13px}
+.collapse-hdr{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);padding:6px 0;user-select:none;border-top:1px solid var(--line);margin-top:6px;display:flex;align-items:center;gap:6px}
+.collapse-hdr:hover{color:var(--txt)}
 .kpis{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
 .kpi{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:120px}
 .kpi .n{font-size:24px;font-weight:bold}.kpi .l{color:var(--muted);font-size:11px}
@@ -404,26 +406,32 @@ table.grid tr:nth-child(even){background:var(--bg2)}
           <input type="number" id="f_copias" min="0" value="0" placeholder="Veces" title="Cantidad de repeticiones a clonar" style="width:74px;display:none">
         </div>
       </div>
-      <div><label>Ingreso (automático)</label><input type="date" id="f_ingreso" readonly></div>
       <div><label>Finalización</label><input type="date" id="f_finalizacion"></div>
-      <div><label>Título de mail (Outlook)</label><input id="f_medio" placeholder="Asunto del mail en Outlook"></div>
       <div><label>Link 1 (fuente principal)</label><input id="f_link1" placeholder="https://..."></div>
-      <div><label>Link 2</label><input id="f_link2" placeholder="https://..."></div>
-      <div><label>Link 3</label><input id="f_link3" placeholder="https://..."></div>
       <div class="full">
-        <label>Imágenes / recortes (pegá con Ctrl+V o subí archivos)</label>
-        <div class="imgdrop">
-          <button type="button" onclick="document.getElementById('f_imgfile').click()">+ Agregar imagen</button>
-          <span class="muted" style="font-size:11px">o pegá una captura con Ctrl+V</span>
-          <input type="file" id="f_imgfile" accept="image/*" multiple style="display:none" onchange="addImgsFromFiles(event)">
-          <div class="thumbs" id="imgThumbs"></div>
+        <div class="collapse-hdr" onclick="toggleExtra()"><span id="extraCaret">▸</span> Mail, links e imágenes</div>
+        <div id="extraFields" class="form2 hidden" style="margin-top:8px">
+          <div class="full"><label>Título de mail (Outlook)</label><input id="f_medio" placeholder="Asunto del mail en Outlook"></div>
+          <div><label>Link 2</label><input id="f_link2" placeholder="https://..."></div>
+          <div><label>Link 3</label><input id="f_link3" placeholder="https://..."></div>
+          <div class="full">
+            <label>Imágenes / recortes (pegá con Ctrl+V o subí archivos)</label>
+            <div class="imgdrop">
+              <button type="button" onclick="document.getElementById('f_imgfile').click()">+ Agregar imagen</button>
+              <span class="muted" style="font-size:11px">o pegá una captura con Ctrl+V</span>
+              <input type="file" id="f_imgfile" accept="image/*" multiple style="display:none" onchange="addImgsFromFiles(event)">
+              <div class="thumbs" id="imgThumbs"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     <div class="modal-actions">
       <button id="btnDelete" class="danger" onclick="deleteTask()">Eliminar</button>
-      <button onclick="closeTaskForm()">Cancelar</button>
-      <button class="primary" onclick="saveTask()">Guardar</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button onclick="closeTaskForm()">Cancelar</button>
+        <button class="primary" onclick="saveTask()">Guardar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -820,12 +828,15 @@ async function _addImg(file){
   setSyncSt('');
   if(error){showToast('Error al subir imagen: '+error.message,'err');return;}
   const{data}=_SB.storage.from('tareas-img').getPublicUrl(path);
-  curImgs.push(data.publicUrl);renderThumbs();
+  curImgs.push(data.publicUrl);renderThumbs();expandExtra();
 }
 function addImgsFromFiles(ev){[...ev.target.files].forEach(f=>{if(f.type.startsWith('image/'))_addImg(f);});ev.target.value='';}
 function renderThumbs(){const el=document.getElementById('imgThumbs');if(!el)return;el.innerHTML=curImgs.map((src,i)=>`<div class="th"><img src="${src}" onclick="openLightbox(${i})"><span class="x" onclick="event.stopPropagation();rmImg(${i})">×</span></div>`).join('');}
 function rmImg(i){curImgs.splice(i,1);renderThumbs();}
 function openLightbox(i){document.getElementById('imgLightboxImg').src=curImgs[i];document.getElementById('imgLightbox').classList.remove('hidden');}
+function toggleExtra(){const ef=document.getElementById('extraFields');ef.classList.toggle('hidden');document.getElementById('extraCaret').textContent=ef.classList.contains('hidden')?'▸':'▾';}
+function expandExtra(){const ef=document.getElementById('extraFields');if(ef&&ef.classList.contains('hidden')){ef.classList.remove('hidden');document.getElementById('extraCaret').textContent='▾';}}
+function collapseExtra(){const ef=document.getElementById('extraFields');if(ef){ef.classList.add('hidden');document.getElementById('extraCaret').textContent='▸';}}
 document.addEventListener('paste',e=>{
   if(document.getElementById('modalBg').classList.contains('hidden'))return;
   const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
@@ -845,18 +856,19 @@ function openTaskForm(id){
     document.getElementById('f_prioridad').value=t.prioridad;document.getElementById('f_frecuencia').value=t.frecuencia;
     document.getElementById('f_finalizacion').value=t.finalizacion||'';
     document.getElementById('f_medio').value=t.medio||'';document.getElementById('f_link1').value=t.link1||'';document.getElementById('f_link2').value=t.link2||'';
-    document.getElementById('f_link3').value=t.link3||'';document.getElementById('f_ingreso').value=t.ingreso||'';
+    document.getElementById('f_link3').value=t.link3||'';
     curImgs=Array.isArray(t.imagenes)?t.imagenes.slice():[];
     document.getElementById('btnDelete').style.display='inline-block';
   }else{
     document.getElementById('modalTitle').textContent='Nueva tarea';
     ['f_tema','f_tareas','f_finalizacion','f_medio','f_link1','f_link2','f_link3'].forEach(x=>document.getElementById(x).value='');
-    document.getElementById('f_ingreso').value=todayISO();
     document.getElementById('f_operador').value=SESSION.user;document.getElementById('f_area').value='COM';
     document.getElementById('f_prioridad').value='Media';document.getElementById('f_frecuencia').value='Unica';
     curImgs=[];document.getElementById('btnDelete').style.display='none';
   }
   document.getElementById('f_copias').value=0;toggleCopias();renderThumbs();
+  collapseExtra();
+  if(id){const _t=DATA.find(x=>x.id===id);if(_t&&(_t.medio||_t.link2||_t.link3||(_t.imagenes&&_t.imagenes.length)))expandExtra();}
   document.getElementById('modalBg').classList.remove('hidden');
 }
 function closeTaskForm(){document.getElementById('modalBg').classList.add('hidden');editingId=null;}
