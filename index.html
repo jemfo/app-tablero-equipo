@@ -782,7 +782,19 @@ function fillSel(id,arr){document.getElementById(id).innerHTML=arr.map(v=>`<opti
 // ── Imágenes de la tarea (base64) ─────────────────────────────
 let curImgs=[];
 function _fileToImg(file){return new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>res(im);im.src=fr.result;};fr.readAsDataURL(file);});}
-async function _addImg(file){const im=await _fileToImg(file);const max=1200;let w=im.width,h=im.height;if(w>max||h>max){const s=Math.min(max/w,max/h);w=Math.round(w*s);h=Math.round(h*s);}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);curImgs.push(c.toDataURL('image/jpeg',0.72));renderThumbs();}
+async function _addImg(file){
+  const im=await _fileToImg(file);const max=1200;let w=im.width,h=im.height;
+  if(w>max||h>max){const s=Math.min(max/w,max/h);w=Math.round(w*s);h=Math.round(h*s);}
+  const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
+  const blob=await new Promise(res=>c.toBlob(res,'image/jpeg',0.72));
+  const path=(SESSION?SESSION.user:'x')+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.jpg';
+  setSyncSt('Subiendo imagen…');
+  const{error}=await _SB.storage.from('tareas-img').upload(path,blob,{contentType:'image/jpeg'});
+  setSyncSt('');
+  if(error){showToast('Error al subir imagen: '+error.message,'err');return;}
+  const{data}=_SB.storage.from('tareas-img').getPublicUrl(path);
+  curImgs.push(data.publicUrl);renderThumbs();
+}
 function addImgsFromFiles(ev){[...ev.target.files].forEach(f=>{if(f.type.startsWith('image/'))_addImg(f);});ev.target.value='';}
 function renderThumbs(){const el=document.getElementById('imgThumbs');if(!el)return;el.innerHTML=curImgs.map((src,i)=>`<div class="th"><img src="${src}" onclick="openLightbox(${i})"><span class="x" onclick="event.stopPropagation();rmImg(${i})">×</span></div>`).join('');}
 function rmImg(i){curImgs.splice(i,1);renderThumbs();}
