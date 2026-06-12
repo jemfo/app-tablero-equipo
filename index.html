@@ -103,11 +103,9 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .col.drop-hover{outline:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--bg2))}
 
 /* ── ESTADO COLORES COLUMNA ───────────────────── */
-.col[data-estado="Pendiente"] .col-hdr{border-top:3px solid #6b7280}
-.col[data-estado="En curso"]  .col-hdr{border-top:3px solid #fbbf24}
-.col[data-estado="Terminado"] .col-hdr{border-top:3px solid #4ade80}
-.col[data-estado="En Revisión"] .col-hdr{border-top:3px solid #fb923c}
-.col[data-estado="Recurrente"] .col-hdr{border-top:3px solid #38bdf8}
+.col .col-hdr{border-top:3px solid #fb2118}
+.col[data-estado="Finalizado"] .card{opacity:0.45;filter:grayscale(0.4);transition:opacity .2s}
+.col[data-estado="Finalizado"] .card:hover{opacity:0.75}
 
 .opgroup{margin-bottom:18px}
 .opgroup .ophdr{font-size:13px;border-bottom:2px solid var(--line);padding-bottom:6px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
@@ -401,8 +399,8 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         <select id="filterPrio" onchange="renderEquipo()"><option value="">Todas</option></select>
         <input id="filterTxt" placeholder="Buscar tema o tarea…" oninput="renderEquipo()" style="min-width:170px">
         <button onclick="clearFilters()" title="Limpiar todos los filtros" style="background:#94a3b8;color:#fff;border-color:#94a3b8">✕ Limpiar</button>
-        <!-- leyenda colores operadores -->
-        <div id="opLegend" style="display:flex;gap:10px;margin-left:12px;flex-wrap:wrap;align-items:center"></div>
+        <!-- toggle visibilidad operadores -->
+        <div id="opToggles" style="display:none;gap:6px;margin-left:24px;flex-wrap:wrap;align-items:center"></div>
       </div>
       <div id="equipoBody"><div class="loading">Conectando con Supabase…</div></div>
     </div>
@@ -521,17 +519,17 @@ const opColorBg=u=>{const c=opColor(u);return c+'28';};  // semi-transparente
 const AREAS      =['GER','COM','A.Com','DES','ARM','PROD','MKT'];
 const PRIORIDADES=['Normal','Media','Alta','Urgente'];
 const FRECUENCIAS=['Unica','Mensual','Semanal','Diaria'];
-const ESTADOS    =['Pendiente','En curso','Terminado','En Revisión','Recurrente'];
+const ESTADOS    =['Pendiente','En curso','En Revisión','Recurrente','Finalizado'];
 const REACCIONES =['👍','❤️','😂','😮','😩'];
 const P_AREA ={GER:5,COM:4,'A.Com':4,DES:3,ARM:3,PROD:2,MKT:2};
 const P_PRIO ={Urgente:8,Alta:6,Media:4,Normal:2};
 const P_FREC ={Unica:5,Mensual:3,Semanal:2,Diaria:1};
-const P_EST  ={'En Revisión':4,Pendiente:3,'En curso':3,Recurrente:2,Terminado:0};
+const P_EST  ={'En Revisión':4,Pendiente:3,'En curso':3,Recurrente:2,Finalizado:0};
 
 // Colores columna por estado (tira superior)
 const EST_COLOR={
   'Pendiente':'#6b7280','En curso':'#fbbf24',
-  'Terminado':'#4ade80','En Revisión':'#fb923c','Recurrente':'#38bdf8'
+  'En Revisión':'#fb923c','Recurrente':'#38bdf8','Finalizado':'#4ade80'
 };
 
 let DATA=[], SESSION=null, editingId=null;
@@ -545,7 +543,7 @@ const uid=()=>'t'+Date.now()+Math.random().toString(36).slice(2,6);
 const escH=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const nombreOp=u=>{const x=USERS.find(z=>z.user===u);return x?x.nombre:u;};
 const factorF=d=>{if(d<0)return 10;if(d===0)return 8;if(d<=2)return 6;if(d<=5)return 4;if(d<=10)return 2;return 1;};
-const puntos=t=>{if(t.estado==='Terminado')return 0;return(P_AREA[t.area]||0)+(P_PRIO[t.prioridad]||0)+(P_FREC[t.frecuencia]||0)+(P_EST[t.estado]||0)+factorF(diasPara(t.finalizacion));};
+const puntos=t=>{if(t.estado==='Finalizado')return 0;return(P_AREA[t.area]||0)+(P_PRIO[t.prioridad]||0)+(P_FREC[t.frecuencia]||0)+(P_EST[t.estado]||0)+factorF(diasPara(t.finalizacion));};
 
 // ── Toast ─────────────────────────────────────────────────────
 function showToast(msg,tipo='ok'){
@@ -624,7 +622,7 @@ function enterApp(found){
   document.getElementById('todayLabel').textContent=fmtDate(todayISO());
   document.getElementById('loginPass').value='';document.getElementById('loginUser').value='';
   // leyenda operadores
-  document.getElementById('opLegend').innerHTML=USERS.filter(u=>!u.hidden).map(u=>`<span style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="width:10px;height:10px;border-radius:50%;background:${opColor(u.user)};display:inline-block"></span>${u.nombre}</span>`).join('');
+  renderOpToggles();
   applyRole();
   loadData().then(()=>startRealtime());
   showPage('equipo');
@@ -747,7 +745,7 @@ function renderEquipo(){
 
 // ── CARD mejorada con color por operador ──────────────────────
 function cardHTML(t){
-  const venc=t.estado!=='Terminado'&&diasPara(t.finalizacion)<0;
+  const venc=t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0;
   const oc=opColor(t.operador);
   const dias=t.finalizacion?diasPara(t.finalizacion):null;
   const prioHtml=t.prioridad==='Urgente'
@@ -796,6 +794,25 @@ async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;cons
 // Orden de cada columna: fijadas primero, luego por fecha de carga (ingreso) según dirección
 let COL_SORT={};
 function toggleColSort(est){COL_SORT[est]=(COL_SORT[est]||'asc')==='asc'?'desc':'asc';renderCurrent();}
+
+let HIDDEN_OPS=new Set();
+function toggleOpVis(user){
+  if(HIDDEN_OPS.has(user))HIDDEN_OPS.delete(user);else HIDDEN_OPS.add(user);
+  renderOpToggles();renderCurrent();
+}
+function renderOpToggles(){
+  const wrap=document.getElementById('opToggles');if(!wrap)return;
+  wrap.style.display='flex';
+  const admin=isAdmin();
+  wrap.innerHTML=USERS.filter(u=>!u.hidden).map(u=>{
+    const oc=opColor(u.user);
+    if(admin){
+      const off=HIDDEN_OPS.has(u.user);
+      return `<button onclick="toggleOpVis('${u.user}')" style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;border:1.5px solid ${off?'var(--line)':oc};background:${off?'var(--bg3)':oc};color:${off?'var(--muted)':'#fff'};text-decoration:${off?'line-through':'none'}">${u.nombre}</button>`;
+    }
+    return `<span style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid ${oc};background:${oc};color:#fff">${u.nombre}</span>`;
+  }).join('');
+}
 const sortCards=(arr,dir='asc')=>arr.slice().sort((a,b)=>((b.fijado?1:0)-(a.fijado?1:0))||(dir==='asc'?1:-1)*((a.ingreso||'').localeCompare(b.ingreso||'')));
 
 function colSortHTML(est){
@@ -809,10 +826,9 @@ function kanbanHTML(list){
     const items=sortCards(list.filter(t=>t.estado===est),dir);
     const ec=EST_COLOR[est]||'#888';
     return `<div class="col" data-estado="${est}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
-      <div class="col-hdr" style="border-top:3px solid ${ec}">
-        <span class="col-title" style="color:${ec}">${est}</span>
-        ${colSortHTML(est)}
-        <span class="col-count">${items.length}</span>
+      <div class="col-hdr" style="border-top:3px solid #fb2118">
+        <span class="col-title" style="color:#fb2118">${est}</span>
+        <span style="display:inline-flex;align-items:center;gap:5px">${colSortHTML(est)}<span class="col-count">${items.length}</span></span>
       </div>
       <div class="cards">${items.map(cardHTML).join('')}</div>
     </div>`;
@@ -823,8 +839,9 @@ function byOpHTML(list){
   let h='';
   USERS.forEach(u=>{
     if(u.hidden&&(!SESSION||u.user!==SESSION.user))return;
+    if(HIDDEN_OPS.has(u.user))return;
     const items=list.filter(t=>t.operador===u.user);if(!items.length)return;
-    const act=items.filter(t=>t.estado!=='Terminado').length;
+    const act=items.filter(t=>t.estado!=='Finalizado').length;
     const oc=opColor(u.user);
     h+=`<div class="opgroup">
       <div class="ophdr">
@@ -838,10 +855,9 @@ function byOpHTML(list){
       const its=sortCards(items.filter(t=>t.estado===est),dir);
       const ec=EST_COLOR[est]||'#888';
       h+=`<div class="col" data-estado="${est}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
-        <div class="col-hdr" style="border-top:3px solid ${ec}">
-          <span class="col-title" style="color:${ec}">${est}</span>
-          ${colSortHTML(est)}
-          <span class="col-count">${its.length}</span>
+        <div class="col-hdr" style="border-top:3px solid #fb2118">
+          <span class="col-title" style="color:#fb2118">${est}</span>
+          <span style="display:inline-flex;align-items:center;gap:5px">${colSortHTML(est)}<span class="col-count">${its.length}</span></span>
         </div>
         <div class="cards">${its.map(cardHTML).join('')}</div>
       </div>`;
@@ -923,7 +939,8 @@ function openTaskForm(id){
     document.getElementById('f_medio').value=t.medio||'';document.getElementById('f_link1').value=t.link1||'';document.getElementById('f_link2').value=t.link2||'';
     document.getElementById('f_link3').value=t.link3||'';
     curImgs=Array.isArray(t.imagenes)?t.imagenes.slice():[];
-    document.getElementById('btnDelete').style.display='inline-block';
+    const _canDel=isAdmin()||(t.operador===SESSION.user);
+    document.getElementById('btnDelete').style.display=_canDel?'inline-block':'none';
   }else{
     document.getElementById('modalTitle').textContent='Nueva tarea';
     ['f_tema','f_tareas','f_finalizacion','f_medio','f_link1','f_link2','f_link3'].forEach(x=>document.getElementById(x).value='');
@@ -983,17 +1000,20 @@ async function cloneByFrecuencia(vals){
   }
 }
 async function deleteTask(){
-  if(!editingId||!confirm('¿Eliminar esta tarea?'))return;
+  if(!editingId)return;
+  const _t=DATA.find(x=>x.id===editingId);
+  if(!isAdmin()&&_t&&_t.operador!==SESSION.user){showToast('Sin permiso para eliminar esta tarea','err');return;}
+  if(!confirm('¿Eliminar esta tarea?'))return;
   const ok=await removeTask(editingId);if(ok)DATA=DATA.filter(x=>x.id!==editingId);
   closeTaskForm();renderCurrent();
 }
 
 // ── Análisis ──────────────────────────────────────────────────
 function renderAnalisis(){
-  const act=DATA.filter(t=>t.estado!=='Terminado');
+  const act=DATA.filter(t=>t.estado!=='Finalizado');
   const venc=act.filter(t=>diasPara(t.finalizacion)<0);
-  const term=DATA.filter(t=>t.estado==='Terminado');
-  let h=`<div class="kpis"><div class="kpi"><div class="n">${act.length}</div><div class="l">Activos</div></div><div class="kpi"><div class="n" style="color:var(--urg)">${venc.length}</div><div class="l">Vencidos</div></div><div class="kpi"><div class="n" style="color:var(--ok)">${term.length}</div><div class="l">Terminados</div></div><div class="kpi"><div class="n">${DATA.length}</div><div class="l">Total</div></div></div>`;
+  const term=DATA.filter(t=>t.estado==='Finalizado');
+  let h=`<div class="kpis"><div class="kpi"><div class="n">${act.length}</div><div class="l">Activos</div></div><div class="kpi"><div class="n" style="color:var(--urg)">${venc.length}</div><div class="l">Vencidos</div></div><div class="kpi"><div class="n" style="color:var(--ok)">${term.length}</div><div class="l">Finalizados</div></div><div class="kpi"><div class="n">${DATA.length}</div><div class="l">Total</div></div></div>`;
   h+='<div class="section-title">Volumen por operador (activos)</div>';
   const perOp=USERS.map(u=>({n:u.nombre,v:act.filter(t=>t.operador===u.user).length,c:opColor(u.user)}));
   const maxO=Math.max(1,...perOp.map(x=>x.v));
@@ -1001,7 +1021,7 @@ function renderAnalisis(){
   h+='<div class="section-title">Tareas por operador y estado</div><div class="scrollx"><table class="grid"><tr><th>Operador</th>'+ESTADOS.map(e=>`<th>${e}</th>`).join('')+'<th>Vencidos</th><th>Total</th></tr>';
   USERS.forEach(u=>{
     const its=DATA.filter(t=>t.operador===u.user);
-    const vc=its.filter(t=>t.estado!=='Terminado'&&diasPara(t.finalizacion)<0).length;
+    const vc=its.filter(t=>t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0).length;
     h+=`<tr><td style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:${opColor(u.user)};display:inline-block"></span>${u.nombre}</td>`+ESTADOS.map(e=>`<td>${its.filter(t=>t.estado===e).length}</td>`).join('')+`<td class="${vc?'eurg':''}">${vc}</td><td>${its.length}</td></tr>`;
   });
   h+='</table></div><div class="section-title">Por área (activos)</div>';
@@ -1023,7 +1043,7 @@ function exportCSV(){
 //  MI ORDEN JFO — IIFE (localStorage, solo admin)
 // ================================================================
 const MO=(function(){
-  const SEED=[{"id":59,"ingreso":"2026-05-21","area":"COM","prioridad":"Urgente","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-05-25","tema":"Voucher 3er par Hoya Stock Super HI Vision","tareas":"VOUCHER SUPER HI VISION","medio":"Tracker","links":["https://gestion.vitolen.com/mensajes/3734213","https://tracker.vitolen.com/tasks/493"],"imagenes":[]},{"id":21,"ingreso":"2026-05-14","area":"A. Com","prioridad":"Alta","frecuencia":"Unica","estado":"Correcion","finalizacion":"2026-06-08","tema":"Correccion SR 24 lentes de lab","tareas":"Nuevo enfoque","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/483"],"imagenes":[]},{"id":53,"ingreso":"2026-01-26","area":"COM","prioridad":"Alta","frecuencia":"Unica","estado":"Correcion","finalizacion":"2026-06-10","tema":"Office Stock // Hija no se ve Radial Office","tareas":"Hija no se ve Radial Armazon Office","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/346","https://tracker.vitolen.com/tasks/413"],"imagenes":[]},{"id":1,"ingreso":"2025-10-10","area":"GER","prioridad":"Media","frecuencia":"Unica","estado":"En espera","finalizacion":"2026-06-03","tema":"Facturacion Remitos ITALIANO","tareas":"1762279599.pdf","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/371"],"imagenes":[]},{"id":8,"ingreso":"2026-04-14","area":"DES","prioridad":"Alta","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-20","tema":"Campus Vitolen","tareas":"entrega a la Dirección el 31/07/2026","medio":"Outlook","links":[],"imagenes":[]},{"id":12,"ingreso":"2026-05-08","area":"COM","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-03","tema":"Arreglar resultados BLANCO power bi","tareas":"Esto aparece en los presupuestos","medio":"","links":[],"imagenes":[]},{"id":14,"ingreso":"2026-05-08","area":"COM","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-03","tema":"Corregir Power Bi Direccion","tareas":"Corregir el Office de Stock en Dash Laboratorio","medio":"","links":[],"imagenes":[]},{"id":5,"ingreso":"2026-04-08","area":"COM","prioridad":"Alta","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-09","tema":"MI lista de precios Calculada","tareas":"Calcularemos solo LENTES","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/466"],"imagenes":[]},{"id":40,"ingreso":"2026-05-13","area":"GER","prioridad":"Media","frecuencia":"Semanal","estado":"Pendiente","finalizacion":"2026-06-01","tema":"ANALISIS DE AR START EN TPD","tareas":"Reporte de Seguimiento de ventas","medio":"Mensajeria","links":["https://gestion.vitolen.com/mensajes/3683145"],"imagenes":[]},{"id":25,"ingreso":"2026-05-18","area":"A. Com","prioridad":"Media","frecuencia":"Mensual","estado":"En curso","finalizacion":"2026-05-18","tema":"Reporte Clicks HOYA","tareas":"2026/04 Click Fee Hoya Abril","medio":"Mensajeria","links":["https://gestion.vitolen.com/mensajes/2802127"],"imagenes":[]},{"id":70,"ingreso":"2026-06-02","area":"A. Com","prioridad":"Alta","frecuencia":"Mensual","estado":"Pendiente","finalizacion":"2026-06-11","tema":"Reunion Equipo Analisis Comercial","tareas":"","medio":"","links":[],"imagenes":[]},{"id":72,"ingreso":"2026-06-04","area":"GER","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-09","tema":"Analisis Integral Gino monetizado","tareas":"","medio":"Mi Pc","links":[],"imagenes":[]},{"id":52,"ingreso":"2026-05-15","area":"A. Com","prioridad":"Media","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-21","tema":"Procedimiento de NC","tareas":"Ver con Max","medio":"Outlook","links":[],"imagenes":[]},{"id":54,"ingreso":"2026-05-20","area":"COM","prioridad":"Alta","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-10","tema":"Cargar 2do PDF en listas desc especiales","tareas":"Solo visible a CAT Ar Green","medio":"Outlook","links":[],"imagenes":[]},{"id":74,"ingreso":"2026-06-05","area":"A. Com","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-10","tema":"84 Incluir numero de cuenta en campo Cliente","tareas":"","medio":"Outlook","links":[],"imagenes":[]},{"id":66,"ingreso":"2026-05-27","area":"GER","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-15","tema":"Resultados GIRA de Eventos","tareas":"","medio":"Mensajeria","links":["https://gestion.vitolen.com/mensajes/3722732"],"imagenes":[]},{"id":2,"ingreso":"2025-11-17","area":"COM","prioridad":"Normal","frecuencia":"Unica","estado":"Terminado","finalizacion":"2026-05-22","tema":"Control primeros pedidos MIYOSMART","tareas":"Corregir campo Tratamiento recetado","medio":"Mensajeria","links":[],"imagenes":[]},{"id":3,"ingreso":"2025-12-18","area":"GER","prioridad":"Alta","frecuencia":"Unica","estado":"Terminado","finalizacion":"2026-06-01","tema":"Requerimiento Info Armazones","tareas":"Solicitado por Andres","medio":"Outlook","links":[],"imagenes":[]}];
+  const SEED=[{"id":59,"ingreso":"2026-05-21","area":"COM","prioridad":"Urgente","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-05-25","tema":"Voucher 3er par Hoya Stock Super HI Vision","tareas":"VOUCHER SUPER HI VISION","medio":"Tracker","links":["https://gestion.vitolen.com/mensajes/3734213","https://tracker.vitolen.com/tasks/493"],"imagenes":[]},{"id":21,"ingreso":"2026-05-14","area":"A. Com","prioridad":"Alta","frecuencia":"Unica","estado":"Correcion","finalizacion":"2026-06-08","tema":"Correccion SR 24 lentes de lab","tareas":"Nuevo enfoque","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/483"],"imagenes":[]},{"id":53,"ingreso":"2026-01-26","area":"COM","prioridad":"Alta","frecuencia":"Unica","estado":"Correcion","finalizacion":"2026-06-10","tema":"Office Stock // Hija no se ve Radial Office","tareas":"Hija no se ve Radial Armazon Office","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/346","https://tracker.vitolen.com/tasks/413"],"imagenes":[]},{"id":1,"ingreso":"2025-10-10","area":"GER","prioridad":"Media","frecuencia":"Unica","estado":"En espera","finalizacion":"2026-06-03","tema":"Facturacion Remitos ITALIANO","tareas":"1762279599.pdf","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/371"],"imagenes":[]},{"id":8,"ingreso":"2026-04-14","area":"DES","prioridad":"Alta","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-20","tema":"Campus Vitolen","tareas":"entrega a la Dirección el 31/07/2026","medio":"Outlook","links":[],"imagenes":[]},{"id":12,"ingreso":"2026-05-08","area":"COM","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-03","tema":"Arreglar resultados BLANCO power bi","tareas":"Esto aparece en los presupuestos","medio":"","links":[],"imagenes":[]},{"id":14,"ingreso":"2026-05-08","area":"COM","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-03","tema":"Corregir Power Bi Direccion","tareas":"Corregir el Office de Stock en Dash Laboratorio","medio":"","links":[],"imagenes":[]},{"id":5,"ingreso":"2026-04-08","area":"COM","prioridad":"Alta","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-09","tema":"MI lista de precios Calculada","tareas":"Calcularemos solo LENTES","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/466"],"imagenes":[]},{"id":40,"ingreso":"2026-05-13","area":"GER","prioridad":"Media","frecuencia":"Semanal","estado":"Pendiente","finalizacion":"2026-06-01","tema":"ANALISIS DE AR START EN TPD","tareas":"Reporte de Seguimiento de ventas","medio":"Mensajeria","links":["https://gestion.vitolen.com/mensajes/3683145"],"imagenes":[]},{"id":25,"ingreso":"2026-05-18","area":"A. Com","prioridad":"Media","frecuencia":"Mensual","estado":"En curso","finalizacion":"2026-05-18","tema":"Reporte Clicks HOYA","tareas":"2026/04 Click Fee Hoya Abril","medio":"Mensajeria","links":["https://gestion.vitolen.com/mensajes/2802127"],"imagenes":[]},{"id":70,"ingreso":"2026-06-02","area":"A. Com","prioridad":"Alta","frecuencia":"Mensual","estado":"Pendiente","finalizacion":"2026-06-11","tema":"Reunion Equipo Analisis Comercial","tareas":"","medio":"","links":[],"imagenes":[]},{"id":72,"ingreso":"2026-06-04","area":"GER","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-09","tema":"Analisis Integral Gino monetizado","tareas":"","medio":"Mi Pc","links":[],"imagenes":[]},{"id":52,"ingreso":"2026-05-15","area":"A. Com","prioridad":"Media","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-21","tema":"Procedimiento de NC","tareas":"Ver con Max","medio":"Outlook","links":[],"imagenes":[]},{"id":54,"ingreso":"2026-05-20","area":"COM","prioridad":"Alta","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-10","tema":"Cargar 2do PDF en listas desc especiales","tareas":"Solo visible a CAT Ar Green","medio":"Outlook","links":[],"imagenes":[]},{"id":74,"ingreso":"2026-06-05","area":"A. Com","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-10","tema":"84 Incluir numero de cuenta en campo Cliente","tareas":"","medio":"Outlook","links":[],"imagenes":[]},{"id":66,"ingreso":"2026-05-27","area":"GER","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-15","tema":"Resultados GIRA de Eventos","tareas":"","medio":"Mensajeria","links":["https://gestion.vitolen.com/mensajes/3722732"],"imagenes":[]},{"id":2,"ingreso":"2025-11-17","area":"COM","prioridad":"Normal","frecuencia":"Unica","estado":"Finalizado","finalizacion":"2026-05-22","tema":"Control primeros pedidos MIYOSMART","tareas":"Corregir campo Tratamiento recetado","medio":"Mensajeria","links":[],"imagenes":[]},{"id":3,"ingreso":"2025-12-18","area":"GER","prioridad":"Alta","frecuencia":"Unica","estado":"Finalizado","finalizacion":"2026-06-01","tema":"Requerimiento Info Armazones","tareas":"Solicitado por Andres","medio":"Outlook","links":[],"imagenes":[]}];
   const DEF_W={area:{"GER":5,"COM":4,"A. Com":4,"DES":3,"ARM":3,"PROD":2,"MKT":2},prioridad:{"Urgente":8,"Alta":6,"Media":4,"Normal":2},frecuencia:{"Unica":5,"Mensual":3,"Semanal":2,"Diaria":1},estado:{"Pendiente":3,"En curso":3,"En espera":2,"Terminado":0,"Correcion":4}};
   const KEY="miorden_v3",KEYW="miorden_w_v3";
   const _ll=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}};
