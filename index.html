@@ -64,20 +64,22 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .col .cards{padding:7px;display:flex;flex-direction:column;gap:7px;min-height:40px}
 
 /* ── CARD ───────────────────────────────────────── */
-.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:9px 10px;cursor:grab;border-left:4px solid var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.18);transition:box-shadow .15s,transform .1s}
-.card:hover{box-shadow:0 4px 12px rgba(0,0,0,.32);transform:translateY(-1px)}
+.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:11px 12px;cursor:grab;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s}
+.card:hover{box-shadow:0 3px 10px rgba(0,0,0,.14);transform:translateY(-1px)}
 .card.drag{opacity:.35;transform:scale(.97)}
-.card .ct{font-weight:bold;font-size:12.5px;line-height:1.25;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card .csub{font-size:10.5px;color:var(--muted);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
-.card .cmeta{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:5px}
-.card .cop{font-size:10px;font-weight:bold;padding:2px 7px;border-radius:10px}
-.card .cpill{font-size:10px;padding:2px 6px;border-radius:8px;background:var(--bg2);border:1px solid var(--line)}
-.card .cpill.urg{color:var(--urg);font-weight:bold;border-color:#5a2020}
-.card .cfoot{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px}
-.card .cdate{font-size:10px;color:var(--txt)}
-.card .cfoot-icons{margin-left:auto;display:inline-flex;align-items:center;gap:7px}
-.card .cpin{cursor:pointer;font-size:13px;opacity:.3;filter:grayscale(1)}
-.card .cpin.on{opacity:1;filter:none}
+.card .ct{font-weight:600;font-size:12.5px;line-height:1.3;margin-bottom:3px;letter-spacing:-.1px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .csub{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .cmeta{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:8px}
+.card .cop{font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.3px}
+.card .cpill{font-size:9px;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:transparent;border:1px solid var(--line);color:var(--muted)}
+.card .cpill.urg{color:var(--urg);border-color:var(--urg);font-weight:600}
+.card .cfoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.card .cdate{font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.card .cdate.ovd{color:var(--urg)}
+.card .cfoot-icons{margin-left:auto;display:inline-flex;align-items:center;gap:10px}
+.card .cic{display:inline-flex}
+.card .cpin{cursor:pointer;display:inline-flex;color:var(--muted);opacity:.55;transition:color .12s,opacity .12s}
+.card .cpin.on{opacity:1;color:var(--accent)}
 .col-sort-btn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:var(--bg3);user-select:none;flex-shrink:0;transition:border-color .15s,background .15s}
 .col-sort-btn:hover{background:var(--bg2);border-color:var(--muted)}
 .col-sort-btn.active{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--bg3))}
@@ -86,26 +88,28 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .col-sort-btn.active::after{border-color:var(--accent)}
 .col-sort-btn.desc::after{transform:rotate(225deg);margin-top:3px}
 .creact-wrap{position:relative;display:inline-flex}
-.creact-face{cursor:pointer;font-size:14px;opacity:.45;line-height:1}
-.creact-face.has{opacity:1}
-.creact-face:hover{opacity:.9}
-.creact-pop{display:none;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:3px 7px;gap:4px;z-index:30;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+.creact-face{cursor:pointer;display:inline-flex;align-items:center;color:var(--muted);opacity:.6;line-height:1;transition:color .12s,opacity .12s}
+.creact-face.has{opacity:1;font-size:13px}
+.creact-face:hover{opacity:1;color:var(--txt)}
+.creact-pop{display:none;position:absolute;bottom:140%;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:4px 8px;gap:6px;z-index:30;box-shadow:0 4px 14px rgba(0,0,0,.20)}
 .creact-wrap.open .creact-pop{display:flex}
-.creact-pop span{cursor:pointer;font-size:17px;transition:transform .1s}
-.creact-pop span:hover{transform:scale(1.3)}
-.card .cthumb{cursor:pointer;font-size:13px}
+.creact-pop span{cursor:pointer;font-size:16px;transition:transform .1s}
+.creact-pop span:hover{transform:scale(1.25)}
+.card .cthumb{cursor:pointer;display:inline-flex;color:var(--muted);transition:color .12s}
+.card .cthumb:hover{color:var(--txt)}
 .card .cthumb-img{width:22px;height:22px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid var(--line)}
 .card .cupd{font-size:9px;color:var(--muted);opacity:.8}
 .card .cpts{font-size:10px;font-weight:bold}
 .card .cfecha{font-size:10px}
 .card.ovd .ct{padding-right:30px}
-.cvenc{position:absolute;top:6px;right:6px;background:var(--urg);color:#fff;font-size:10px;font-weight:bold;min-width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
-.col.drop-hover{outline:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--bg2))}
+.cvenc{position:absolute;top:8px;right:8px;background:transparent;color:var(--urg);border:1px solid var(--urg);font-size:9px;font-weight:600;min-width:19px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 6px;letter-spacing:.2px}
+.col.drop-hover{outline:1px dashed var(--accent);outline-offset:-2px;background:color-mix(in srgb,var(--accent) 5%,var(--bg2))}
 
 /* ── ESTADO COLORES COLUMNA ───────────────────── */
 .col .col-hdr{border-top:3px solid #fb2118}
 .col[data-estado="Finalizado"] .card{opacity:0.45;filter:grayscale(0.4);transition:opacity .2s}
 .col[data-estado="Finalizado"] .card:hover{opacity:0.75}
+.card.cfinal{cursor:default}
 
 .opgroup{margin-bottom:18px}
 .opgroup .ophdr{font-size:13px;border-bottom:2px solid var(--line);padding-bottom:6px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
@@ -261,6 +265,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <div class="tab" id="tabMiOrden" onclick="showPage('miorden')">Mi Orden</div>
     <div class="tab active" id="tabEquipo" onclick="showPage('equipo')">Tablero Equipo</div>
     <div class="tab" id="tabAnalisis" onclick="showPage('analisis')">Análisis</div>
+    <div class="tab" id="tabRegistro" onclick="showPage('registro')">Registro</div>
     <div class="spacer" id="navSpacer">
       <span id="syncSt"></span>
       <button class="primary" id="btnNew" onclick="openTaskForm()">+ Nueva tarea</button>
@@ -409,6 +414,21 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <div id="pageAnalisis" class="hidden">
       <div id="analisisBody"></div>
     </div>
+
+    <!-- REGISTRO / REPORTES (solo admin) -->
+    <div id="pageRegistro" class="hidden">
+      <div id="regTools" style="display:flex;gap:10px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+        <label class="muted">Desde:</label><input type="date" id="regDesde" onchange="renderRegistro()">
+        <label class="muted">Hasta:</label><input type="date" id="regHasta" onchange="renderRegistro()">
+        <label class="muted">Quién:</label><select id="regQuien" onchange="renderRegistro()"><option value="">Todos</option></select>
+        <label class="muted">Área:</label><select id="regArea" onchange="renderRegistro()"><option value="">Todas</option></select>
+        <input id="regTxt" placeholder="Buscar tema…" oninput="renderRegistro()" style="min-width:150px">
+        <button onclick="clearReg()" title="Limpiar filtros" style="background:#94a3b8;color:#fff;border-color:#94a3b8">✕ Limpiar</button>
+        <button onclick="loadRealizaciones(true)" title="Actualizar">↻</button>
+        <button onclick="exportRegistro()" style="margin-left:auto">⬇ Excel</button>
+      </div>
+      <div id="regBody"><div class="loading">Cargando registro…</div></div>
+    </div>
   </div>
 </div>
 
@@ -518,12 +538,12 @@ const opColorBg=u=>{const c=opColor(u);return c+'28';};  // semi-transparente
 // ── Catálogos ─────────────────────────────────────────────────
 const AREAS      =['GER','COM','A.Com','DES','ARM','PROD','MKT'];
 const PRIORIDADES=['Normal','Media','Alta','Urgente'];
-const FRECUENCIAS=['Unica','Mensual','Semanal','Diaria'];
+const FRECUENCIAS=['Unica','Diaria','Semanal','Quincenal','Mensual'];
 const ESTADOS    =['Pendiente','En curso','En Revisión','Recurrente','Finalizado'];
 const REACCIONES =['👍','❤️','😂','😮','😩'];
 const P_AREA ={GER:5,COM:4,'A.Com':4,DES:3,ARM:3,PROD:2,MKT:2};
 const P_PRIO ={Urgente:8,Alta:6,Media:4,Normal:2};
-const P_FREC ={Unica:5,Mensual:3,Semanal:2,Diaria:1};
+const P_FREC ={Unica:5,Mensual:3,Quincenal:2,Semanal:2,Diaria:1};
 const P_EST  ={'En Revisión':4,Pendiente:3,'En curso':3,Recurrente:2,Finalizado:0};
 
 // Colores columna por estado (tira superior)
@@ -576,6 +596,61 @@ async function removeTask(id){
   if(error){showToast('Error: '+error.message,'err');return false;}
   showToast('Eliminado ✓'); return true;
 }
+
+// ── Frecuencia: próxima fecha y semana en curso ───────────────
+function nextFechaByFrec(iso,frec){
+  const[y,m,d]=(iso||todayISO()).split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  if(frec==='Diaria')dt.setDate(dt.getDate()+1);
+  else if(frec==='Semanal')dt.setDate(dt.getDate()+7);
+  else if(frec==='Quincenal')dt.setDate(dt.getDate()+14);
+  else if(frec==='Mensual')dt.setDate(dt.getDate()+30);
+  else return iso;
+  // Empujar a día laboral: si cae sábado o domingo, pasa al lunes
+  const g=dt.getDay();
+  if(g===6)dt.setDate(dt.getDate()+2);
+  else if(g===0)dt.setDate(dt.getDate()+1);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+function startOfWeekISO(){
+  const[y,m,d]=todayISO().split('-').map(Number);
+  const dt=new Date(y,m-1,d);const off=(dt.getDay()+6)%7;
+  dt.setDate(dt.getDate()-off);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+
+// ── Registro de realizaciones (histórico para reportes) ───────
+async function logRealizacion(t){
+  const row={trabajo_id:String(t.id),tema:t.tema||'',operador:t.operador||'',completado_por:SESSION?SESSION.user:'',area:t.area||'',prioridad:t.prioridad||'',frecuencia:t.frecuencia||'',finalizacion:t.finalizacion||''};
+  const{error}=await _SB.from('realizaciones').insert(row);
+  if(error){showToast('Cerrada, pero NO se registró: '+error.message,'err');return false;}
+  return true;
+}
+
+// ── Finalizar (confirmado e irreversible) ─────────────────────
+async function finalizarTarea(t){
+  // Permiso: el admin finaliza cualquiera; el operador solo las asignadas a él
+  if(!isAdmin()&&t.operador!==SESSION.user){showToast('Solo podés finalizar tareas asignadas a vos','err');renderEquipo();return;}
+  const esRec=t.frecuencia&&t.frecuencia!=='Unica';
+  const msg=esRec
+    ?'¿Confirmás que esta tarea se realizó?\n\nQueda registrada y vuelve sola con su próxima fecha ('+t.frecuencia+'). No se puede revertir.'
+    :'¿Confirmás que esta tarea está finalizada?\n\nQueda registrada y no se puede revertir.';
+  if(!confirm(msg))return;
+  const logged=await logRealizacion(t);
+  if(!logged&&!confirm('No se pudo registrar en el historial. ¿Finalizar de todos modos?'))return;
+  let extra='';
+  if(esRec){
+    const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
+    t.estado='Pendiente';t.finalizacion=next;t.reaccion='';t.fecha_estado=todayISO();t.actualizado=nowStamp();
+    extra=' · próxima: '+fmtDate(next);
+  }else{
+    t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
+  }
+  await upsertTask(t);
+  renderCurrent();
+  if(logged)showToast((esRec?'Registrada ✓':'Finalizada ✓')+extra);
+}
+
 function startRealtime(){
   _SB.channel('trabajos-live')
     .on('postgres_changes',{event:'*',schema:'public',table:'trabajos'},p=>{
@@ -672,6 +747,7 @@ function applyRole(){
   document.getElementById('tabMiOrden').style.display=admin?'block':'none';
   document.getElementById('tabEquipo').style.display=admin?'block':'none';
   document.getElementById('tabAnalisis').style.display=admin?'block':'none';
+  document.getElementById('tabRegistro').style.display=admin?'block':'none';
   document.getElementById('btnExport').style.display=admin?'inline-block':'none';
   // El filtro por operador es solo para el admin; el operador ve el tablero general (sin filtro)
   const fw=document.getElementById('filterOpWrap');
@@ -694,16 +770,18 @@ function applyRole(){
 
 // ── Navegación ────────────────────────────────────────────────
 function showPage(p){
-  if((p==='miorden'||p==='analisis')&&!isAdmin())p='equipo';
-  ['MiOrden','Equipo','Analisis'].forEach(x=>document.getElementById('page'+x).classList.add('hidden'));
+  if((p==='miorden'||p==='analisis'||p==='registro')&&!isAdmin())p='equipo';
+  ['MiOrden','Equipo','Analisis','Registro'].forEach(x=>document.getElementById('page'+x).classList.add('hidden'));
   document.querySelectorAll('nav .tab').forEach(t=>t.classList.remove('active'));
   if(p==='miorden'){document.getElementById('pageMiOrden').classList.remove('hidden');document.getElementById('tabMiOrden').classList.add('active');MO.render();}
   else if(p==='analisis'){document.getElementById('pageAnalisis').classList.remove('hidden');document.getElementById('tabAnalisis').classList.add('active');renderAnalisis();}
+  else if(p==='registro'){document.getElementById('pageRegistro').classList.remove('hidden');document.getElementById('tabRegistro').classList.add('active');loadRealizaciones();}
   else{document.getElementById('pageEquipo').classList.remove('hidden');document.getElementById('tabEquipo').classList.add('active');renderEquipo();}
 }
 function renderCurrent(){
   if(!document.getElementById('pageEquipo').classList.contains('hidden'))renderEquipo();
   else if(!document.getElementById('pageAnalisis').classList.contains('hidden'))renderAnalisis();
+  else if(!document.getElementById('pageRegistro').classList.contains('hidden'))renderRegistro();
 }
 
 // ── Tablero Equipo ────────────────────────────────────────────
@@ -738,39 +816,51 @@ function renderEquipo(){
   if(far)list=list.filter(t=>t.area===far);
   if(fpr)list=list.filter(t=>t.prioridad===fpr);
   if(ftx)list=list.filter(t=>((t.tema||'')+' '+(t.tareas||'')).toLowerCase().includes(ftx));
+  // La columna Finalizado solo muestra lo cerrado en la semana en curso (el resto vive en el registro)
+  const _wk=startOfWeekISO();
+  list=list.filter(t=>t.estado!=='Finalizado'||(t.fecha_estado||'')>=_wk);
   // Vista "Por operador": el operador solo ve sus propios trabajos (el admin ve a todos)
   if(mode==='operador'&&!isAdmin())list=list.filter(t=>t.operador===SESSION.user);
   document.getElementById('equipoBody').innerHTML=mode==='estado'?kanbanHTML(list):byOpHTML(list);
 }
 
-// ── CARD mejorada con color por operador ──────────────────────
+// ── Íconos de línea (SVG finos, heredan color del contenedor) ─
+const ICO={
+  cal:'<svg class="cic" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v4M16 3v4"/></svg>',
+  img:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-4.5L5 20"/></svg>',
+  link:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 1 0-5.7-5.7L12 6"/><path d="M13.5 10.5a4 4 0 0 0-5.7 0L5 13.3a4 4 0 1 0 5.7 5.7L12 18"/></svg>',
+  pin:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6l-1 5.5 3 3v2H7v-2l3-3-1-5.5z"/><path d="M12 17v3.5"/></svg>',
+  smile:'<svg class="cic" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 14a4 4 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg>'
+};
+// ── CARD con color por operador ───────────────────────────────
 function cardHTML(t){
   const venc=t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0;
+  const isFinal=t.estado==='Finalizado';
   const oc=opColor(t.operador);
   const dias=t.finalizacion?diasPara(t.finalizacion):null;
   const prioHtml=t.prioridad==='Urgente'
-    ?`<span class="cpill urg">⚡ ${t.prioridad}</span>`
+    ?`<span class="cpill urg">${t.prioridad}</span>`
     :`<span class="cpill">${t.prioridad}</span>`;
-  const reacc=`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" title="Reaccionar" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||'🙂'}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`;
+  const reacc=`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" title="Reaccionar" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`;
   const hasImg=!t.privado&&t.imagenes&&t.imagenes.length;
   const hasLink=!t.privado&&(t.link1||t.link2||t.link3);
-  const imgIcon=hasImg?`<span class="cthumb" title="Ver imagen" onclick="event.stopPropagation();openTaskImg('${t.id}')">🖼️</span>`:'';
-  const linkIcon=hasLink?`<span class="cthumb" title="Abrir link" onclick="event.stopPropagation();openTaskLink('${t.id}')">🔗</span>`:'';
-  const pinIcon=`<span class="cpin${t.fijado?' on':''}" title="${t.fijado?'Desfijar':'Fijar arriba'}" onclick="event.stopPropagation();toggleFijar('${t.id}')">📌</span>`;
-  return `<div class="card${venc?' ovd':''}" draggable="true" data-id="${t.id}"
-    ondragstart="dragStart(event)" ondragend="dragEnd(event)"
+  const imgIcon=hasImg?`<span class="cthumb" title="Ver imagen" onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img}</span>`:'';
+  const linkIcon=hasLink?`<span class="cthumb" title="Abrir link" onclick="event.stopPropagation();openTaskLink('${t.id}')">${ICO.link}</span>`:'';
+  const pinIcon=`<span class="cpin${t.fijado?' on':''}" title="${t.fijado?'Desfijar':'Fijar arriba'}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`;
+  return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${isFinal?'':'draggable="true"'} data-id="${t.id}"
+    ${isFinal?'':'ondragstart="dragStart(event)" ondragend="dragEnd(event)"'}
     style="border-left-color:${oc}">
     ${venc?`<span class="cvenc" title="Vencido hace ${Math.abs(dias)} día(s)">${Math.abs(dias)}d</span>`:''}
     <div class="ct" title="${escH(t.tema)}">${escH(t.tema)}</div>
     ${t.tareas?`<div class="csub" title="${escH(t.tareas)}">${escH(t.tareas)}</div>`:''}
     <div class="cmeta">
-      <span class="cop" title="Abrir tarea" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${oc};color:#fff;border:1px solid ${oc};cursor:pointer">${nombreOp(t.operador)}</span>
+      <span class="cop" title="Abrir tarea" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${oc}22;color:${oc};border:1px solid ${oc}66;cursor:pointer">${nombreOp(t.operador)}</span>
       <span class="cpill">${t.area}</span>
       ${prioHtml}
     </div>
     <div class="cfoot">
-      <span class="cdate" title="Creación">🗓 ${t.ingreso?fmtDate(t.ingreso):'—'}</span>
-      <span class="cdate" style="color:${venc?'var(--urg)':'var(--txt)'}" title="Vencimiento">📅 ${t.finalizacion?fmtDate(t.finalizacion):'—'}</span>
+      <span class="cdate" title="Creación">${ICO.cal} ${t.ingreso?fmtDate(t.ingreso):'—'}</span>
+      <span class="cdate${venc?' ovd':''}" title="Vencimiento">${ICO.cal} ${t.finalizacion?fmtDate(t.finalizacion):'—'}</span>
       <span class="cfoot-icons">${reacc}${imgIcon}${linkIcon}${pinIcon}</span>
     </div>
   </div>`;
@@ -873,13 +963,15 @@ function dragStart(e){dragId=e.currentTarget.dataset.id;e.currentTarget.classLis
 function dragEnd(e){e.currentTarget.classList.remove('drag');}
 function dragOver(e){e.preventDefault();e.currentTarget.closest('.col').classList.add('drop-hover');}
 function dragLeave(e){e.currentTarget.closest('.col').classList.remove('drop-hover');}
-function drop(e){
+async function drop(e){
   e.preventDefault();
-  const col=e.currentTarget.closest?e.currentTarget:e.currentTarget;
+  const col=e.currentTarget;
   col.classList.remove('drop-hover');
   const est=col.dataset.estado;
   const t=DATA.find(x=>x.id===dragId);
-  if(t&&t.estado!==est){t.estado=est;t.actualizado=nowStamp();t.fecha_estado=todayISO();upsertTask(t);renderEquipo();}
+  if(!t||t.estado===est)return;
+  if(est==='Finalizado'){await finalizarTarea(t);return;}
+  t.estado=est;t.actualizado=nowStamp();t.fecha_estado=todayISO();upsertTask(t);renderEquipo();
 }
 
 // ── Formulario tarea equipo ───────────────────────────────────
@@ -986,19 +1078,9 @@ async function saveTask(){
   await cloneByFrecuencia(vals);
   closeTaskForm();renderCurrent();
 }
-function toggleCopias(){const v=document.getElementById('f_frecuencia').value;const on=(v==='Mensual'||v==='Semanal');const inp=document.getElementById('f_copias');inp.style.display=on?'block':'none';if(!on)inp.value=0;}
-async function cloneByFrecuencia(vals){
-  const fr=vals.frecuencia;
-  const copias=(fr==='Mensual'||fr==='Semanal')?Math.max(0,parseInt(document.getElementById('f_copias').value||'0',10)):0;
-  if(copias<=0)return;
-  const step=fr==='Mensual'?30:7;
-  const baseISO=vals.finalizacion||todayISO();
-  const addDays=(iso,n)=>{const[y,m,d]=iso.split('-').map(Number);const dt=new Date(y,m-1,d);dt.setDate(dt.getDate()+n);return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');};
-  for(let k=1;k<=copias;k++){
-    const clone=Object.assign({},vals,{id:uid(),creado_por:SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),finalizacion:addDays(baseISO,step*k)});
-    const ok=await upsertTask(clone);if(ok)DATA.push(clone);
-  }
-}
+// Las tareas recurrentes ya NO se clonan por adelantado: se regeneran solas al finalizar (ver finalizarTarea).
+function toggleCopias(){const inp=document.getElementById('f_copias');if(inp){inp.style.display='none';inp.value=0;}}
+async function cloneByFrecuencia(vals){return;}
 async function deleteTask(){
   if(!editingId)return;
   const _t=DATA.find(x=>x.id===editingId);
@@ -1029,6 +1111,82 @@ function renderAnalisis(){
   const maxA=Math.max(1,...perA.map(x=>x.v));
   perA.forEach(x=>{h+=`<div class="bar-row"><div class="bname">${x.a}</div><div class="bbar" style="width:${(x.v/maxA)*300}px;background:var(--accent)"></div><div>${x.v}</div></div>`;});
   document.getElementById('analisisBody').innerHTML=h;
+}
+
+// ── Registro / Reportes (histórico de realizaciones) ──────────
+let REAL=[];
+async function loadRealizaciones(force){
+  if(!isAdmin())return;
+  setSyncSt('Cargando registro…');
+  const{data,error}=await _SB.from('realizaciones').select('*').order('completado_en',{ascending:false});
+  setSyncSt('');
+  if(error){document.getElementById('regBody').innerHTML='<p class="muted">Error al cargar: '+escH(error.message)+'</p>';return;}
+  REAL=data||[];
+  fillRegFiltros();
+  renderRegistro();
+}
+function fillRegFiltros(){
+  const q=document.getElementById('regQuien');const cq=q.value;
+  const users=[...new Set(REAL.map(r=>r.completado_por).filter(Boolean))];
+  q.innerHTML='<option value="">Todos</option>'+users.map(u=>`<option value="${u}">${nombreOp(u)}</option>`).join('');q.value=cq;
+  const a=document.getElementById('regArea');const ca=a.value;
+  const areas=[...new Set(REAL.map(r=>r.area).filter(Boolean))];
+  a.innerHTML='<option value="">Todas</option>'+areas.map(x=>`<option value="${x}">${x}</option>`).join('');a.value=ca;
+}
+function regFiltered(){
+  const desde=document.getElementById('regDesde').value;
+  const hasta=document.getElementById('regHasta').value;
+  const quien=document.getElementById('regQuien').value;
+  const area=document.getElementById('regArea').value;
+  const txt=document.getElementById('regTxt').value.trim().toLowerCase();
+  return REAL.filter(r=>{
+    const d=(r.completado_en||'').slice(0,10);
+    if(desde&&d<desde)return false;
+    if(hasta&&d>hasta)return false;
+    if(quien&&r.completado_por!==quien)return false;
+    if(area&&r.area!==area)return false;
+    if(txt&&!((r.tema||'').toLowerCase().includes(txt)))return false;
+    return true;
+  });
+}
+function renderRegistro(){
+  const rows=regFiltered();
+  if(!rows.length){document.getElementById('regBody').innerHTML='<p class="muted">Sin realizaciones en el rango/filtro elegido.</p>';return;}
+  const porPersona={};rows.forEach(r=>{const k=r.completado_por||'—';porPersona[k]=(porPersona[k]||0)+1;});
+  const porTema={};rows.forEach(r=>{const k=r.tema||'—';porTema[k]=(porTema[k]||0)+1;});
+  let h=`<div class="kpis">
+    <div class="kpi"><div class="n">${rows.length}</div><div class="l">Realizaciones</div></div>
+    <div class="kpi"><div class="n">${Object.keys(porTema).length}</div><div class="l">Tareas distintas</div></div>
+    <div class="kpi"><div class="n">${Object.keys(porPersona).length}</div><div class="l">Personas</div></div>
+  </div>`;
+  h+='<div class="section-title">Realizado por persona</div><div class="scrollx"><table class="grid"><tr><th>Persona</th><th>Cantidad</th></tr>';
+  Object.entries(porPersona).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{h+=`<tr><td style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:${opColor(k)};display:inline-block"></span>${escH(nombreOp(k))}</td><td>${v}</td></tr>`;});
+  h+='</table></div>';
+  h+='<div class="section-title">Cuántas veces se hizo cada tarea</div><div class="scrollx"><table class="grid"><tr><th>Tarea</th><th>Veces</th></tr>';
+  Object.entries(porTema).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{h+=`<tr><td>${escH(k)}</td><td>${v}</td></tr>`;});
+  h+='</table></div>';
+  h+='<div class="section-title">Detalle</div><div class="scrollx"><table class="grid"><tr><th>Fecha</th><th>Tema</th><th>Asignada a</th><th>La hizo</th><th>Área</th><th>Prioridad</th><th>Frecuencia</th><th>Vencía</th></tr>';
+  rows.forEach(r=>{
+    const f=(r.completado_en||'').slice(0,16).replace('T',' ');
+    h+=`<tr><td>${escH(f)}</td><td>${escH(r.tema)}</td><td>${escH(nombreOp(r.operador))}</td><td>${escH(nombreOp(r.completado_por))}</td><td>${escH(r.area)}</td><td>${escH(r.prioridad)}</td><td>${escH(r.frecuencia)}</td><td>${escH(r.finalizacion?fmtDate(r.finalizacion):'')}</td></tr>`;
+  });
+  h+='</table></div>';
+  document.getElementById('regBody').innerHTML=h;
+}
+function clearReg(){['regDesde','regHasta','regQuien','regArea','regTxt'].forEach(id=>document.getElementById(id).value='');renderRegistro();}
+function exportRegistro(){
+  if(typeof XLSX==='undefined'){alert('Necesitás conexión a internet para exportar.');return;}
+  const rows=regFiltered().map(r=>({
+    Fecha:(r.completado_en||'').slice(0,16).replace('T',' '),
+    Tema:r.tema||'',
+    'Asignada a':nombreOp(r.operador),
+    'La hizo':nombreOp(r.completado_por),
+    Area:r.area||'',Prioridad:r.prioridad||'',Frecuencia:r.frecuencia||'',
+    Vencia:r.finalizacion||''
+  }));
+  if(!rows.length){alert('Sin filas para exportar.');return;}
+  const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Registro');XLSX.writeFile(wb,'Registro_'+todayISO()+'.xlsx');
 }
 
 // ── Export CSV ────────────────────────────────────────────────
