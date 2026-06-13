@@ -64,17 +64,18 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .col .cards{padding:7px;display:flex;flex-direction:column;gap:7px;min-height:40px}
 
 /* ── CARD ───────────────────────────────────────── */
-.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:11px 12px;cursor:grab;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s}
+.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:3px 12px 5px;cursor:grab;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s}
 .card:hover{box-shadow:0 3px 10px rgba(0,0,0,.14);transform:translateY(-1px)}
 .card.drag{opacity:.35;transform:scale(.97)}
 .card .ct{font-weight:600;font-size:12.5px;line-height:1.3;margin-bottom:3px;letter-spacing:-.1px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .csub{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card .cmeta{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:8px}
+.card .cmeta{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:2px}
+.card .cnum{font-size:10px;font-weight:700;color:var(--txt);letter-spacing:.3px;white-space:nowrap}
 .card .cop{font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.3px}
 .card .cpill{font-size:9px;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:transparent;border:1px solid var(--line);color:var(--muted)}
 .card .cpill.urg{color:var(--urg);border-color:var(--urg);font-weight:600}
-.card .cfoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
-.card .cdate{font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.card .cfoot{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px;padding-top:2px;border-top:1px solid var(--line)}
+.card .cdate{font-size:10px;color:var(--txt);display:inline-flex;align-items:center;gap:4px}
 .card .cdate.ovd{color:var(--urg)}
 .card .cfoot-icons{margin-left:auto;display:inline-flex;align-items:center;gap:10px}
 .card .cic{display:inline-flex}
@@ -91,12 +92,14 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .creact-face{cursor:pointer;display:inline-flex;align-items:center;color:var(--muted);opacity:.6;line-height:1;transition:color .12s,opacity .12s}
 .creact-face.has{opacity:1;font-size:13px}
 .creact-face:hover{opacity:1;color:var(--txt)}
-.creact-pop{display:none;position:absolute;bottom:140%;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:4px 8px;gap:6px;z-index:30;box-shadow:0 4px 14px rgba(0,0,0,.20)}
+.creact-pop{display:none;position:absolute;bottom:140%;right:0;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:4px 8px;gap:6px;z-index:100;box-shadow:0 4px 14px rgba(0,0,0,.20)}
 .creact-wrap.open .creact-pop{display:flex}
 .creact-pop span{cursor:pointer;font-size:16px;transition:transform .1s}
 .creact-pop span:hover{transform:scale(1.25)}
 .card .cthumb{cursor:pointer;display:inline-flex;color:var(--muted);transition:color .12s}
 .card .cthumb:hover{color:var(--txt)}
+.card .cenv{cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:4px;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;transition:all .12s}
+.card .cenv.ok{background:var(--bg3);color:var(--muted);border-color:var(--line)}
 .card .cthumb-img{width:22px;height:22px;object-fit:cover;border-radius:3px;cursor:pointer;border:1px solid var(--line)}
 .card .cupd{font-size:9px;color:var(--muted);opacity:.8}
 .card .cpts{font-size:10px;font-weight:bold}
@@ -256,6 +259,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
   <div class="eq-header">
     <h1>Análisis Comercial</h1>
     <span class="userbox">Sesión: <b id="curUser"></b></span>
+    <button id="btnEnvNot" onclick="toggleFiltroComentario()" title="Comentarios pendientes para mí" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px">✉<span id="envBadge" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <span class="date" id="todayLabel"></span>
     <button onclick="openPassModal()" title="Cambiar contraseña" style="margin-left:8px;height:32px;padding:0 11px;font-size:16px;display:inline-flex;align-items:center;justify-content:center">🔑</button>
     <button id="themeBtn" onclick="toggleTheme()" style="margin-left:8px;height:32px;width:88px;display:inline-flex;align-items:center;justify-content:center">Tema</button>
@@ -269,7 +273,8 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <div class="spacer" id="navSpacer">
       <span id="syncSt"></span>
       <button class="primary" id="btnNew" onclick="openTaskForm()">+ Nueva tarea</button>
-      <button id="btnExport" onclick="exportCSV()">Exportar CSV</button>
+      <button id="btnExport" onclick="exportCSV()" style="display:none">⬇ En curso</button>
+      <button id="btnExportReg" onclick="exportFinalizadosNav()" style="display:none">⬇ Finalizados</button>
     </div>
   </nav>
   <div class="wrap">
@@ -425,7 +430,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         <input id="regTxt" placeholder="Buscar tema…" oninput="renderRegistro()" style="min-width:150px">
         <button onclick="clearReg()" title="Limpiar filtros" style="background:#94a3b8;color:#fff;border-color:#94a3b8">✕ Limpiar</button>
         <button onclick="loadRealizaciones(true)" title="Actualizar">↻</button>
-        <button onclick="exportRegistro()" style="margin-left:auto">⬇ Excel</button>
+        <button onclick="exportRegistro()" style="margin-left:auto">⬇ Finalizados</button>
       </div>
       <div id="regBody"><div class="loading">Cargando registro…</div></div>
     </div>
@@ -435,7 +440,16 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 <!-- MODAL TAREA EQUIPO -->
 <div id="modalBg" class="modal-bg hidden">
   <div class="emodal">
-    <h2 id="modalTitle">Nueva tarea</h2>
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+      <h2 id="modalTitle" style="margin:0;white-space:nowrap">Nueva tarea</h2>
+      <div id="comentWrap" style="display:none;margin-left:auto;width:45%">
+        <label style="font-size:11px;color:var(--muted)">Comentario del equipo <span id="comentAutor" style="font-weight:400;font-style:italic"></span></label>
+        <textarea id="f_comentario" rows="2" maxlength="300" placeholder="Dejá una nota corta para el equipo…" style="width:100%;font-size:12px;resize:vertical;box-sizing:border-box"></textarea>
+        <div id="comentOkWrap" style="margin-top:4px;display:none">
+          <button type="button" id="btnComentOk" onclick="toggleComentOk()" style="font-size:12px"></button>
+        </div>
+      </div>
+    </div>
     <div class="form2">
       <div class="full"><label>Tema *</label><input id="f_tema"></div>
       <div class="full"><label>Tareas a realizar</label><textarea id="f_tareas" rows="3"></textarea></div>
@@ -552,7 +566,7 @@ const EST_COLOR={
   'En Revisión':'#fb923c','Recurrente':'#38bdf8','Finalizado':'#4ade80'
 };
 
-let DATA=[], SESSION=null, editingId=null;
+let DATA=[], SESSION=null, editingId=null, filtroComentario=false;
 
 // ── Utilidades ────────────────────────────────────────────────
 const todayISO=()=>new Date().toISOString().slice(0,10);
@@ -580,7 +594,7 @@ async function loadData(){
   const{data,error}=await _SB.from('trabajos').select('*').order('actualizado',{ascending:false});
   setSyncSt('');
   if(error){showToast('Error al cargar: '+error.message,'err');return;}
-  DATA=data||[]; renderCurrent();
+  DATA=data||[]; updateEnvBadge(); renderCurrent();
 }
 async function upsertTask(task){
   setSyncSt('Guardando…');
@@ -620,8 +634,8 @@ function startOfWeekISO(){
 }
 
 // ── Registro de realizaciones (histórico para reportes) ───────
-async function logRealizacion(t){
-  const row={trabajo_id:String(t.id),tema:t.tema||'',operador:t.operador||'',completado_por:SESSION?SESSION.user:'',area:t.area||'',prioridad:t.prioridad||'',frecuencia:t.frecuencia||'',finalizacion:t.finalizacion||''};
+async function logRealizacion(t,tipo='finalizado'){
+  const row={trabajo_id:String(t.id),numero:t.numero||null,tema:t.tema||'',operador:t.operador||'',completado_por:SESSION?SESSION.user:'',area:t.area||'',prioridad:t.prioridad||'',frecuencia:t.frecuencia||'',finalizacion:t.finalizacion||'',tipo};
   const{error}=await _SB.from('realizaciones').insert(row);
   if(error){showToast('Cerrada, pero NO se registró: '+error.message,'err');return false;}
   return true;
@@ -773,10 +787,11 @@ function showPage(p){
   if((p==='miorden'||p==='analisis'||p==='registro')&&!isAdmin())p='equipo';
   ['MiOrden','Equipo','Analisis','Registro'].forEach(x=>document.getElementById('page'+x).classList.add('hidden'));
   document.querySelectorAll('nav .tab').forEach(t=>t.classList.remove('active'));
-  if(p==='miorden'){document.getElementById('pageMiOrden').classList.remove('hidden');document.getElementById('tabMiOrden').classList.add('active');MO.render();}
-  else if(p==='analisis'){document.getElementById('pageAnalisis').classList.remove('hidden');document.getElementById('tabAnalisis').classList.add('active');renderAnalisis();}
-  else if(p==='registro'){document.getElementById('pageRegistro').classList.remove('hidden');document.getElementById('tabRegistro').classList.add('active');loadRealizaciones();}
-  else{document.getElementById('pageEquipo').classList.remove('hidden');document.getElementById('tabEquipo').classList.add('active');renderEquipo();}
+  const _be=document.getElementById('btnExport'),_br=document.getElementById('btnExportReg');
+  if(p==='miorden'){document.getElementById('pageMiOrden').classList.remove('hidden');document.getElementById('tabMiOrden').classList.add('active');MO.render();if(_be)_be.style.display='none';if(_br)_br.style.display='none';}
+  else if(p==='analisis'){document.getElementById('pageAnalisis').classList.remove('hidden');document.getElementById('tabAnalisis').classList.add('active');renderAnalisis();if(_be)_be.style.display='none';if(_br)_br.style.display='none';}
+  else if(p==='registro'){document.getElementById('pageRegistro').classList.remove('hidden');document.getElementById('tabRegistro').classList.add('active');loadRealizaciones();if(_be)_be.style.display='none';if(_br)_br.style.display='';}
+  else{document.getElementById('pageEquipo').classList.remove('hidden');document.getElementById('tabEquipo').classList.add('active');renderEquipo();if(_be)_be.style.display='';if(_br)_br.style.display='none';}
 }
 function renderCurrent(){
   if(!document.getElementById('pageEquipo').classList.contains('hidden'))renderEquipo();
@@ -804,6 +819,21 @@ function clearFilters(){
   document.getElementById('viewMode').value='operador';
   renderEquipo();
 }
+function updateEnvBadge(){
+  if(!SESSION)return;
+  const count=DATA.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user).length;
+  const badge=document.getElementById('envBadge');
+  const btn=document.getElementById('btnEnvNot');
+  if(!badge||!btn)return;
+  if(count>0){badge.textContent=count;badge.style.display='inline-flex';btn.style.color='#16a34a';}
+  else{badge.style.display='none';btn.style.color='';}
+}
+function toggleFiltroComentario(){
+  filtroComentario=!filtroComentario;
+  const btn=document.getElementById('btnEnvNot');
+  if(btn){btn.style.background=filtroComentario?'#16a34a22':'';btn.style.borderColor=filtroComentario?'#16a34a':'';}
+  renderCurrent();
+}
 function renderEquipo(){
   fillFilterOp();fillFiltros();
   const mode=document.getElementById('viewMode').value;
@@ -821,6 +851,7 @@ function renderEquipo(){
   list=list.filter(t=>t.estado!=='Finalizado'||(t.fecha_estado||'')>=_wk);
   // Vista "Por operador": el operador solo ve sus propios trabajos (el admin ve a todos)
   if(mode==='operador'&&!isAdmin())list=list.filter(t=>t.operador===SESSION.user);
+  if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user);
   document.getElementById('equipoBody').innerHTML=mode==='estado'?kanbanHTML(list):byOpHTML(list);
 }
 
@@ -830,7 +861,8 @@ const ICO={
   img:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-4.5L5 20"/></svg>',
   link:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 1 0-5.7-5.7L12 6"/><path d="M13.5 10.5a4 4 0 0 0-5.7 0L5 13.3a4 4 0 1 0 5.7 5.7L12 18"/></svg>',
   pin:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6l-1 5.5 3 3v2H7v-2l3-3-1-5.5z"/><path d="M12 17v3.5"/></svg>',
-  smile:'<svg class="cic" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 14a4 4 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg>'
+  smile:'<svg class="cic" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 14a4 4 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg>',
+  mail:'<svg class="cic" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>'
 };
 // ── CARD con color por operador ───────────────────────────────
 function cardHTML(t){
@@ -847,6 +879,7 @@ function cardHTML(t){
   const imgIcon=hasImg?`<span class="cthumb" title="Ver imagen" onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img}</span>`:'';
   const linkIcon=hasLink?`<span class="cthumb" title="Abrir link" onclick="event.stopPropagation();openTaskLink('${t.id}')">${ICO.link}</span>`:'';
   const pinIcon=`<span class="cpin${t.fijado?' on':''}" title="${t.fijado?'Desfijar':'Fijar arriba'}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`;
+  const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${isFinal?'':'draggable="true"'} data-id="${t.id}"
     ${isFinal?'':'ondragstart="dragStart(event)" ondragend="dragEnd(event)"'}
     style="border-left-color:${oc}">
@@ -854,13 +887,14 @@ function cardHTML(t){
     <div class="ct" title="${escH(t.tema)}">${escH(t.tema)}</div>
     ${t.tareas?`<div class="csub" title="${escH(t.tareas)}">${escH(t.tareas)}</div>`:''}
     <div class="cmeta">
+      ${t.numero?`<span class="cnum">ID ${t.numero}</span>`:''}
       <span class="cop" title="Abrir tarea" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${oc}22;color:${oc};border:1px solid ${oc}66;cursor:pointer">${nombreOp(t.operador)}</span>
       <span class="cpill">${t.area}</span>
       ${prioHtml}
+      ${envIcon}
     </div>
     <div class="cfoot">
-      <span class="cdate" title="Creación">${ICO.cal} ${t.ingreso?fmtDate(t.ingreso):'—'}</span>
-      <span class="cdate${venc?' ovd':''}" title="Vencimiento">${ICO.cal} ${t.finalizacion?fmtDate(t.finalizacion):'—'}</span>
+      <span style="display:inline-flex;gap:6px"><span class="cdate" title="Creación">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" title="Vencimiento">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span></span>
       <span class="cfoot-icons">${reacc}${imgIcon}${linkIcon}${pinIcon}</span>
     </div>
   </div>`;
@@ -1056,6 +1090,28 @@ function openTaskForm(id){
   }else if(_t&&(_t.medio||_t.link2||_t.link3||(_t.imagenes&&_t.imagenes.length))){
     expandExtra();
   }
+  // Sección comentario — solo visible al editar
+  const _cw=document.getElementById('comentWrap');
+  const _fcm=document.getElementById('f_comentario');
+  const _fca=document.getElementById('comentAutor');
+  const _fcok=document.getElementById('comentOkWrap');
+  const _fcbtn=document.getElementById('btnComentOk');
+  if(_t){
+    _cw.style.display='';
+    const _canC=isAdmin()||SESSION.user!==_t.creado_por;
+    _fcm.value=_t.comentario||'';
+    _fcm.disabled=!_canC;
+    _fcm.placeholder=_canC?'Dejá una nota corta para el equipo…':'Solo otros operadores pueden comentar aquí';
+    if(_t.comentario&&_t.comentario_por){
+      _fca.style.display='block';
+      _fca.textContent='Comentó '+nombreOp(_t.comentario_por)+(_t.comentario_ok?' · ✓ Leído':'');
+    }else{_fca.style.display='none';}
+    const _showOk=!!(_t.comentario&&(SESSION.user===_t.operador||SESSION.user===_t.creado_por));
+    _fcok.style.display=_showOk?'':'none';
+    if(_showOk)_fcbtn.textContent=_t.comentario_ok?'✓ Ya leído':'👍 Marcar como leído';
+  }else{
+    _cw.style.display='none';_fcm.value='';
+  }
   document.getElementById('modalBg').classList.remove('hidden');
 }
 function closeTaskForm(){document.getElementById('modalBg').classList.add('hidden');editingId=null;}
@@ -1065,6 +1121,20 @@ async function saveTask(){
   if(!document.getElementById('f_finalizacion').value){alert('La fecha de finalización es obligatoria.');return;}
   const vals={tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:document.getElementById('f_frecuencia').value,finalizacion:document.getElementById('f_finalizacion').value,medio:document.getElementById('f_medio').value.trim(),link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked};
   if(vals.privado)vals.operador=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
+  {
+    const _te=editingId?DATA.find(x=>x.id===editingId):null;
+    const _canC=editingId&&(isAdmin()||SESSION.user!==(_te&&_te.creado_por));
+    if(_canC){
+      const nc=document.getElementById('f_comentario').value.trim();
+      vals.comentario=nc||null;
+      if(nc!==(_te&&_te.comentario||'')){vals.comentario_por=nc?SESSION.user:null;vals.comentario_ok=false;}
+      else{vals.comentario_por=(_te&&_te.comentario_por)||null;vals.comentario_ok=(_te&&_te.comentario_ok)||false;}
+    }else{
+      vals.comentario=(_te&&_te.comentario)||null;
+      vals.comentario_por=(_te&&_te.comentario_por)||null;
+      vals.comentario_ok=(_te&&_te.comentario_ok)||false;
+    }
+  }
   if(editingId){
     const t=DATA.find(x=>x.id===editingId);
     // Si un operador edita una tarea reservada, se conserva el contenido oculto (no lo pisa con los vacíos)
@@ -1072,11 +1142,22 @@ async function saveTask(){
     const upd=Object.assign({},t,vals,{actualizado:nowStamp()});
     const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;}
   }else{
-    const nw=Object.assign({id:uid(),creado_por:SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:'Pendiente'},vals);
+    const nextNum=DATA.reduce((m,t)=>Math.max(m,t.numero||0),0)+1;
+    const nw=Object.assign({id:uid(),numero:nextNum,creado_por:SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:'Pendiente'},vals);
     const ok=await upsertTask(nw);if(ok)DATA.push(nw);
   }
   await cloneByFrecuencia(vals);
   closeTaskForm();renderCurrent();
+}
+async function toggleComentOk(){
+  if(!editingId)return;
+  const t=DATA.find(x=>x.id===editingId);if(!t)return;
+  const upd=Object.assign({},t,{comentario_ok:!t.comentario_ok,actualizado:nowStamp()});
+  const ok=await upsertTask(upd);
+  if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;updateEnvBadge();renderCurrent();}
+  document.getElementById('btnComentOk').textContent=upd.comentario_ok?'✓ Ya leído':'👍 Marcar como leído';
+  const _fca=document.getElementById('comentAutor');
+  if(_fca)_fca.textContent='Comentó '+nombreOp(t.comentario_por||'')+(upd.comentario_ok?' · ✓ Leído':'');
 }
 // Las tareas recurrentes ya NO se clonan por adelantado: se regeneran solas al finalizar (ver finalizarTarea).
 function toggleCopias(){const inp=document.getElementById('f_copias');if(inp){inp.style.display='none';inp.value=0;}}
@@ -1085,7 +1166,8 @@ async function deleteTask(){
   if(!editingId)return;
   const _t=DATA.find(x=>x.id===editingId);
   if(!isAdmin()&&_t&&_t.operador!==SESSION.user){showToast('Sin permiso para eliminar esta tarea','err');return;}
-  if(!confirm('¿Eliminar esta tarea?'))return;
+  if(!confirm('¿Eliminar esta tarea? Quedará registrada como eliminada en el historial.'))return;
+  if(_t)await logRealizacion(_t,'eliminado');
   const ok=await removeTask(editingId);if(ok)DATA=DATA.filter(x=>x.id!==editingId);
   closeTaskForm();renderCurrent();
 }
@@ -1152,12 +1234,15 @@ function regFiltered(){
 function renderRegistro(){
   const rows=regFiltered();
   if(!rows.length){document.getElementById('regBody').innerHTML='<p class="muted">Sin realizaciones en el rango/filtro elegido.</p>';return;}
-  const porPersona={};rows.forEach(r=>{const k=r.completado_por||'—';porPersona[k]=(porPersona[k]||0)+1;});
-  const porTema={};rows.forEach(r=>{const k=r.tema||'—';porTema[k]=(porTema[k]||0)+1;});
+  const finRows=rows.filter(r=>r.tipo!=='eliminado');
+  const elimRows=rows.filter(r=>r.tipo==='eliminado');
+  const porPersona={};finRows.forEach(r=>{const k=r.completado_por||'—';porPersona[k]=(porPersona[k]||0)+1;});
+  const porTema={};finRows.forEach(r=>{const k=r.tema||'—';porTema[k]=(porTema[k]||0)+1;});
   let h=`<div class="kpis">
-    <div class="kpi"><div class="n">${rows.length}</div><div class="l">Realizaciones</div></div>
+    <div class="kpi"><div class="n">${finRows.length}</div><div class="l">Realizaciones</div></div>
     <div class="kpi"><div class="n">${Object.keys(porTema).length}</div><div class="l">Tareas distintas</div></div>
     <div class="kpi"><div class="n">${Object.keys(porPersona).length}</div><div class="l">Personas</div></div>
+    ${elimRows.length?`<div class="kpi"><div class="n" style="color:var(--urg)">${elimRows.length}</div><div class="l">Eliminadas</div></div>`:''}
   </div>`;
   h+='<div class="section-title">Realizado por persona</div><div class="scrollx"><table class="grid"><tr><th>Persona</th><th>Cantidad</th></tr>';
   Object.entries(porPersona).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{h+=`<tr><td style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:${opColor(k)};display:inline-block"></span>${escH(nombreOp(k))}</td><td>${v}</td></tr>`;});
@@ -1165,18 +1250,28 @@ function renderRegistro(){
   h+='<div class="section-title">Cuántas veces se hizo cada tarea</div><div class="scrollx"><table class="grid"><tr><th>Tarea</th><th>Veces</th></tr>';
   Object.entries(porTema).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{h+=`<tr><td>${escH(k)}</td><td>${v}</td></tr>`;});
   h+='</table></div>';
-  h+='<div class="section-title">Detalle</div><div class="scrollx"><table class="grid"><tr><th>Fecha</th><th>Tema</th><th>Asignada a</th><th>La hizo</th><th>Área</th><th>Prioridad</th><th>Frecuencia</th><th>Vencía</th></tr>';
+  h+='<div class="section-title">Detalle</div><div class="scrollx"><table class="grid"><tr><th>Fecha</th><th>ID</th><th>Tipo</th><th>Tema</th><th>Asignada a</th><th>La hizo</th><th>Área</th><th>Prioridad</th><th>Frecuencia</th><th>Vencía</th></tr>';
   rows.forEach(r=>{
     const f=(r.completado_en||'').slice(0,16).replace('T',' ');
-    h+=`<tr><td>${escH(f)}</td><td>${escH(r.tema)}</td><td>${escH(nombreOp(r.operador))}</td><td>${escH(nombreOp(r.completado_por))}</td><td>${escH(r.area)}</td><td>${escH(r.prioridad)}</td><td>${escH(r.frecuencia)}</td><td>${escH(r.finalizacion?fmtDate(r.finalizacion):'')}</td></tr>`;
+    const esElim=r.tipo==='eliminado';
+    const tipoBadge=esElim
+      ?'<span class="cpill" style="color:var(--urg);border-color:var(--urg)">Eliminado</span>'
+      :'<span class="cpill" style="color:var(--ok);border-color:var(--ok)">Finalizado</span>';
+    const trStyle=esElim?'opacity:.6':'';
+    const numLabel=r.numero?`ID ${r.numero}`:'—';
+    h+=`<tr style="${trStyle}"><td>${escH(f)}</td><td style="font-weight:700">${escH(numLabel)}</td><td>${tipoBadge}</td><td>${escH(r.tema)}</td><td>${escH(nombreOp(r.operador))}</td><td>${escH(nombreOp(r.completado_por))}</td><td>${escH(r.area)}</td><td>${escH(r.prioridad)}</td><td>${escH(r.frecuencia)}</td><td>${escH(r.finalizacion?fmtDate(r.finalizacion):'')}</td></tr>`;
   });
   h+='</table></div>';
   document.getElementById('regBody').innerHTML=h;
 }
 function clearReg(){['regDesde','regHasta','regQuien','regArea','regTxt'].forEach(id=>document.getElementById(id).value='');renderRegistro();}
+async function exportFinalizadosNav(){
+  if(!REAL.length)await loadRealizaciones();
+  exportRegistro();
+}
 function exportRegistro(){
   if(typeof XLSX==='undefined'){alert('Necesitás conexión a internet para exportar.');return;}
-  const rows=regFiltered().map(r=>({
+  const rows=regFiltered().filter(r=>r.tipo!=='eliminado').map(r=>({
     Fecha:(r.completado_en||'').slice(0,16).replace('T',' '),
     Tema:r.tema||'',
     'Asignada a':nombreOp(r.operador),
@@ -1191,9 +1286,9 @@ function exportRegistro(){
 
 // ── Export CSV ────────────────────────────────────────────────
 function exportCSV(){
-  const cols=['id','operador','creado_por','ingreso','actualizado','tema','tareas','area','prioridad','frecuencia','estado','finalizacion','medio','link1','link2'];
+  const cols=['numero','id','operador','creado_por','ingreso','actualizado','tema','tareas','area','prioridad','frecuencia','estado','finalizacion','medio','link1','link2'];
   let csv=cols.join(';')+'\n';
-  DATA.forEach(t=>{csv+=cols.map(c=>{let v=(t[c]||'');v=(''+v).replace(/"/g,'""');return/[;"\n]/.test(v)?`"${v}"`:v;}).join(';')+'\n';});
+  DATA.forEach(t=>{csv+=cols.map(c=>{let v=(t[c]||'');v=(''+v).replace(/\r?\n/g,' ').replace(/"/g,'""');return/[;"]/.test(v)?`"${v}"`:v;}).join(';')+'\n';});
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));a.download='equipo_'+todayISO()+'.csv';a.click();
 }
 
