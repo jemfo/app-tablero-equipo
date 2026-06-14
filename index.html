@@ -357,10 +357,11 @@ const _SB = window.supabase.createClient(
 // Las contraseñas YA NO viven aquí: la autenticación la maneja Supabase Auth.
 // Aquí solo queda la metadata (email para login, nombre visible, rol, color).
 const USERS=[
-  {user:'diego',   login:'diego.diaz', email:'diego@equipo.local',   nombre:'Diego',   rol:'operador'},
-  {user:'maxi',    login:'maxi.ponce', email:'maxi@equipo.local',    nombre:'Maxi',    rol:'operador'},
-  {user:'juan',    login:'juan.olguin',email:'juan@equipo.local',    nombre:'Juan',    rol:'admin'},
-  {user:'invitado',login:'invitado',   email:'invitado@equipo.local',nombre:'Invitado',rol:'operador',hidden:true},
+  {user:'diego',   login:'diego.diaz',  email:'diego@equipo.local',   nombre:'Diego',   rol:'operador'},
+  {user:'maxi',    login:'maxi.ponce',  email:'maxi@equipo.local',    nombre:'Maxi',    rol:'operador'},
+  {user:'ruben',   login:'ruben',       email:'ruben@equipo.local',   nombre:'Rubén',   rol:'operador'},
+  {user:'juan',    login:'juan.olguin', email:'juan@equipo.local',    nombre:'Juan',    rol:'admin'},
+  {user:'invitado',login:'invitado',    email:'invitado@equipo.local',nombre:'Invitado',rol:'operador',hidden:true,demo:true},
 ];
 
 // ── COLOR POR OPERADOR ───────────────────────────────────────
@@ -368,6 +369,7 @@ const OP_COLOR={
   juan:    '#e07b39',   // naranja
   maxi:    '#4caf7d',   // verde
   diego:   '#5b9bd5',   // azul
+  ruben:   '#e91e8c',   // rosa
   invitado:'#9b59b6',   // violeta
 };
 const opColor=u=>OP_COLOR[u]||'#5b9bd5';
@@ -1089,7 +1091,8 @@ async function saveTask(){
     const upd=Object.assign({},t,vals,{actualizado:nowStamp()});
     const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;}
   }else{
-    const nextNum=DATA.reduce((m,t)=>Math.max(m,t.numero||0),0)+1;
+    const isDemo=USERS.find(u=>u.user===SESSION.user)?.demo;
+    const nextNum=isDemo?null:DATA.reduce((m,t)=>Math.max(m,t.numero||0),0)+1;
     const _estInicial=(vals.frecuencia==='Personalizada'||vals.frecuencia==='Por Etapas'||(vals.frecuencia||'').startsWith('Personalizada:')||(vals.frecuencia||'').startsWith('Mensual:'))?'Programado':'Pendiente';
     const nw=Object.assign({id:uid(),numero:nextNum,creado_por:SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:_estInicial},vals);
     const ok=await upsertTask(nw);if(ok)DATA.push(nw);
