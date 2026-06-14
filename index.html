@@ -164,6 +164,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <button class="primary" onclick="doLogin()">Ingresar</button>
     <div class="hint">Acceso restringido al equipo de Análisis Comercial.</div>
     <div class="err" id="loginErr"></div>
+    <div style="text-align:center;margin-top:6px"><a href="#" onclick="openRecoveryModal();return false" style="font-size:12px;color:#fb2118;text-decoration:none">¿Olvidaste tu contraseña?</a></div>
   </div>
 </div>
 
@@ -332,6 +333,22 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <div class="modal-actions">
       <button onclick="closePassModal()">Cancelar</button>
       <button class="primary" onclick="savePass()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECUPERAR CONTRASEÑA -->
+<div id="recoveryBg" class="modal-bg hidden">
+  <div class="emodal" style="width:380px">
+    <h2>Recuperar contraseña</h2>
+    <p style="color:var(--muted);font-size:12px;margin:0 0 14px">Ingresá tu usuario y te enviamos un link de recuperación a tu email.</p>
+    <label style="display:block;color:var(--muted);font-size:11px;margin-bottom:3px">Usuario</label>
+    <input type="text" id="recoveryUser" placeholder="ej: diego.diaz" style="width:100%" onkeydown="if(event.key==='Enter')sendRecovery()">
+    <div class="err" id="recoveryErr" style="margin-top:8px"></div>
+    <div id="recoveryOk" style="color:#16a34a;font-size:13px;margin-top:8px;display:none">✓ Link enviado. Revisá tu email.</div>
+    <div class="modal-actions">
+      <button onclick="closeRecoveryModal()">Cerrar</button>
+      <button class="primary" onclick="sendRecovery()">Enviar link</button>
     </div>
   </div>
 </div>
@@ -580,6 +597,13 @@ async function restoreSession(){
     const meta=USERS.find(x=>x.email===data.session.user.email);
     if(meta)enterApp(meta);
   }
+  _SB.auth.onAuthStateChange((event)=>{
+    if(event==='PASSWORD_RECOVERY'){
+      const meta=USERS.find(x=>x.email===_SB.auth.getUser()?.email)||SESSION;
+      if(!SESSION&&meta)enterApp(meta);
+      setTimeout(()=>openPassModal(),300);
+    }
+  });
 }
 async function logout(){
   await _SB.auth.signOut();
@@ -615,6 +639,31 @@ function resetTEPesos(){
 }
 
 // ── Cambiar contraseña (autogestión del propio usuario) ───────
+function openRecoveryModal(){
+  document.getElementById('recoveryUser').value='';
+  document.getElementById('recoveryErr').textContent='';
+  document.getElementById('recoveryOk').style.display='none';
+  document.getElementById('recoveryBg').classList.remove('hidden');
+  document.getElementById('recoveryUser').focus();
+}
+function closeRecoveryModal(){document.getElementById('recoveryBg').classList.add('hidden');}
+async function sendRecovery(){
+  const val=document.getElementById('recoveryUser').value.trim().toLowerCase();
+  const errEl=document.getElementById('recoveryErr');
+  errEl.textContent='';
+  const meta=USERS.find(x=>x.login===val||x.user===val||x.email.toLowerCase()===val);
+  if(!meta||!meta.email||meta.email.endsWith('@equipo.local')){
+    errEl.textContent='Usuario no encontrado o sin email real configurado.';return;
+  }
+  const btn=document.querySelector('#recoveryBg button.primary');
+  if(btn){btn.disabled=true;btn.textContent='Enviando…';}
+  const{error}=await _SB.auth.resetPasswordForEmail(meta.email,{
+    redirectTo:'https://jemfo.github.io/app-tablero-equipo/'
+  });
+  if(btn){btn.disabled=false;btn.textContent='Enviar link';}
+  if(error){errEl.textContent='Error: '+error.message;return;}
+  document.getElementById('recoveryOk').style.display='block';
+}
 function openPassModal(){
   document.getElementById('np1').value='';
   document.getElementById('np2').value='';
