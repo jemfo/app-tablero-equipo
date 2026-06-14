@@ -185,10 +185,10 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <div class="spacer" id="navSpacer">
       <span id="syncSt"></span>
       <button class="primary" id="btnNew" onclick="openTaskForm()">+ Nueva tarea</button>
+      <button id="btnPassNav" onclick="openPassModal()" style="display:none;width:32px;height:32px;padding:0" title="Cambiar contraseña"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
       <button id="btnPesos" onclick="openTEPesos()" style="display:none">⚖ Pesos</button>
       <button id="btnExport" onclick="exportCSV()" style="display:none">⬇ En curso</button>
       <button id="btnExportReg" onclick="exportFinalizadosNav()" style="display:none">⬇ Finalizados</button>
-      <button id="btnPassNav" onclick="openPassModal()" style="display:none" title="Cambiar contraseña"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Contraseña</button>
     </div>
   </nav>
   <div class="wrap">
