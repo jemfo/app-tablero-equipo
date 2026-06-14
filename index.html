@@ -188,6 +188,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       <button id="btnPesos" onclick="openTEPesos()" style="display:none">⚖ Pesos</button>
       <button id="btnExport" onclick="exportCSV()" style="display:none">⬇ En curso</button>
       <button id="btnExportReg" onclick="exportFinalizadosNav()" style="display:none">⬇ Finalizados</button>
+      <button id="btnPassNav" onclick="openPassModal()" style="display:none" title="Cambiar contraseña"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Contraseña</button>
     </div>
   </nav>
   <div class="wrap">
@@ -646,6 +647,7 @@ function applyRole(){
   document.getElementById('tabAnalisis').style.display=admin?'block':'none';
   document.getElementById('tabRegistro').style.display=admin?'block':'none';
   document.getElementById('btnPesos').style.display=admin?'inline-block':'none';
+  document.getElementById('btnPassNav').style.display=admin?'inline-block':'none';
   if(!admin){document.getElementById('filterOp').value='';}
   const nav=document.getElementById('mainNav');
   const tools=document.getElementById('equipoTools');
