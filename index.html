@@ -360,7 +360,7 @@ const _SB = window.supabase.createClient(
 const USERS=[
   {user:'diego',   login:'diego.diaz',   email:'diego.diaz@vitolen.com',         nombre:'Diego',   rol:'operador'},
   {user:'maxi',    login:'maxi.ponce',   email:'maximiliano.ponce@vitolen.com',   nombre:'Maxi',    rol:'operador'},
-  {user:'ruben',   login:'ruben.sainato',email:'ruben.sainato@vitolen.com',       nombre:'Rubén',   rol:'operador'},
+  {user:'ruben',   login:'ruben.sainato',email:'ruben.sainato@vitolen.com',       nombre:'Rubén',   rol:'operador',canFinalize:false},
   {user:'juan',    login:'juan.olguin', email:'juan.olguin@vitolen.com',nombre:'Juan',    rol:'admin'},
   {user:'invitado',login:'invitado',    email:'invitado@equipo.local',nombre:'Invitado',rol:'operador',hidden:true,demo:true},
 ];
@@ -475,6 +475,8 @@ async function logRealizacion(t,tipo='finalizado'){
 // ── Finalizar (confirmado e irreversible) ─────────────────────
 async function finalizarTarea(t){
   // Permiso: el admin finaliza cualquiera; el operador solo las asignadas a él
+  const _uCfg=USERS.find(u=>u.user===SESSION.user);
+  if(_uCfg&&_uCfg.canFinalize===false){showToast('Tu rol no permite finalizar tareas','err');renderEquipo();return;}
   if(!isAdmin()&&t.operador!==SESSION.user){showToast('Solo podés finalizar tareas asignadas a vos','err');renderEquipo();return;}
   const esEtapas=t.frecuencia==='Por Etapas';
   const esPersonalizada=frecBase(t.frecuencia)==='Personalizada';
