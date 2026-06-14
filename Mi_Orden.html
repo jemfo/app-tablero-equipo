@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Orden JFO</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0/dist/chartjs-chart-treemap.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f6f9;font-family:Arial,Helvetica,sans-serif}
+/* ── MI ORDEN SCOPE ───────────────────────────────── */
+#moWrap{--moa:#111827;--moa2:#2E75B6;--mol:#e5e7eb;--mok:#fff;--moi:#1f2937;--mom:#6b7280;background:#f4f6f9;color:#1f2937;min-height:100vh}
+#moWrap *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+#moWrap .mo-hdr{background:var(--moa);color:#fff;padding:14px 20px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+#moWrap .mo-hdr h1{font-size:18px;margin:0;font-weight:700;color:#fff}
+#moWrap .mo-hdr .sub{font-size:12px;opacity:.85;color:#fff}
+#moWrap #mo_today{color:#facc15;font-weight:700}
+#moWrap .mowrap{max-width:1340px;margin:0 auto;padding:16px 24px}
+#moWrap .mobar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+#moWrap .mobar input[type=text],#moWrap .mobar select{padding:7px 9px;border:1px solid var(--mol);border-radius:6px;font-size:13px;background:#fff;color:var(--moi)}
+#moWrap .grow{flex:1 1 200px}
+#moWrap button{cursor:pointer;border:1px solid var(--mol);background:#fff;color:var(--moi);padding:7px 12px;border-radius:6px;font-size:13px}
+#moWrap button:hover{background:#f0f2f5;filter:none}
+#moWrap button.moprimary{background:var(--moa2);color:#fff;border-color:var(--moa2)}
+#moWrap button.moprimary:hover{background:#255e94}
+#moWrap button.mosm{padding:4px 8px;font-size:12px}
+#moWrap select.mosm{padding:3px 6px;font-size:12px;border:1px solid var(--mol);border-radius:6px;background:#fff;color:var(--moi)}
+#moWrap .mostats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+#moWrap .mostat{background:#fff;border:1px solid var(--mol);border-radius:8px;padding:8px 14px;min-width:90px}
+#moWrap .mostat .n{font-size:20px;font-weight:700;color:var(--moa)}
+#moWrap .mostat .l{font-size:11px;color:var(--mom);text-transform:uppercase;letter-spacing:.4px}
+#moWrap .tablewrap{overflow-x:auto;border-radius:8px}
+#moWrap table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--mol);border-radius:8px;overflow:hidden}
+#moWrap th,#moWrap td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--mol);font-size:13px;vertical-align:top}
+#moWrap th{background:var(--moa);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.4px;cursor:pointer;white-space:nowrap}
+#moWrap tr:hover td{background:#f8fafc}
+#moWrap tr.moterm td{opacity:.6}
+#moWrap tr.mopinned td{background:#fff7ed!important}
+#moWrap tr.mopinned td:first-child{box-shadow:inset 4px 0 0 #f59e0b}
+#moWrap td.mord{font-weight:700;color:var(--moa);text-align:center;width:54px}
+#moWrap td.mopts{font-weight:700;text-align:center;width:48px}
+#moWrap .mofecha{white-space:nowrap;font-size:12px}
+#moWrap .pri-Urgente{color:#b91c1c;font-weight:700;font-style:italic}
+#moWrap .dias-neg{color:#b91c1c;font-weight:700}
+#moWrap .dias-hoy{color:#b45309;font-weight:700}
+#moWrap .momuted{color:var(--mom);font-size:12px}
+#moWrap .molnk{text-decoration:none;font-size:12px;margin-right:6px;white-space:nowrap;cursor:pointer}
+#moWrap .moactions{white-space:nowrap}
+#moWrap a{color:var(--moa2)}
+#moWrap select.mocell{padding:2px 4px;font-size:12px;border:1px solid var(--mol);border-radius:5px;background:#fff;color:var(--moi);max-width:120px}
+#moWrap select.mocell.pri-Urgente{color:#b91c1c;font-weight:700}
+#moWrap select.mocell.est-Pendiente{border-color:#fca5a5;color:#991b1b}
+#moWrap select.mocell.est-Correcion{border-color:#fde68a;color:#854d0e}
+#moWrap select.mocell.est-Encurso{border-color:#93c5fd;color:#1e40af}
+#moWrap select.mocell.est-Enespera{background:#fde047;color:#713f12;border-color:#eab308}
+#moWrap select.mocell.est-Terminado{border-color:#86efac;color:#166534}
+#moWrap .moov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;padding:30px 14px;overflow:auto;z-index:60}
+#moWrap .moov.show{display:flex}
+#moWrap .momodal{background:#fff;border-radius:10px;max-width:680px;width:100%;padding:20px;color:var(--moi)}
+#moWrap .momodal h2{margin:0 0 12px;font-size:16px;color:var(--moa)}
+#moWrap .mogrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#moWrap .mofld{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+#moWrap .mofld label{font-size:12px;color:var(--mom);font-weight:700}
+#moWrap .mofld input,#moWrap .mofld select,#moWrap .mofld textarea{padding:7px 9px;border:1px solid var(--mol);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--moi)}
+#moWrap .mofld input[readonly]{background:#f3f4f6;color:var(--mom)}
+#moWrap .mofld.mofull{grid-column:1/-1}
+#moWrap .momodal .mofoot{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+#moWrap .mocfgrow{display:grid;grid-template-columns:1fr 80px;gap:8px;align-items:center;margin-bottom:6px}
+#moWrap .mocfgrow input{padding:5px 8px;border:1px solid var(--mol);border-radius:6px;text-align:center;background:#fff;color:var(--moi)}
+#moWrap .mocfgcol h3{font-size:13px;color:var(--moa);margin:6px 0}
+#moWrap .mohelp{font-size:12px;color:var(--mom);background:#f0f4f9;border-left:3px solid var(--moa2);padding:8px 10px;border-radius:4px;margin-bottom:12px}
+#moWrap .moimgdrop{border:1px dashed var(--mol);border-radius:8px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#moWrap .mothumbs{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+#moWrap .moth{position:relative;width:74px;height:74px;border:1px solid var(--mol);border-radius:6px;overflow:hidden}
+#moWrap .moth img{width:100%;height:100%;object-fit:cover;cursor:pointer}
+#moWrap .moth .mox{position:absolute;top:0;right:0;background:rgba(0,0,0,.6);color:#fff;width:18px;height:18px;line-height:16px;text-align:center;cursor:pointer;border-bottom-left-radius:6px;font-size:13px}
+#moWrap .mogallery{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+#moWrap .mogallery img{max-width:100%;max-height:70vh;border:1px solid var(--mol);border-radius:6px}
+#moWrap #mo_topgrid{display:flex;gap:10px;flex-wrap:nowrap;align-items:stretch;margin-bottom:14px;height:140px}
+#moWrap #mo_topgrid .mostats{flex:0 0 96px;flex-direction:column;gap:6px;margin:0}
+#moWrap #mo_topgrid .mostat{flex:1;min-width:0;padding:2px 8px;display:flex;flex-direction:column;justify-content:center}
+#moWrap #mo_topgrid .mostat .n{font-size:16px}
+#moWrap #mo_topgrid .mostat .l{font-size:8px}
+#moWrap #mo_charts{flex:1 1 0;min-width:0;display:flex;gap:10px}
+#moWrap #mo_charts .mochartcard{flex:1 1 0;min-width:0}
+#moWrap .mochartcard{background:#fff;border:1px solid var(--mol);border-radius:8px;padding:5px;height:140px;display:flex;flex-direction:column}
+#moWrap .mochartcard canvas{flex:1;min-height:0}
+#moWrap .mowkhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:10px;font-weight:700;color:var(--moa);padding:1px 4px}
+#moWrap .mowkinfo{font-weight:400;color:var(--mom);font-size:9px;white-space:nowrap}
+#moWrap .mowkrow{display:flex;align-items:center;gap:6px;padding:1px 4px 0}
+#moWrap .mowkrow input[type=range]{flex:1;min-width:0;height:14px}
+#moWrap .mowkrow span{font-size:9px;color:var(--mom);white-space:nowrap}
+#moWrap .mowkrow .moacc{font-size:9px;color:var(--mom);display:flex;align-items:center;gap:3px;white-space:nowrap;cursor:pointer}
+@media(max-width:680px){#moWrap .mogrid2{grid-template-columns:1fr}#moWrap #mo_topgrid{flex-direction:column;height:auto}#moWrap #mo_topgrid .mostats{flex-direction:row;flex-wrap:wrap;flex:0 0 auto}#moWrap #mo_charts{flex-direction:column}#moWrap #mo_charts .mochartcard{height:170px}}
+</style>
+</head>
+<body>
+<div id="moWrap">
+  <div class="mo-hdr">
+    <h1>Mi Orden JFO</h1><span class="sub">— Gestión y priorización de tareas</span>
+    <span class="sub" id="mo_today" style="margin-left:auto"></span>
+  </div>
+  <div class="mowrap">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
+      <button class="mosm" onclick="MO.toggleCharts()" id="mo_chToggle">▴ Ocultar análisis</button>
+    </div>
+    <div id="mo_topgrid">
+      <div class="mostats" id="mo_stats"></div>
+      <div id="mo_charts">
+        <div class="mochartcard">
+          <div class="mowkhead"><span>Por área</span><span id="mo_wkInfo" class="mowkinfo"></span></div>
+          <canvas id="mo_chBar"></canvas>
+          <div class="mowkrow"><input type="range" id="mo_wk" min="1" max="52" value="1" oninput="MO.render()"><span id="mo_wkLbl"></span><label class="moacc"><input type="checkbox" id="mo_wkAll" onchange="MO.render()"> 52 sem</label></div>
+        </div>
+        <div class="mochartcard"><canvas id="mo_chTree"></canvas></div>
+      </div>
+    </div>
+    <div class="mobar">
+      <button class="moprimary" onclick="MO.openForm()">+ Nuevo trabajo</button>
+      <input type="text" id="mo_q" class="grow" placeholder="Buscar tema, tarea, mail..." oninput="MO.render()">
+      <select id="mo_fArea" onchange="MO.render()"><option value="">Todas las áreas</option></select>
+      <select id="mo_fPrioridad" onchange="MO.render()"><option value="">Todas las prioridades</option></select>
+      <select id="mo_fEstado" onchange="MO.render()">
+        <option value="">Todos los estados</option><option value="__activos">Solo activos</option>
+        <option>Pendiente</option><option>En curso</option><option>En espera</option>
+        <option>Terminado</option><option>Correcion</option>
+      </select>
+      <button onclick="MO.openConfig()">⚙ Pesos</button>
+      <button onclick="MO.exportExcel()">⬇ Excel</button>
+      <button onclick="document.getElementById('mo_imp').click()">⬆ Importar</button>
+      <input type="file" id="mo_imp" accept=".xlsx" style="display:none" onchange="MO.importExcel(event)">
+    </div>
+    <div class="tablewrap">
+      <table><thead><tr>
+        <th style="width:30px;text-align:center">📌</th>
+        <th onclick="MO.sortBy('orden')">Orden</th>
+        <th onclick="MO.sortBy('ingreso')">Ingreso</th>
+        <th onclick="MO.sortBy('tema')">Tema</th>
+        <th onclick="MO.sortBy('area')">Área</th>
+        <th>Prioridad</th><th>Frec.</th><th>Estado</th>
+        <th onclick="MO.sortBy('finalizacion')">Finaliza</th>
+        <th onclick="MO.sortBy('dias')">Días</th>
+        <th onclick="MO.sortBy('puntos')">Pts</th>
+        <th>Acciones</th>
+      </tr></thead><tbody id="mo_rows"></tbody></table>
+    </div>
+    <p class="momuted" id="mo_count" style="margin-top:8px"></p>
+  </div>
+  <!-- Modales -->
+  <div class="moov" id="mo_ovForm"><div class="momodal">
+    <h2 id="mo_formTitle">Nuevo trabajo</h2>
+    <input type="hidden" id="mo_f_id">
+    <div class="mogrid2">
+      <div class="mofld mofull"><label>Tema *</label><input id="mo_f_tema"></div>
+      <div class="mofld mofull"><label>Tareas a realizar</label><textarea id="mo_f_tareas" rows="3"></textarea></div>
+      <div class="mofld"><label>Área</label><select id="mo_f_area"></select></div>
+      <div class="mofld"><label>Prioridad</label><select id="mo_f_prioridad"></select></div>
+      <div class="mofld"><label>Frecuencia</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select id="mo_f_frecuencia" onchange="MO.toggleCopias()" style="flex:1;min-width:0"></select>
+          <input type="number" id="mo_f_copias" min="0" value="0" placeholder="Veces" style="width:74px;display:none">
+        </div>
+      </div>
+      <div class="mofld"><label>Estado</label><select id="mo_f_estado"></select></div>
+      <div class="mofld"><label>Ingreso (automático)</label><input type="date" id="mo_f_ingreso" readonly></div>
+      <div class="mofld"><label>Finalización</label><input type="date" id="mo_f_finalizacion"></div>
+      <div class="mofld"><label>Título de mail</label><input id="mo_f_medio"></div>
+      <div class="mofld"><label>Link 1</label><input id="mo_f_link1" placeholder="https://..."></div>
+      <div class="mofld"><label>Link 2</label><input id="mo_f_link2" placeholder="https://..."></div>
+      <div class="mofld"><label>Link 3</label><input id="mo_f_link3" placeholder="https://..."></div>
+      <div class="mofld mofull"><label>Imágenes (pegá Ctrl+V o subí archivos)</label>
+        <div class="moimgdrop">
+          <button type="button" onclick="document.getElementById('mo_f_imgfile').click()">+ Imagen</button>
+          <span style="color:var(--mom);font-size:12px">o Ctrl+V</span>
+          <input type="file" id="mo_f_imgfile" accept="image/*" multiple style="display:none" onchange="MO.addImgsFromFiles(event)">
+          <div class="mothumbs" id="mo_imgThumbs"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mofoot">
+      <button id="mo_delBtn" onclick="MO.delCurrent()" style="color:#b91c1c">Eliminar</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button onclick="MO.closeForm()">Cancelar</button>
+        <button class="moprimary" onclick="MO.saveForm()">Guardar</button>
+      </div>
+    </div>
+  </div></div>
+  <div class="moov" id="mo_ovCfg"><div class="momodal">
+    <h2>Pesos de priorización</h2>
+    <div class="mohelp">Puntos = Área + Prioridad + Frecuencia + Estado + factor Fecha. Terminado sale del ranking; En espera sigue activo.</div>
+    <div class="mogrid2" id="mo_cfgGrid"></div>
+    <div class="mofoot">
+      <button onclick="MO.resetSeed()" style="color:#b91c1c">Restaurar datos originales</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button onclick="MO.closeConfig()">Cerrar</button>
+        <button class="moprimary" onclick="MO.saveConfig()">Guardar pesos</button>
+      </div>
+    </div>
+  </div></div>
+  <div class="moov" id="mo_ovImg" onclick="this.classList.remove('show')"><div class="momodal" style="max-width:920px" onclick="event.stopPropagation()">
+    <h2>Imágenes</h2>
+    <div class="mogallery" id="mo_imgGallery"></div>
+    <div class="mofoot"><button onclick="document.getElementById('mo_ovImg').classList.remove('show')" style="margin-left:auto">Cerrar</button></div>
+  </div></div>
+</div>
+
+<script>
+// ================================================================
+//  MI ORDEN JFO — IIFE (localStorage, solo admin)
+// ================================================================
+const MO=(function(){
+  const SEED=[{"id":59,"ingreso":"2026-05-21","area":"COM","prioridad":"Urgente","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-05-25","tema":"Voucher 3er par Hoya Stock Super HI Vision","tareas":"VOUCHER SUPER HI VISION","medio":"Tracker","links":["https://gestion.vitolen.com/mensajes/3734213","https://tracker.vitolen.com/tasks/493"],"imagenes":[]},{"id":21,"ingreso":"2026-05-14","area":"A. Com","prioridad":"Alta","frecuencia":"Unica","estado":"Correcion","finalizacion":"2026-06-08","tema":"Correccion SR 24 lentes de lab","tareas":"Nuevo enfoque","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/483"],"imagenes":[]},{"id":53,"ingreso":"2026-01-26","area":"COM","prioridad":"Alta","frecuencia":"Unica","estado":"Correcion","finalizacion":"2026-06-10","tema":"Office Stock // Hija no se ve Radial Office","tareas":"Hija no se ve Radial Armazon Office","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/346","https://tracker.vitolen.com/tasks/413"],"imagenes":[]},{"id":1,"ingreso":"2025-10-10","area":"GER","prioridad":"Media","frecuencia":"Unica","estado":"En espera","finalizacion":"2026-06-03","tema":"Facturacion Remitos ITALIANO","tareas":"1762279599.pdf","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/371"],"imagenes":[]},{"id":8,"ingreso":"2026-04-14","area":"DES","prioridad":"Alta","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-20","tema":"Campus Vitolen","tareas":"entrega a la Dirección el 31/07/2026","medio":"Outlook","links":[],"imagenes":[]},{"id":12,"ingreso":"2026-05-08","area":"COM","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-03","tema":"Arreglar resultados BLANCO power bi","tareas":"Esto aparece en los presupuestos","medio":"","links":[],"imagenes":[]},{"id":14,"ingreso":"2026-05-08","area":"COM","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-03","tema":"Corregir Power Bi Direccion","tareas":"Corregir el Office de Stock en Dash Laboratorio","medio":"","links":[],"imagenes":[]},{"id":5,"ingreso":"2026-04-08","area":"COM","prioridad":"Alta","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-09","tema":"MI lista de precios Calculada","tareas":"Calcularemos solo LENTES","medio":"Tracker","links":["https://tracker.vitolen.com/tasks/466"],"imagenes":[]},{"id":40,"ingreso":"2026-05-13","area":"GER","prioridad":"Media","frecuencia":"Semanal","estado":"Pendiente","finalizacion":"2026-06-01","tema":"ANALISIS DE AR START EN TPD","tareas":"Reporte de Seguimiento de ventas","medio":"Mensajeria","links":["https://gestion.vitolen.com/mensajes/3683145"],"imagenes":[]},{"id":25,"ingreso":"2026-05-18","area":"A. Com","prioridad":"Media","frecuencia":"Mensual","estado":"En curso","finalizacion":"2026-05-18","tema":"Reporte Clicks HOYA","tareas":"2026/04 Click Fee Hoya Abril","medio":"Mensajeria","links":["https://gestion.vitolen.com/mensajes/2802127"],"imagenes":[]},{"id":70,"ingreso":"2026-06-02","area":"A. Com","prioridad":"Alta","frecuencia":"Mensual","estado":"Pendiente","finalizacion":"2026-06-11","tema":"Reunion Equipo Analisis Comercial","tareas":"","medio":"","links":[],"imagenes":[]},{"id":72,"ingreso":"2026-06-04","area":"GER","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-09","tema":"Analisis Integral Gino monetizado","tareas":"","medio":"Mi Pc","links":[],"imagenes":[]},{"id":52,"ingreso":"2026-05-15","area":"A. Com","prioridad":"Media","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-21","tema":"Procedimiento de NC","tareas":"Ver con Max","medio":"Outlook","links":[],"imagenes":[]},{"id":54,"ingreso":"2026-05-20","area":"COM","prioridad":"Alta","frecuencia":"Unica","estado":"En curso","finalizacion":"2026-06-10","tema":"Cargar 2do PDF en listas desc especiales","tareas":"Solo visible a CAT Ar Green","medio":"Outlook","links":[],"imagenes":[]},{"id":74,"ingreso":"2026-06-05","area":"A. Com","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-10","tema":"84 Incluir numero de cuenta en campo Cliente","tareas":"","medio":"Outlook","links":[],"imagenes":[]},{"id":66,"ingreso":"2026-05-27","area":"GER","prioridad":"Media","frecuencia":"Unica","estado":"Pendiente","finalizacion":"2026-06-15","tema":"Resultados GIRA de Eventos","tareas":"","medio":"Mensajeria","links":["https://gestion.vitolen.com/mensajes/3722732"],"imagenes":[]},{"id":2,"ingreso":"2025-11-17","area":"COM","prioridad":"Baja","frecuencia":"Unica","estado":"Finalizado","finalizacion":"2026-05-22","tema":"Control primeros pedidos MIYOSMART","tareas":"Corregir campo Tratamiento recetado","medio":"Mensajeria","links":[],"imagenes":[]},{"id":3,"ingreso":"2025-12-18","area":"GER","prioridad":"Alta","frecuencia":"Unica","estado":"Finalizado","finalizacion":"2026-06-01","tema":"Requerimiento Info Armazones","tareas":"Solicitado por Andres","medio":"Outlook","links":[],"imagenes":[]}];
+  const DEF_W={area:{"GER":5,"COM":4,"A. Com":4,"DES":3,"ARM":3,"PROD":2,"MKT":2},prioridad:{"Urgente":8,"Alta":6,"Media":4,"Baja":2},frecuencia:{"Unica":5,"Mensual":3,"Semanal":2,"Diaria":1},estado:{"Pendiente":3,"En curso":3,"En espera":2,"Terminado":0,"Correcion":4}};
+  const KEY="miorden_v3",KEYW="miorden_w_v3";
+  const _ll=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}};
+  const _ls=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));localStorage.setItem(KEYW,JSON.stringify(W));}catch(e){alert("Almacenamiento lleno. Exportá a Excel y borrá imágenes.");}};
+  let data=_ll(KEY)||SEED.map(x=>({...x}));
+  let W=_ll(KEYW)||JSON.parse(JSON.stringify(DEF_W));
+  const EORD=["Pendiente","En curso","En espera","Terminado","Correcion"];
+  const PORD=["Baja","Media","Alta","Urgente"];
+  let sortKey="puntos",sortDir=-1,lastView=[],currentImgs=[],ANALYSIS=[];
+  let chartsOn=(_ll("miorden_charts")!==false),chartBar=null,chartTree=null,lastSig="";
+  const G=id=>document.getElementById(id);
+  const GV=id=>G(id).value;
+  function keysFor(cat){const ks=Object.keys(W[cat]);if(cat==="estado")return EORD.filter(k=>ks.includes(k)).concat(ks.filter(k=>!EORD.includes(k)));if(cat==="prioridad")return PORD.filter(k=>ks.includes(k)).concat(ks.filter(k=>!PORD.includes(k)));return ks;}
+  function _todayISO(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);}
+  function _isoStr(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);}
+  function _isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const ys=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil((((t-ys)/86400000)+1)/7);}
+  function _isoWeekStart(year,week){const jan4=new Date(year,0,4);const day=(jan4.getDay()||7);const w1=new Date(jan4);w1.setDate(jan4.getDate()-(day-1));const d=new Date(w1);d.setDate(w1.getDate()+(week-1)*7);d.setHours(0,0,0,0);return d;}
+  function _today(){const d=new Date();d.setHours(0,0,0,0);return d;}
+  function _parseD(s){if(!s)return null;const p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
+  function _fmtShow(iso){if(!iso)return "—";const m=String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+"/"+m[2]+"/"+m[1].slice(2):iso;}
+  function _dias(t){if(t.estado==="Terminado"||!t.finalizacion)return null;return Math.round((_parseD(t.finalizacion)-_today())/86400000);}
+  function _factorF(d){if(d===null)return 0;if(d<0)return 10;if(d===0)return 8;if(d<=2)return 6;if(d<=5)return 4;if(d<=10)return 2;return 1;}
+  function _puntos(t){if(t.estado==="Terminado")return null;const a=W.area[t.area]||0,p=W.prioridad[t.prioridad]||0,f=W.frecuencia[t.frecuencia]||0,e=W.estado[t.estado]||0;return a+p+f+e+_factorF(_dias(t));}
+  function _esc(s){return(s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+  function _estCls(e){return"est-"+(e||"").replace(/\s/g,"");}
+  function computed(){let arr=data.map(t=>({...t,_d:_dias(t),_p:_puntos(t)}));let r=arr.filter(t=>t._p!==null).sort((x,y)=>y._p-x._p);r.forEach((t,i)=>t._orden=i+1);return arr;}
+  function inlineSel(id,field,val){const opts=keysFor(field).map(k=>`<option ${k===val?"selected":""}>${_esc(k)}</option>`).join("");let extra=(field==="prioridad"&&val==="Urgente")?"pri-Urgente":field==="estado"?_estCls(val):"";return `<select class="mocell ${extra}" onclick="event.stopPropagation()" onchange="MO.quickEdit('${id}','${field}',this.value)">${opts}</select>`;}
+  function quickEdit(id,field,value){const t=data.find(x=>String(x.id)===String(id));if(!t)return;t[field]=value;_ls();render();}
+  function togglePin(id){const t=data.find(x=>String(x.id)===String(id));if(!t)return;t.fijado=!t.fijado;_ls();render();}
+  function render(){
+    G("mo_today").textContent="Hoy: "+_fmtShow(_todayISO());
+    let arr=computed();
+    const q=(GV("mo_q")||"").toLowerCase();
+    const fe=GV("mo_fEstado"),fa=GV("mo_fArea"),fp=GV("mo_fPrioridad");
+    let view=arr.filter(t=>{
+      if(fe==="__activos"){if(t.estado==="Terminado")return false;}
+      else if(fe&&t.estado!==fe)return false;
+      if(fa&&t.area!==fa)return false;
+      if(fp&&t.prioridad!==fp)return false;
+      if(q){const blob=(t.tema+" "+(t.tareas||"")+" "+(t.medio||"")).toLowerCase();if(!blob.includes(q))return false;}
+      return true;
+    });
+    view.sort((x,y)=>{
+      const xf=x.fijado?1:0,yf=y.fijado?1:0;if(xf!==yf)return yf-xf;
+      const xt=x.estado==="Terminado",yt=y.estado==="Terminado";if(xt!==yt)return xt?1:-1;
+      let a,b;
+      if(sortKey==="orden"){a=x._orden||9999;b=y._orden||9999;}
+      else if(sortKey==="puntos"){a=x._p??-1;b=y._p??-1;}
+      else if(sortKey==="dias"){a=x._d??9999;b=y._d??9999;}
+      else if(sortKey==="finalizacion"||sortKey==="ingreso"){a=x[sortKey]||"";b=y[sortKey]||"";}
+      else{a=(x[sortKey]||"").toString().toLowerCase();b=(y[sortKey]||"").toString().toLowerCase();}
+      return a<b?-1*sortDir:a>b?1*sortDir:0;
+    });
+    lastView=view;
+    const rows=view.map(t=>{
+      const dCls=t._d===null?"":t._d<0?"dias-neg":t._d===0?"dias-hoy":"";
+      const dTxt=t._d===null?"—":t._d,pTxt=t._p===null?"—":t._p,oTxt=t._orden||"—";
+      const term=t.estado==="Terminado"?"moterm":"";
+      const isOutlook=u=>{try{return new URL(u).hostname.includes("outlook");}catch(e){return false;}};
+      const lks=(t.links||[]).map(u=>isOutlook(u)?`<span class="molnk" style="color:var(--mom)" title="${_esc(u)}">✉ Outlook</span>`:`<a class="molnk" href="${_esc(u)}" target="_blank">🔗 ${_linkLabel(u)}</a>`).join("");
+      const img=(t.imagenes&&t.imagenes.length)?`<a class="molnk" onclick="MO.openGallery('${t.id}')">🖼 ${t.imagenes.length}</a>`:"";
+      const posp=t.estado==="Terminado"?"":`<select class="mosm" onclick="event.stopPropagation()" onchange="MO.posponerSel('${t.id}',this)"><option value="">Posponer…</option><option value="1">+1 día</option><option value="2">+2 días</option><option value="3">+3 días</option><option value="otro">Otro…</option></select>`;
+      return `<tr class="${term} ${t.fijado?'mopinned':''}" ondblclick="MO.openForm('${t.id}')">
+        <td style="text-align:center"><input type="checkbox" ${t.fijado?'checked':''} onclick="event.stopPropagation();MO.togglePin('${t.id}')"></td>
+        <td class="mord">${oTxt}</td><td class="mofecha">${_fmtShow(t.ingreso)}</td>
+        <td><strong>${_esc(t.tema)}</strong>${t.tareas?`<div class="momuted">${_esc(t.tareas)}</div>`:""}${(t.medio||lks||img)?`<div class="momuted">${t.medio?"✉ "+_esc(t.medio)+" ":""}${lks}${img}</div>`:""}</td>
+        <td>${_esc(t.area)}</td><td>${inlineSel(t.id,'prioridad',t.prioridad)}</td>
+        <td>${inlineSel(t.id,'frecuencia',t.frecuencia)}</td><td>${inlineSel(t.id,'estado',t.estado)}</td>
+        <td class="mofecha">${_fmtShow(t.finalizacion)}</td>
+        <td class="mord ${dCls}">${dTxt}</td><td class="mopts">${pTxt}</td>
+        <td class="moactions"><button class="mosm" onclick="event.stopPropagation();MO.openForm('${t.id}')">✎</button> ${posp}</td>
+      </tr>`;
+    }).join("");
+    G("mo_rows").innerHTML=rows||`<tr><td colspan="12" class="momuted" style="text-align:center;padding:20px">Sin trabajos para mostrar.</td></tr>`;
+    G("mo_count").textContent=`${view.length} de ${data.length} trabajos`;
+    const td=_today(),year=td.getFullYear();
+    const allY=G("mo_wkAll").checked;
+    const slider=G("mo_wk");slider.disabled=allY;
+    if(allY){ANALYSIS=arr.filter(t=>{const ing=_parseD(t.ingreso);return ing&&ing.getFullYear()===year;});G("mo_wkInfo").textContent="Acumulado 52 sem · "+year;G("mo_wkLbl").textContent="Año "+year;}
+    else{const wk=+slider.value;const selStart=_isoWeekStart(year,wk);const selEnd=new Date(selStart);selEnd.setDate(selEnd.getDate()+6);ANALYSIS=arr.filter(t=>{const ing=_parseD(t.ingreso);return ing&&ing>=selStart&&ing<=selEnd;});G("mo_wkInfo").textContent="Sem. "+wk+" · "+_fmtShow(_isoStr(selStart))+" a "+_fmtShow(_isoStr(selEnd));G("mo_wkLbl").textContent="Sem. "+wk;}
+    const act=arr.filter(t=>t.estado!=="Terminado");
+    G("mo_stats").innerHTML=_mostat(act.length,"Activos")+_mostat(act.filter(t=>t._d!==null&&t._d<0).length,"Vencidos")+_mostat(arr.filter(t=>t.estado==="Terminado").length,"Terminados");
+    const aset=new Set(Object.keys(W.area));data.forEach(t=>{if(t.area)aset.add(t.area);});
+    const areas=[...aset],curA=GV("mo_fArea");
+    G("mo_fArea").innerHTML=`<option value="">Todas las áreas</option>`+areas.map(a=>`<option ${a===curA?"selected":""}>${_esc(a)}</option>`).join("");
+    const curP=GV("mo_fPrioridad");
+    G("mo_fPrioridad").innerHTML=`<option value="">Todas las prioridades</option>`+keysFor("prioridad").map(p=>`<option ${p===curP?"selected":""}>${_esc(p)}</option>`).join("");
+    const sig=(G("mo_wkAll").checked?"A":G("mo_wk").value)+"|"+ANALYSIS.map(t=>t.area+"|"+t.estado).join(",");
+    if(sig!==lastSig){lastSig=sig;_renderCharts();}
+  }
+  function _mostat(n,l){return `<div class="mostat"><div class="n">${n}</div><div class="l">${l}</div></div>`;}
+  function _linkLabel(u){try{const url=new URL(u),h=url.hostname.replace("www.","");let m=u.match(/\/tasks\/(\d+)/);if(m)return"Tracker #"+m[1];m=u.match(/\/mensajes\/(\d+)/);if(m)return"Mensaje #"+m[1];if(h.includes("tracker"))return"Tracker";if(h.includes("gestion"))return"Mensajería";if(/\.(pdf|xlsx?)$/i.test(u))return"Archivo";return h.split(".")[0];}catch(e){return"Link";}}
+  function toggleCharts(){chartsOn=!chartsOn;localStorage.setItem("miorden_charts",JSON.stringify(chartsOn));_applyChartsPref();}
+  function _applyChartsPref(){G("mo_topgrid").style.display=chartsOn?"flex":"none";G("mo_chToggle").textContent=chartsOn?"▴ Ocultar análisis":"▾ Mostrar análisis";if(chartsOn){lastSig="";_renderCharts();}}
+  function _renderCharts(){
+    if(!chartsOn)return;
+    if(typeof Chart==="undefined")return;
+    const ac={};ANALYSIS.forEach(t=>{if(t.area)ac[t.area]=(ac[t.area]||0)+1;});
+    const pairs=Object.entries(ac).sort((a,b)=>b[1]-a[1]);
+    if(chartBar)chartBar.destroy();
+    chartBar=new Chart(G("mo_chBar"),{type:"bar",data:{labels:pairs.map(p=>p[0]),datasets:[{data:pairs.map(p=>p[1]),backgroundColor:"#2E75B6",borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true,ticks:{precision:0,font:{size:9}}}}}});
+    const ec={};ANALYSIS.forEach(t=>{const e=t.estado||"(sin)";ec[e]=(ec[e]||0)+1;});
+    const tree=Object.entries(ec).map(([name,value])=>({name,value}));
+    const COL={"Pendiente":"#fca5a5","En curso":"#93c5fd","En espera":"#facc15","Terminado":"#86efac","Correcion":"#fde68a"};
+    if(chartTree)chartTree.destroy();
+    chartTree=new Chart(G("mo_chTree"),{type:"treemap",data:{datasets:[{tree,key:"value",groups:["name"],spacing:1,borderWidth:1,borderColor:"#fff",backgroundColor:(c)=>{if(c.type!=="data")return"transparent";return COL[c.raw._data.name]||"#cbd5e1";},labels:{display:true,color:"#1f2937",font:{size:12,weight:"bold"},formatter:(c)=>[c.raw._data.name,String(c.raw.v)]}}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},title:{display:true,text:"Por estado",font:{size:11}}}}});
+  }
+  function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==="tema"||k==="finalizacion"||k==="ingreso"||k==="area")?1:-1;}render();}
+  function posponerSel(id,sel){const v=sel.value;sel.value="";if(!v)return;if(v==="otro"){const n=prompt("¿Cuántos días posponer?");if(n===null||n.trim()==="")return;const num=parseInt(n,10);if(isNaN(num)){alert("Número inválido");return;}posponer(id,num);}else{posponer(id,+v);}}
+  function posponer(id,n){const t=data.find(x=>String(x.id)===String(id));if(!t)return;const base=t.finalizacion?_parseD(t.finalizacion):_today();base.setDate(base.getDate()+n);t.finalizacion=base.toISOString().slice(0,10);_ls();render();}
+  function _fillSel(id,cat,val){G(id).innerHTML=keysFor(cat).map(k=>`<option ${k===val?"selected":""}>${_esc(k)}</option>`).join("");}
+  function toggleCopias(){const v=GV("mo_f_frecuencia");const on=(v==="Mensual"||v==="Semanal");const inp=G("mo_f_copias");inp.style.display=on?"block":"none";if(!on)inp.value=0;}
+  function openForm(id){
+    const t=id?data.find(x=>String(x.id)===String(id)):null;
+    G("mo_formTitle").textContent=t?"Editar trabajo":"Nuevo trabajo";
+    G("mo_f_id").value=t?t.id:"";
+    _fillSel("mo_f_area","area",t?t.area:"COM");_fillSel("mo_f_prioridad","prioridad",t?t.prioridad:"Media");
+    _fillSel("mo_f_frecuencia","frecuencia",t?t.frecuencia:"Unica");_fillSel("mo_f_estado","estado",t?t.estado:"Pendiente");
+    G("mo_f_tema").value=t?t.tema:"";G("mo_f_tareas").value=t?t.tareas:"";
+    G("mo_f_ingreso").value=t?(t.ingreso||_todayISO()):_todayISO();
+    G("mo_f_finalizacion").value=t?(t.finalizacion||""):"";
+    G("mo_f_medio").value=t?(t.medio||""):"";
+    const L=(t&&t.links)?t.links:[];G("mo_f_link1").value=L[0]||"";G("mo_f_link2").value=L[1]||"";G("mo_f_link3").value=L[2]||"";
+    G("mo_f_copias").value=0;toggleCopias();
+    currentImgs=(t&&t.imagenes)?[...t.imagenes]:[];_renderThumbs();
+    G("mo_delBtn").style.display=t?"inline-block":"none";
+    G("mo_ovForm").classList.add("show");
+  }
+  function closeForm(){G("mo_ovForm").classList.remove("show");}
+  function saveForm(){
+    if(!GV("mo_f_tema").trim()){alert("El tema es obligatorio");return;}
+    const id=GV("mo_f_id");const existing=id?data.find(x=>String(x.id)===String(id)):null;
+    const ingreso=existing?(existing.ingreso||_todayISO()):_todayISO();
+    const links=[GV("mo_f_link1"),GV("mo_f_link2"),GV("mo_f_link3")].map(x=>x.trim()).filter(Boolean);
+    const fr=GV("mo_f_frecuencia");
+    const obj={tema:GV("mo_f_tema"),tareas:GV("mo_f_tareas"),area:GV("mo_f_area"),prioridad:GV("mo_f_prioridad"),frecuencia:fr,estado:GV("mo_f_estado"),ingreso,finalizacion:GV("mo_f_finalizacion"),medio:GV("mo_f_medio"),links,imagenes:[...currentImgs]};
+    if(id){Object.assign(existing,obj);}else{obj.id=Date.now();data.push(obj);}
+    const copias=(fr==="Mensual"||fr==="Semanal")?Math.max(0,parseInt(GV("mo_f_copias")||"0",10)):0;
+    if(copias>0){const step=fr==="Mensual"?30:7;const base=obj.finalizacion?_parseD(obj.finalizacion):_today();for(let k=1;k<=copias;k++){const d=new Date(base.getTime());d.setDate(d.getDate()+step*k);data.push({...obj,id:Date.now()+k,ingreso:_todayISO(),finalizacion:d.toISOString().slice(0,10),imagenes:[...(obj.imagenes||[])]});}}
+    _ls();closeForm();render();
+  }
+  function delCurrent(){const id=GV("mo_f_id");if(id&&confirm("¿Eliminar este trabajo?")){data=data.filter(x=>String(x.id)!==String(id));_ls();closeForm();render();}}
+  function _fileToImg(file){return new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>res(im);im.src=fr.result;};fr.readAsDataURL(file);});}
+  async function _addImg(file){const im=await _fileToImg(file);const max=1200;let w=im.width,h=im.height;if(w>max||h>max){const s=Math.min(max/w,max/h);w=Math.round(w*s);h=Math.round(h*s);}const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);currentImgs.push(c.toDataURL("image/jpeg",.72));_renderThumbs();}
+  function addImgsFromFiles(ev){[...ev.target.files].forEach(f=>{if(f.type.startsWith("image/"))_addImg(f);});ev.target.value="";}
+  function _renderThumbs(){G("mo_imgThumbs").innerHTML=currentImgs.map((src,i)=>`<div class="moth"><img src="${src}" onclick="MO.viewImgs(${i})"><span class="mox" onclick="MO._spliceImg(${i})">×</span></div>`).join("");}
+  function _spliceImg(i){currentImgs.splice(i,1);_renderThumbs();}
+  function viewImgs(){_showGallery(currentImgs);}
+  function openGallery(id){const t=data.find(x=>String(x.id)===String(id));if(t&&t.imagenes)_showGallery(t.imagenes);}
+  function _showGallery(imgs){G("mo_imgGallery").innerHTML=(imgs||[]).map(s=>`<img src="${s}">`).join("")||'<p class="momuted">Sin imágenes.</p>';G("mo_ovImg").classList.add("show");}
+  function openConfig(){
+    const cats=[["area","Área"],["prioridad","Prioridad"],["frecuencia","Frecuencia"],["estado","Estado"]];
+    G("mo_cfgGrid").innerHTML=cats.map(([k,lbl])=>`<div class="mocfgcol"><h3>${lbl}</h3>${keysFor(k).map(name=>`<div class="mocfgrow"><span>${_esc(name)}</span><input type="number" data-cat="${k}" data-name="${_esc(name)}" value="${W[k][name]}"></div>`).join("")}</div>`).join("");
+    G("mo_ovCfg").classList.add("show");
+  }
+  function closeConfig(){G("mo_ovCfg").classList.remove("show");}
+  function saveConfig(){document.querySelectorAll("#mo_cfgGrid input").forEach(i=>{W[i.dataset.cat][i.dataset.name]=Number(i.value)||0;});_ls();closeConfig();render();}
+  function resetSeed(){if(confirm("¿Reemplazar TODO por los datos originales?")){data=SEED.map(x=>({...x}));W=JSON.parse(JSON.stringify(DEF_W));_ls();closeConfig();render();}}
+  function exportExcel(){
+    if(typeof XLSX==="undefined"){alert("Necesitás conexión a internet.");return;}
+    const rows=lastView.map(t=>({Orden:t._orden||"",Ingreso:_fmtShow(t.ingreso),Tema:t.tema||"",Tareas:t.tareas||"",Area:t.area||"",Prioridad:t.prioridad||"",Frecuencia:t.frecuencia||"",Estado:t.estado||"",Finalizacion:_fmtShow(t.finalizacion),Dias:(t._d??""),Puntos:(t._p??""),Mail:t.medio||"",Link1:(t.links||[])[0]||"",Link2:(t.links||[])[1]||"",Link3:(t.links||[])[2]||""}));
+    if(!rows.length){alert("Sin filas visibles.");return;}
+    const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Mi Orden");XLSX.writeFile(wb,"Mi_Orden.xlsx");
+  }
+  function _fmtDate(v){if(v==null||v==="")return "";if(v instanceof Date&&!isNaN(v))return new Date(v.getTime()-v.getTimezoneOffset()*60000).toISOString().slice(0,10);const s=String(v).trim();let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[1]+"-"+m[2]+"-"+m[3];m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);if(m){let y=m[3];if(y.length===2)y="20"+y;return y+"-"+String(m[2]).padStart(2,"0")+"-"+String(m[1]).padStart(2,"0");}return s;}
+  function _norm(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim();}
+  function importExcel(ev){
+    if(typeof XLSX==="undefined"){alert("Necesitás conexión a internet.");ev.target.value="";return;}
+    const f=ev.target.files[0];if(!f)return;const r=new FileReader();
+    r.onload=()=>{try{const wb=XLSX.read(r.result,{type:"array",cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];const json=XLSX.utils.sheet_to_json(ws,{defval:""});if(!json.length)throw 0;
+      const mapped=json.map((row,i)=>{const g=name=>{const k=Object.keys(row).find(k=>_norm(k)===_norm(name));return k!==undefined?row[k]:"";};const links=[g("Link1"),g("Link2"),g("Link3")].map(x=>String(x).trim()).filter(Boolean);return{id:Date.now()+i,ingreso:_fmtDate(g("Ingreso"))||_todayISO(),area:String(g("Area")).trim(),prioridad:String(g("Prioridad")).trim(),frecuencia:String(g("Frecuencia")).trim(),estado:String(g("Estado")).trim(),finalizacion:_fmtDate(g("Finalizacion")),tema:String(g("Tema")),tareas:String(g("Tareas")),medio:String(g("Mail")||g("Medio")),links,imagenes:[]};}).filter(t=>t.tema);
+      if(!mapped.length)throw 0;if(confirm("¿Reemplazar datos por el Excel importado? ("+mapped.length+" trabajos)")){data=mapped;_ls();render();}}catch(e){alert("No pude leer el Excel.");}ev.target.value="";};
+    r.readAsArrayBuffer(f);
+  }
+  document.addEventListener("keydown",e=>{
+    if(e.key!=="ArrowLeft"&&e.key!=="ArrowRight")return;
+    const sl=G("mo_wk");if(!sl)return;
+    const ae=document.activeElement,tag=ae?ae.tagName:"";
+    if(ae===sl||tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT")return;
+    if(G("mo_ovForm").classList.contains("show")||G("mo_ovCfg").classList.contains("show")||G("mo_ovImg").classList.contains("show"))return;
+    if(G("mo_wkAll").checked||!chartsOn)return;
+    if(e.key==="ArrowLeft")sl.value=Math.max(1,(+sl.value)-1);else sl.value=Math.min(52,(+sl.value)+1);
+    render();e.preventDefault();
+  });
+  document.addEventListener("paste",e=>{
+    if(!G("mo_ovForm").classList.contains("show"))return;
+    const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+    for(const it of items){if(it.type&&it.type.startsWith("image/")){const f=it.getAsFile();if(f)_addImg(f);}}
+  });
+  G("mo_wk").value=_isoWeek(_today());
+  _applyChartsPref();
+  return{render,openForm,closeForm,saveForm,delCurrent,quickEdit,togglePin,sortBy,posponerSel,toggleCopias,addImgsFromFiles,viewImgs,openGallery,_spliceImg,openConfig,closeConfig,saveConfig,resetSeed,toggleCharts,exportExcel,importExcel};
+})();
+
+MO.render();
+</script>
+</body>
+</html>
