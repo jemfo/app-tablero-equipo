@@ -179,13 +179,13 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <button onclick="logout()" style="margin-left:6px;height:32px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center">Salir</button>
   </div>
   <nav id="mainNav">
-    <button id="btnPesos" onclick="openTEPesos()" style="display:none;height:32px;padding:0 10px;margin-right:4px">⚖ Pesos</button>
     <div class="tab active" id="tabEquipo" onclick="showPage('equipo')">Tablero Equipo</div>
     <div class="tab" id="tabAnalisis" onclick="showPage('analisis')">Análisis</div>
     <div class="tab" id="tabRegistro" onclick="showPage('registro')">Registro</div>
     <div class="spacer" id="navSpacer">
       <span id="syncSt"></span>
       <button class="primary" id="btnNew" onclick="openTaskForm()">+ Nueva tarea</button>
+      <button id="btnPesos" onclick="openTEPesos()" style="display:none">⚖ Pesos</button>
       <button id="btnExport" onclick="exportCSV()" style="display:none">⬇ En curso</button>
       <button id="btnExportReg" onclick="exportFinalizadosNav()" style="display:none">⬇ Finalizados</button>
     </div>
