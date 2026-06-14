@@ -200,10 +200,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
           <option value="operador">Por operador</option>
           <option value="estado">Por equipo</option>
         </select>
-        <span id="filterOpWrap" style="display:flex;gap:10px;align-items:center">
-          <label class="muted">Operador:</label>
-          <select id="filterOp" onchange="renderEquipo()"><option value="">Todos</option></select>
-        </span>
+        <select id="filterOp" style="display:none" onchange="renderEquipo()"><option value="">Todos</option></select>
         <label class="muted">Área:</label>
         <select id="filterArea" onchange="renderEquipo()"><option value="">Todas</option></select>
         <label class="muted">Prioridad:</label>
@@ -647,11 +644,7 @@ function applyRole(){
   document.getElementById('tabAnalisis').style.display=admin?'block':'none';
   document.getElementById('tabRegistro').style.display=admin?'block':'none';
   document.getElementById('btnPesos').style.display=admin?'inline-block':'none';
-  const fw=document.getElementById('filterOpWrap');
-  if(fw){
-    fw.style.display=admin?'flex':'none';
-    if(!admin){document.getElementById('filterOp').value='';}
-  }
+  if(!admin){document.getElementById('filterOp').value='';}
   const nav=document.getElementById('mainNav');
   const tools=document.getElementById('equipoTools');
   const btnNew=document.getElementById('btnNew');
