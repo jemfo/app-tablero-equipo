@@ -1211,11 +1211,12 @@ function renderAnalisis(){
   const term=DATA.filter(t=>t.estado==='Finalizado');
   let h=`<div class="kpis"><div class="kpi"><div class="n">${act.length}</div><div class="l">Activos</div></div><div class="kpi"><div class="n" style="color:var(--urg)">${venc.length}</div><div class="l">Vencidos</div></div><div class="kpi"><div class="n" style="color:var(--ok)">${term.length}</div><div class="l">Finalizados</div></div><div class="kpi"><div class="n">${DATA.length}</div><div class="l">Total</div></div></div>`;
   h+='<div class="section-title">Volumen por operador (activos)</div>';
-  const perOp=USERS.map(u=>({n:u.nombre,v:act.filter(t=>t.operador===u.user).length,c:opColor(u.user)}));
+  const _uAn=USERS.filter(u=>u.canFinalize!==false&&!u.demo);
+  const perOp=_uAn.map(u=>({n:u.nombre,v:act.filter(t=>t.operador===u.user).length,c:opColor(u.user)}));
   const maxO=Math.max(1,...perOp.map(x=>x.v));
   perOp.forEach(x=>{h+=`<div class="bar-row"><div class="bname" style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:${x.c};display:inline-block"></span>${x.n}</div><div class="bbar" style="width:${(x.v/maxO)*300}px;background:${x.c}"></div><div>${x.v}</div></div>`;});
   h+='<div class="section-title">Tareas por operador y estado</div><div class="scrollx"><table class="grid"><tr><th>Operador</th>'+ESTADOS.map(e=>`<th>${e}</th>`).join('')+'<th>Vencidos</th><th>Total</th></tr>';
-  USERS.forEach(u=>{
+  _uAn.forEach(u=>{
     const its=DATA.filter(t=>t.operador===u.user);
     const vc=its.filter(t=>t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0).length;
     h+=`<tr><td style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:${opColor(u.user)};display:inline-block"></span>${u.nombre}</td>`+ESTADOS.map(e=>`<td>${its.filter(t=>t.estado===e).length}</td>`).join('')+`<td class="${vc?'eurg':''}">${vc}</td><td>${its.length}</td></tr>`;
