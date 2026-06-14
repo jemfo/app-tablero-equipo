@@ -174,20 +174,20 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <span class="userbox">Sesión: <b id="curUser"></b></span>
     <button id="btnEnvNot" onclick="toggleFiltroComentario()" title="Comentarios pendientes para mí" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px">✉<span id="envBadge" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <span class="date" id="todayLabel"></span>
-    <button onclick="openPassModal()" title="Cambiar contraseña" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
+    <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
     <button id="themeBtn" onclick="toggleTheme()" title="Cambiar tema" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg id="themeIco" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
-    <button id="btnExport" onclick="exportCSV()" style="display:none;margin-left:6px;height:32px;padding:0 10px">⬇ En curso</button>
-    <button id="btnExportReg" onclick="exportFinalizadosNav()" style="display:none;margin-left:4px;height:32px;padding:0 10px">⬇ Finalizados</button>
-    <button id="btnPesos" onclick="openTEPesos()" style="display:none;margin-left:4px;height:32px;padding:0 10px">⚖ Pesos</button>
     <button onclick="logout()" style="margin-left:6px;height:32px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center">Salir</button>
   </div>
   <nav id="mainNav">
+    <button id="btnPesos" onclick="openTEPesos()" style="display:none;height:32px;padding:0 10px;margin-right:4px">⚖ Pesos</button>
     <div class="tab active" id="tabEquipo" onclick="showPage('equipo')">Tablero Equipo</div>
     <div class="tab" id="tabAnalisis" onclick="showPage('analisis')">Análisis</div>
     <div class="tab" id="tabRegistro" onclick="showPage('registro')">Registro</div>
     <div class="spacer" id="navSpacer">
       <span id="syncSt"></span>
       <button class="primary" id="btnNew" onclick="openTaskForm()">+ Nueva tarea</button>
+      <button id="btnExport" onclick="exportCSV()" style="display:none">⬇ En curso</button>
+      <button id="btnExportReg" onclick="exportFinalizadosNav()" style="display:none">⬇ Finalizados</button>
     </div>
   </nav>
   <div class="wrap">
@@ -637,13 +637,15 @@ async function savePass(){
   showToast('Contraseña actualizada ✓');
 }
 const isAdmin=()=>SESSION&&SESSION.rol==='admin';
+function toggleNav(){
+  const nav=document.getElementById('mainNav');
+  nav.style.display=nav.style.display==='none'?'':'none';
+}
 function applyRole(){
   const admin=isAdmin();
   document.getElementById('tabEquipo').style.display=admin?'block':'none';
   document.getElementById('tabAnalisis').style.display=admin?'block':'none';
   document.getElementById('tabRegistro').style.display=admin?'block':'none';
-  document.getElementById('btnExport').style.display=admin?'inline-block':'none';
-  document.getElementById('btnExportReg').style.display=admin?'inline-block':'none';
   document.getElementById('btnPesos').style.display=admin?'inline-block':'none';
   const fw=document.getElementById('filterOpWrap');
   if(fw){
@@ -655,6 +657,9 @@ function applyRole(){
   const btnNew=document.getElementById('btnNew');
   if(admin){nav.style.display='';}else{nav.style.display='none';}
   tools.insertBefore(btnNew,tools.firstChild);
+  // actualizar título del botón candado según rol
+  const tog=document.getElementById('btnNavToggle');
+  if(tog)tog.title=admin?'Mostrar/ocultar barra de navegación':'Cambiar contraseña';
 }
 
 // ── Navegación ────────────────────────────────────────────────
