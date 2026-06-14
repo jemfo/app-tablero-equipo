@@ -404,7 +404,7 @@ const P_PRIO_DEF={Urgente:8,Alta:6,Media:4,Baja:2};
 let TE_PESOS=(()=>{try{const s=localStorage.getItem('oe_pesos');return s?JSON.parse(s):{area:Object.assign({},P_AREA_DEF),prioridad:Object.assign({},P_PRIO_DEF)};}catch{return{area:Object.assign({},P_AREA_DEF),prioridad:Object.assign({},P_PRIO_DEF)};}})();
 const P_AREA=new Proxy({},{get:(_,k)=>TE_PESOS.area[k]||0});
 const P_PRIO=new Proxy({},{get:(_,k)=>TE_PESOS.prioridad[k]||0});
-const P_FREC ={Unica:5,Mensual:3,Quincenal:2,Semanal:2,Diaria:1};
+const P_FREC ={Unica:5,Mensual:3,Semanal:2,Diaria:1};
 const P_EST  ={'Para ver juntos':4,Pendiente:3,'En curso':3,Programado:2,Finalizado:0};
 
 // Colores columna por estado (tira superior)
@@ -597,9 +597,9 @@ async function restoreSession(){
     const meta=USERS.find(x=>x.email===data.session.user.email);
     if(meta)enterApp(meta);
   }
-  _SB.auth.onAuthStateChange((event)=>{
+  _SB.auth.onAuthStateChange((event,session)=>{
     if(event==='PASSWORD_RECOVERY'){
-      const meta=USERS.find(x=>x.email===_SB.auth.getUser()?.email)||SESSION;
+      const meta=session?USERS.find(x=>x.email===session.user.email):null;
       if(!SESSION&&meta)enterApp(meta);
       setTimeout(()=>openPassModal(),300);
     }
@@ -1150,7 +1150,6 @@ async function saveTask(){
     const nw=Object.assign({id:uid(),numero:nextNum,creado_por:SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:_estInicial},vals);
     const ok=await upsertTask(nw);if(ok)DATA.push(nw);
   }
-  await cloneByFrecuencia(vals);
   closeTaskForm();renderCurrent();
 }
 async function toggleComentOk(){
@@ -1193,7 +1192,7 @@ function toggleCopias(){
   if(frec==='Por Etapas'&&fin&&!fin.value){fin.value=todayISO();}
   const cop=document.getElementById('f_copias');if(cop){cop.style.display='none';cop.value=0;}
 }
-async function cloneByFrecuencia(vals){return;}
+
 async function deleteTask(){
   if(!editingId)return;
   const _t=DATA.find(x=>x.id===editingId);
