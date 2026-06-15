@@ -67,11 +67,14 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card.drag{opacity:.35;transform:scale(.97)}
 .card .ct{font-weight:600;font-size:12.5px;line-height:1.3;margin-bottom:3px;letter-spacing:-.1px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .csub{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card .cmeta{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:2px}
-.card .cnum{font-size:10px;font-weight:700;color:var(--txt);letter-spacing:.3px;white-space:nowrap}
+.card .cmeta{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;margin-bottom:2px;overflow:hidden;min-width:0}
+.card .cnum{font-size:10px;font-weight:700;color:var(--txt);letter-spacing:.3px;white-space:nowrap;flex-shrink:0}
+.cfrec{position:absolute;right:8px;color:#000;line-height:0}
 .card .cop{font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.3px}
 .card .cpill{font-size:9px;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:transparent;border:1px solid var(--line);color:var(--muted)}
-.card .cpill.urg{color:var(--urg);border-color:var(--urg);font-weight:600}
+.card .cpill.med{color:#16a34a;border-color:#16a34a88}
+.card .cpill.alt{color:#dc2626;border-color:#dc262688}
+.card .cpill.urg{background:#dc2626;color:#fff;border-color:#dc2626;font-weight:700}
 .card .cfoot{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px;padding-top:2px;border-top:1px solid var(--line)}
 .card .cdate{font-size:10px;color:var(--txt);display:inline-flex;align-items:center;gap:4px}
 .card .cdate.ovd{color:var(--urg)}
@@ -268,7 +271,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
       </div>
       <div class="full"><label>Tareas a realizar</label><textarea id="f_tareas" rows="3"></textarea></div>
-      <div><label>Operador</label><select id="f_operador"></select></div>
+      <div id="wrapOperador"><label>Operador</label><select id="f_operador"></select></div>
       <div><label>Área</label><select id="f_area"></select></div>
       <div><label>Prioridad</label><select id="f_prioridad"></select></div>
       <div><label>Frecuencia</label>
@@ -384,7 +387,7 @@ const USERS=[
 
 // ── COLOR POR OPERADOR ───────────────────────────────────────
 const OP_COLOR={
-  juan:    '#e07b39',   // naranja
+  juan:    '#f97316',   // naranja
   maxi:    '#4caf7d',   // verde
   diego:   '#5b9bd5',   // azul
   ruben:   '#e91e8c',   // rosa
@@ -785,10 +788,21 @@ function renderEquipo(){
   // La columna Finalizado solo muestra lo cerrado en la semana en curso (el resto vive en el registro)
   const _wk=startOfWeekISO();
   list=list.filter(t=>t.estado!=='Finalizado'||(t.fecha_estado||'')>=_wk);
-  // Vista "Por operador": el operador solo ve sus propios trabajos (el admin ve a todos)
-  if(mode==='operador'&&!isAdmin())list=list.filter(t=>t.operador===SESSION.user);
+  // Filtro por rol en vista "Por operador"
+  if(mode==='operador'&&!isAdmin()){
+    const isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
+    if(isWatcher){
+      // Rubén: ve solo las tareas que él solicitó, bajo la sección del ejecutor
+      list=list.filter(t=>t.creado_por===SESSION.user);
+    } else {
+      // Operadores: ven solo las tareas asignadas a ellos
+      list=list.filter(t=>t.operador===SESSION.user);
+    }
+  }
+  // Vista "Por equipo": todos ven todos los trabajos (sin filtro por usuario)
   if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user);
-  document.getElementById('equipoBody').innerHTML=mode==='estado'?kanbanHTML(list):byOpHTML(list);
+  const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
+  document.getElementById('equipoBody').innerHTML=(mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list);
 }
 
 // ── Íconos de línea (SVG finos, heredan color del contenedor) ─
@@ -804,10 +818,16 @@ const ICO={
 function cardHTML(t){
   const venc=t.estado!=='Finalizado'&&t.frecuencia!=='Por Etapas'&&diasPara(t.finalizacion)<0;
   const isFinal=t.estado==='Finalizado';
-  const oc=opColor(t.operador);
+  const _creator=USERS.find(u=>u.user===t.creado_por);
+  const oc=(_creator&&_creator.canFinalize===false)?opColor(t.creado_por):opColor(t.operador);
+  const ocOp=opColor(t.operador);
   const dias=t.finalizacion?diasPara(t.finalizacion):null;
   const prioHtml=t.prioridad==='Urgente'
     ?`<span class="cpill urg">${t.prioridad}</span>`
+    :t.prioridad==='Alta'
+    ?`<span class="cpill alt">${t.prioridad}</span>`
+    :t.prioridad==='Media'
+    ?`<span class="cpill med">${t.prioridad}</span>`
     :`<span class="cpill">${t.prioridad}</span>`;
   const reacc=`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" title="Reaccionar" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`;
   const hasImg=!t.privado&&t.imagenes&&t.imagenes.length;
@@ -818,14 +838,20 @@ function cardHTML(t){
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
   const clIcon=cl?`<span class="cpill" title="Lista de comprobación" style="background:${cl.every(x=>x.ok)?'#4ade8033;color:#16a34a':'var(--bg2)'};border-color:${cl.every(x=>x.ok)?'#4ade80':'var(--border)'}">☑ ${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'';
-  return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${isFinal?'':'draggable="true"'} data-id="${t.id}"
-    ${isFinal?'':'ondragstart="dragStart(event)" ondragend="dragEnd(event)"'}
+  const _canDrag=!isFinal&&!(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false);
+  const _isRecurring=frecBase(t.frecuencia)!=='Unica';
+  const _frecSvg='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';
+  const _frecIcon=_isRecurring?`<span class="cfrec" title="Frecuencia: ${escH(t.frecuencia)}" style="top:${venc?30:8}px">${_frecSvg}</span>`:'';
+  return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
+    ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
     style="border-left-color:${oc}">
     ${venc?`<span class="cvenc" title="Vencido hace ${Math.abs(dias)} día(s)">${Math.abs(dias)}d</span>`:''}
+    ${_frecIcon}
     <div class="ct" title="${t.tareas?escH(t.tareas):escH(t.tema)}">${escH((t.tema||'').length>30?(t.tema||'').slice(0,30)+'…':t.tema||'')}</div>
     <div class="cmeta">
       ${t.numero?`<span class="cnum">ID ${t.numero}</span>`:''}
-      <span class="cop" title="Abrir tarea" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${oc}22;color:${oc};border:1px solid ${oc}66;cursor:pointer">${nombreOp(t.operador)}</span>
+      ${(()=>{const _cr=USERS.find(u=>u.user===t.creado_por);return(_cr&&_cr.canFinalize===false&&t.creado_por!==t.operador)?`<span class="cop" style="background:${opColor(t.creado_por)}22;color:${opColor(t.creado_por)};border:1px solid ${opColor(t.creado_por)}66" title="Solicitante">${_cr.nombre}</span>`:'';})()}
+      <span class="cop" title="Abrir tarea" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${ocOp}22;color:${ocOp};border:1px solid ${ocOp}66;cursor:pointer">${nombreOp(t.operador)}</span>
       <span class="cpill">${t.area}</span>
       ${prioHtml}
       ${envIcon}
@@ -865,13 +891,18 @@ function renderOpToggles(){
   const wrap=document.getElementById('opToggles');if(!wrap)return;
   wrap.style.display='flex';
   const admin=isAdmin();
-  wrap.innerHTML=USERS.filter(u=>!u.hidden).map(u=>{
+  const canFilter=admin;
+  // Rubén primero (canFinalize:false), luego el resto
+  const ordered=[...USERS.filter(u=>!u.hidden&&u.canFinalize===false),...USERS.filter(u=>!u.hidden&&u.canFinalize!==false)];
+  wrap.innerHTML=ordered.map(u=>{
     const oc=opColor(u.user);
-    if(admin){
+    const pill=`<span style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid ${oc};background:${oc};color:#fff">${u.nombre}</span>`;
+    if(u.canFinalize===false)return '';
+    if(canFilter){
       const off=HIDDEN_OPS.has(u.user);
       return `<button onclick="toggleOpVis('${u.user}')" style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;border:1.5px solid ${off?'var(--line)':oc};background:${off?'var(--bg3)':oc};color:${off?'var(--muted)':'#fff'};text-decoration:${off?'line-through':'none'}">${u.nombre}</button>`;
     }
-    return `<span style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid ${oc};background:${oc};color:#fff">${u.nombre}</span>`;
+    return pill;
   }).join('');
 }
 const sortCards=(arr,dir='asc',byEstado=false)=>arr.slice().sort((a,b)=>{
@@ -908,6 +939,7 @@ function byOpHTML(list){
   let h='';
   USERS.forEach(u=>{
     if(u.hidden&&(!SESSION||u.user!==SESSION.user))return;
+    if(u.canFinalize===false)return;
     if(HIDDEN_OPS.has(u.user))return;
     const items=list.filter(t=>t.operador===u.user);if(!items.length)return;
     const act=items.filter(t=>t.estado!=='Finalizado').length;
@@ -1014,6 +1046,33 @@ document.addEventListener('paste',e=>{
   const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
   for(const it of items){if(it.type&&it.type.startsWith('image/')){const f=it.getAsFile();if(f)_addImg(f);}}
 });
+function setupOperadorField(isNew){
+  const isRequester=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
+  const fop=document.getElementById('f_operador');
+  const existing=document.getElementById('ejecutorWrap');
+  if(existing)existing.remove();
+  const wrapLbl=document.querySelector('#wrapOperador > label');
+  if(wrapLbl)wrapLbl.style.display='';
+  fop.style.display='';
+  const farea=document.getElementById('f_area');
+  if(farea)farea.disabled=false;
+  if(!isRequester||!isNew)return;
+  const oc=opColor(SESSION.user);const nom=nombreOp(SESSION.user);
+  if(wrapLbl)wrapLbl.style.display='none';
+  fop.style.display='none';
+  document.getElementById('wrapOperador').insertAdjacentHTML('beforeend',
+    `<div id="ejecutorWrap" style="display:flex;gap:8px;align-items:flex-end">` +
+    `<span style="padding:5px 10px;border-radius:14px;background:${oc}22;color:${oc};border:1px solid ${oc}66;font-size:13px;white-space:nowrap;margin-bottom:2px">${nom}</span>` +
+    `<div style="flex:1"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:2px">Operador</label><select id="f_ejecutor_sel" style="width:100%"></select></div>` +
+    `</div>`);
+  const executors=USERS.filter(u=>!u.hidden&&u.canFinalize!==false);
+  document.getElementById('f_ejecutor_sel').innerHTML=`<option value="">— Seleccioná operador —</option>`+executors.map(u=>`<option value="${u.user}">${u.nombre}</option>`).join('');
+  if(farea){farea.value='COM';farea.disabled=true;}
+  const _fpr=document.getElementById('f_prioridad');
+  if(_fpr)_fpr.value='Media';
+  const _ffin=document.getElementById('f_finalizacion');
+  if(_ffin){const _dt=new Date();_dt.setDate(_dt.getDate()+2);_ffin.value=_dt.getFullYear()+'-'+String(_dt.getMonth()+1).padStart(2,'0')+'-'+String(_dt.getDate()).padStart(2,'0');}
+}
 function openTaskForm(id){
   editingId=id||null;
   fillSel('f_area',AREAS);fillSel('f_prioridad',PRIORIDADES);fillSelFrecuencia('f_frecuencia');
@@ -1050,6 +1109,10 @@ function openTaskForm(id){
     document.getElementById('btnCerrarProyecto').style.display='none';
     document.getElementById('btnFinalizarPersonalizada').style.display='none';
   }
+  setupOperadorField(!id);
+  document.getElementById('f_prioridad').disabled=!isAdmin();
+  document.getElementById('f_frecuencia').disabled=!isAdmin();
+  document.getElementById('f_finalizacion').disabled=!isAdmin();
   document.getElementById('f_copias').value=0;toggleCopias();renderThumbs();renderChecklist();
   collapseExtra();
   const _t=id?DATA.find(x=>x.id===id):null;
@@ -1122,6 +1185,8 @@ async function saveTask(){
   if(document.getElementById('f_frecuencia').value==='Personalizada'){const _fd=parseInt(document.getElementById('f_frec_dias').value||'0',10);if(!_fd||_fd<1){alert('Ingresá la cantidad de días para la frecuencia personalizada.');document.getElementById('f_frec_dias').focus();return;}}
   if(document.getElementById('f_frecuencia').value==='Mensual'){const _fd=parseInt(document.getElementById('f_frec_dia').value||'0',10);if(!_fd||_fd<1||_fd>28){alert('Ingresá el día del mes (1-28) para la frecuencia mensual.');document.getElementById('f_frec_dia').focus();return;}}
   const vals={tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,checklist:curChecklist.length?curChecklist.slice():null};
+  const _ejSel=document.getElementById('f_ejecutor_sel');
+  if(_ejSel){if(!_ejSel.value){alert('Seleccioná el operador que va a realizar la tarea.');_ejSel.focus();return;}vals.operador=_ejSel.value;}
   if(vals.privado)vals.operador=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
   {
     const _te=editingId?DATA.find(x=>x.id===editingId):null;
