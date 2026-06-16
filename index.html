@@ -706,7 +706,7 @@ function applyRole(){
   const nav=document.getElementById('mainNav');
   const tools=document.getElementById('equipoTools');
   const btnNew=document.getElementById('btnNew');
-  if(admin){nav.style.display='';}else{nav.style.display='none';}
+  nav.style.display='none';
   tools.insertBefore(btnNew,tools.firstChild);
   // actualizar título del botón candado según rol
   const tog=document.getElementById('btnNavToggle');
@@ -831,9 +831,8 @@ function cardHTML(t){
     :`<span class="cpill">${t.prioridad}</span>`;
   const reacc=`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" title="Reaccionar" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`;
   const hasImg=!t.privado&&t.imagenes&&t.imagenes.length;
-  const hasLink=!t.privado&&(t.link1||t.link2||t.link3);
   const imgIcon=hasImg?`<span class="cthumb" title="Ver imagen" onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img}</span>`:'';
-  const linkIcon=hasLink?`<span class="cthumb" title="Abrir link" onclick="event.stopPropagation();openTaskLink('${t.id}')">${ICO.link}</span>`:'';
+  const linkIcon=!t.privado?[t.link1,t.link2,t.link3].filter(Boolean).map(u=>`<span class="cthumb" title="${escH(u)}" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')">${ICO.link}</span>`).join(''):'';
   const pinIcon=`<span class="cpin${t.fijado?' on':''}" title="${t.fijado?'Desfijar':'Fijar arriba'}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`;
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
@@ -841,7 +840,8 @@ function cardHTML(t){
   const _canDrag=!isFinal&&!(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false);
   const _isRecurring=frecBase(t.frecuencia)!=='Unica';
   const _frecSvg='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';
-  const _frecIcon=_isRecurring?`<span class="cfrec" title="Frecuencia: ${escH(t.frecuencia)}" style="top:${venc?30:8}px">${_frecSvg}</span>`:'';
+  const _frecTip=(()=>{const f=t.frecuencia;if(f&&f.startsWith('Personalizada:')){const d=f.split(':')[1];return `Se repite c/${d} día${d==='1'?'':'s'}`;}if(f==='Por Etapas')return 'Por etapas — genera nueva tarjeta al finalizar';return f;})();
+  const _frecIcon=_isRecurring?`<span class="cfrec" title="${escH(_frecTip)}" style="top:${venc?30:8}px">${_frecSvg}</span>`:'';
   return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
     ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
     style="border-left-color:${oc}">
