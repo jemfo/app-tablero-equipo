@@ -829,9 +829,9 @@ function cardHTML(t){
     ?`<span class="cpill med">${t.prioridad}</span>`
     :`<span class="cpill">${t.prioridad}</span>`;
   const reacc=`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" title="Reaccionar" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`;
-  const hasImg=!t.privado&&t.imagenes&&t.imagenes.length;
+  const hasImg=(isAdmin()||!t.privado)&&t.imagenes&&t.imagenes.length;
   const imgIcon=hasImg?`<span class="cthumb" title="Ver imagen" onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img}</span>`:'';
-  const linkIcon=!t.privado?[t.link1,t.link2,t.link3].filter(Boolean).map(u=>`<span class="cthumb" title="${escH(u)}" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')">${ICO.link}</span>`).join(''):'';
+  const linkIcon=(isAdmin()||!t.privado)?[t.link1,t.link2,t.link3].filter(Boolean).map(u=>`<span class="cthumb" title="${escH(u)}" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')">${ICO.link}</span>`).join(''):'';
   const pinIcon=`<span class="cpin${t.fijado?' on':''}" title="${t.fijado?'Desfijar':'Fijar arriba'}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`;
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
@@ -1111,7 +1111,7 @@ function openTaskForm(id){
   setupOperadorField(!id);
   document.getElementById('f_prioridad').disabled=!isAdmin();
   document.getElementById('f_frecuencia').disabled=!isAdmin();
-  document.getElementById('f_finalizacion').disabled=!isAdmin();
+  document.getElementById('f_finalizacion').disabled=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
   document.getElementById('f_copias').value=0;toggleCopias();renderThumbs();renderChecklist();
   collapseExtra();
   const _t=id?DATA.find(x=>x.id===id):null;
