@@ -1264,7 +1264,9 @@ function toggleCopias(){
   const fin=document.getElementById('f_finalizacion');
   if(dias)dias.style.display=frec==='Personalizada'?'':'none';
   if(dia)dia.style.display=frec==='Mensual'?'':'none';
-  const bloquear=frec==='Mensual'||frec==='Personalizada';
+  // Personalizada: la fecha queda EDITABLE (operador puede ajustar la 1ra ocurrencia por feriados/fiestas).
+  // El campo "días" solo sugiere hoy+N; las repeticiones se calculan sumando N a la fecha elegida.
+  const bloquear=frec==='Mensual';
   if(fin){fin.readOnly=bloquear;fin.style.background=bloquear?'var(--border)':'';}
   if(frec==='Mensual'&&dia){const d=parseInt(dia.value||'0',10);if(d>=1&&d<=28)fin.value=calcFechaMensual(d);}
   if(frec==='Personalizada'&&dias){const d=parseInt(dias.value||'0',10);if(d>=1)actualizarFechaPersonalizada();}
