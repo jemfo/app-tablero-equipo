@@ -1109,9 +1109,12 @@ function openTaskForm(id){
     document.getElementById('btnFinalizarPersonalizada').style.display='none';
   }
   setupOperadorField(!id);
-  document.getElementById('f_prioridad').disabled=!isAdmin();
-  document.getElementById('f_frecuencia').disabled=!isAdmin();
-  document.getElementById('f_finalizacion').disabled=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
+  const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
+  document.getElementById('f_prioridad').disabled=_isWatcher;
+  document.getElementById('f_frecuencia').disabled=_isWatcher;
+  document.getElementById('f_finalizacion').disabled=_isWatcher;
+  document.getElementById('f_area').disabled=_isWatcher;
+  if(_isWatcher&&!id){document.getElementById('f_prioridad').value='Media';const _d=new Date();_d.setDate(_d.getDate()+2);document.getElementById('f_finalizacion').value=_d.toISOString().slice(0,10);}
   document.getElementById('f_copias').value=0;toggleCopias();renderThumbs();renderChecklist();
   collapseExtra();
   const _t=id?DATA.find(x=>x.id===id):null;
