@@ -316,7 +316,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       <button id="btnFinalizarPersonalizada" style="display:none;background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="finalizarPersonalizada()" title="Finaliza esta tarea sin generar una nueva">Finalizar tarea</button>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button onclick="closeTaskForm()">Cancelar</button>
-        <button class="primary" onclick="saveTask()">Guardar</button>
+        <button id="btnGuardarTarea" class="primary" onclick="saveTask()">Guardar</button>
       </div>
     </div>
   </div>
@@ -1204,20 +1204,30 @@ async function saveTask(){
       vals.comentario_ok=(_te&&_te.comentario_ok)||false;
     }
   }
-  if(editingId){
-    const t=DATA.find(x=>x.id===editingId);
-    // Si un operador edita una tarea reservada, se conserva el contenido oculto (no lo pisa con los vacíos)
-    if(t&&t.privado&&!isAdmin()){vals.medio=t.medio;vals.link2=t.link2;vals.link3=t.link3;vals.imagenes=t.imagenes;vals.privado=t.privado;}
-    const upd=Object.assign({},t,vals,{actualizado:nowStamp()});
-    const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;}
-  }else{
-    const isDemo=USERS.find(u=>u.user===SESSION.user)?.demo;
-    const nextNum=isDemo?null:DATA.reduce((m,t)=>Math.max(m,t.numero||0),0)+1;
-    const _estInicial=(vals.frecuencia==='Personalizada'||vals.frecuencia==='Por Etapas'||(vals.frecuencia||'').startsWith('Personalizada:')||(vals.frecuencia||'').startsWith('Mensual:'))?'Programado':'Pendiente';
-    const nw=Object.assign({id:uid(),numero:nextNum,creado_por:SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:_estInicial},vals);
-    const ok=await upsertTask(nw);if(ok)DATA.push(nw);
+  // Guard anti doble-envío: evita que dos clics/Enter creen tarjetas duplicadas (mismo numero, distinto id)
+  if(window._savingTask)return;
+  window._savingTask=true;
+  const _bg=document.getElementById('btnGuardarTarea');
+  if(_bg){_bg.disabled=true;_bg.textContent='Guardando…';}
+  try{
+    if(editingId){
+      const t=DATA.find(x=>x.id===editingId);
+      // Si un operador edita una tarea reservada, se conserva el contenido oculto (no lo pisa con los vacíos)
+      if(t&&t.privado&&!isAdmin()){vals.medio=t.medio;vals.link2=t.link2;vals.link3=t.link3;vals.imagenes=t.imagenes;vals.privado=t.privado;}
+      const upd=Object.assign({},t,vals,{actualizado:nowStamp()});
+      const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;}
+    }else{
+      const isDemo=USERS.find(u=>u.user===SESSION.user)?.demo;
+      const nextNum=isDemo?null:DATA.reduce((m,t)=>Math.max(m,t.numero||0),0)+1;
+      const _estInicial=(vals.frecuencia==='Personalizada'||vals.frecuencia==='Por Etapas'||(vals.frecuencia||'').startsWith('Personalizada:')||(vals.frecuencia||'').startsWith('Mensual:'))?'Programado':'Pendiente';
+      const nw=Object.assign({id:uid(),numero:nextNum,creado_por:SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:_estInicial},vals);
+      const ok=await upsertTask(nw);if(ok)DATA.push(nw);
+    }
+    closeTaskForm();renderCurrent();
+  }finally{
+    window._savingTask=false;
+    if(_bg){_bg.disabled=false;_bg.textContent='Guardar';}
   }
-  closeTaskForm();renderCurrent();
 }
 async function toggleComentOk(){
   if(!editingId)return;
