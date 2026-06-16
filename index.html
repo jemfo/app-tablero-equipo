@@ -702,6 +702,8 @@ function applyRole(){
   document.getElementById('btnPesos').style.display=admin?'inline-block':'none';
   document.getElementById('btnPassNav').style.display=admin?'inline-block':'none';
   if(!admin){document.getElementById('filterOp').value='';}
+  // Vista "Ver:" por defecto según rol: admin arranca en "Por equipo", operador en "Por operador"
+  const _vm=document.getElementById('viewMode');if(_vm)_vm.value=admin?'estado':'operador';
   const nav=document.getElementById('mainNav');
   const tools=document.getElementById('equipoTools');
   const btnNew=document.getElementById('btnNew');
@@ -746,7 +748,7 @@ function clearFilters(){
   document.getElementById('filterID').value='';
   document.getElementById('filterTxt').value='';
   const fo=document.getElementById('filterOp');if(fo)fo.value='';
-  document.getElementById('viewMode').value='operador';
+  document.getElementById('viewMode').value=isAdmin()?'estado':'operador';
   if(filtroComentario){
     filtroComentario=false;
     const btn=document.getElementById('btnEnvNot');
