@@ -67,23 +67,23 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .col .cards{padding:7px;display:flex;flex-direction:column;gap:7px;min-height:40px}
 
 /* ── CARD ───────────────────────────────────────── */
-.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:3px 12px 5px;cursor:grab;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s}
+.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:3px 12px 5px;cursor:grab;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s;min-height:74px;display:flex;flex-direction:column}
 .card:hover{box-shadow:0 3px 10px rgba(0,0,0,.14);transform:translateY(-1px)}
 .card.drag{opacity:.35;transform:scale(.97)}
 .card .ct{font-weight:600;font-size:12.5px;line-height:1.3;margin-bottom:3px;letter-spacing:-.1px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .csub{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card .cmeta{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;margin-bottom:2px;overflow:hidden;min-width:0}
+.card .cmeta{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;margin-top:auto;margin-bottom:2px;overflow:hidden;min-width:0}
 .card .cnum{font-size:10px;font-weight:700;color:var(--txt);letter-spacing:.3px;white-space:nowrap;flex-shrink:0}
 .cfrec{position:absolute;right:8px;color:#000;line-height:0}
 .card .cop{font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.3px}
-.card .cpill{font-size:9px;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:transparent;border:1px solid var(--line);color:var(--muted)}
+.card .cpill{font-size:9px;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:transparent;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .card .cpill.med{color:#16a34a;border-color:#16a34a88}
 .card .cpill.alt{color:#dc2626;border-color:#dc262688}
 .card .cpill.urg{background:#dc2626;color:#fff;border-color:#dc2626;font-weight:700}
-.card .cfoot{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px;padding-top:2px;border-top:1px solid var(--line)}
+.card .cfoot{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;margin-top:2px;padding-top:2px;border-top:1px solid var(--line)}
 .card .cdate{font-size:10px;color:var(--txt);display:inline-flex;align-items:center;gap:4px}
 .card .cdate.ovd{color:var(--urg)}
-.card .cfoot-icons{margin-left:auto;display:inline-flex;align-items:center;gap:10px}
+.card .cfoot-icons{margin-left:auto;display:inline-flex;align-items:center;gap:6px}
 .card .cic{display:inline-flex}
 .card .cpin{cursor:pointer;display:inline-flex;color:var(--muted);opacity:.55;transition:color .12s,opacity .12s}
 .card .cpin.on{opacity:1;color:var(--accent)}
@@ -102,6 +102,15 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .creact-wrap.open .creact-pop{display:flex}
 .creact-pop span{cursor:pointer;font-size:16px;transition:transform .1s}
 .creact-pop span:hover{transform:scale(1.25)}
+/* Chip de adjuntos agrupados (📎 N) + popover con la lista */
+.cattach-wrap{position:relative;display:inline-flex}
+.cattach-chip{cursor:pointer;display:inline-flex;align-items:center;gap:3px;font-size:9.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 5px;line-height:1.4;transition:color .12s,border-color .12s}
+.cattach-chip b{font-weight:700;font-size:9.5px}
+.cattach-chip:hover{color:var(--txt);border-color:var(--muted)}
+.cattach-pop{display:none;position:absolute;bottom:140%;right:0;flex-direction:column;background:#000;border:1px solid #444;border-radius:8px;padding:5px;gap:2px;z-index:100;box-shadow:0 4px 14px rgba(0,0,0,.35);min-width:130px}
+.cattach-wrap.open .cattach-pop{display:flex}
+.cattach-pop span{cursor:pointer;font-size:11px;display:inline-flex;align-items:center;gap:6px;padding:4px 7px;border-radius:5px;white-space:nowrap;color:#fff}
+.cattach-pop span:hover{background:#333}
 .card .cthumb{cursor:pointer;display:inline-flex;color:var(--muted);transition:color .12s}
 .card .cthumb:hover{color:var(--txt)}
 .card .cenv{cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:4px;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;transition:all .12s}
@@ -514,35 +523,38 @@ async function finalizarTarea(t){
       ?'¿Confirmás que esta tarea se realizó?\n\nQueda registrada y se genera una nueva tarjeta con la próxima fecha.'
       :'¿Confirmás que esta tarea está finalizada?\n\nQueda registrada y no se puede revertir.';
   if(!confirm(msg))return;
-  const logged=await logRealizacion(t);
-  if(!logged&&!confirm('No se pudo registrar en el historial. ¿Finalizar de todos modos?'))return;
-  let extra='';
-  const yaExisteActiva=DATA.some(x=>x.tema===t.tema&&x.estado!=='Finalizado'&&x.id!==t.id);
-  if(esEtapas){
-    t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
-    await upsertTask(t);
-    if(!yaExisteActiva){
+  // Guard anti doble-disparo: evita que un doble drop genere dos regeneraciones
+  if(window._finalizing)return;
+  window._finalizing=true;
+  let logged=false;
+  try{
+    logged=await logRealizacion(t);
+    if(!logged&&!confirm('No se pudo registrar en el historial. ¿Finalizar de todos modos?'))return;
+    let extra='';
+    if(esEtapas){
+      t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
+      await upsertTask(t);
       const nextNum=DATA.reduce((m,x)=>Math.max(m,x.numero||0),0)+1;
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
       extra=' · nueva etapa creada';
-    }else{extra=' · ya existe una etapa activa, no se generó otra';}
-  }else if(esPersonalizada||esMensual){
-    const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
-    t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
-    await upsertTask(t);
-    if(!yaExisteActiva){
+    }else if(esPersonalizada||esMensual){
+      const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
+      t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
+      await upsertTask(t);
       const nextNum=DATA.reduce((m,x)=>Math.max(m,x.numero||0),0)+1;
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
       extra=' · próxima: '+fmtDate(next);
-    }else{extra=' · ya existe una copia activa, no se generó otra';}
-  }else{
-    t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
-    await upsertTask(t);
+    }else{
+      t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
+      await upsertTask(t);
+    }
+    renderCurrent();
+    if(logged)showToast((esEtapas?'Etapa registrada ✓':esRec?'Registrada ✓':'Finalizada ✓')+extra);
+  }finally{
+    window._finalizing=false;
   }
-  renderCurrent();
-  if(logged)showToast((esEtapas?'Etapa registrada ✓':esRec?'Registrada ✓':'Finalizada ✓')+extra);
 }
 
 function startRealtime(){
@@ -868,44 +880,48 @@ function cardHTML(t){
     :`<span class="cpill">${t.prioridad}</span>`;
   const _canInteract=!isFinal||isAdmin();
   const reacc=_canInteract
-    ?`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" title="Reaccionar" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`
+    ?`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`
     :(t.reaccion?`<span class="creact-face has" style="pointer-events:none;opacity:.6">${t.reaccion}</span>`:'');
-  const hasImg=(isAdmin()||!t.privado)&&t.imagenes&&t.imagenes.length;
-  const imgIcon=hasImg?`<span class="cthumb" title="Ver imagen" onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img}</span>`:'';
-  const linkIcon=(isAdmin()||!t.privado)?[t.link1,t.link2,t.link3].filter(Boolean).map(u=>`<span class="cthumb" title="${escH(u)}" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')">${ICO.link}</span>`).join(''):'';
+  // Adjuntos agrupados en un solo chip 📎 N (links + imágenes) con popover. Mantiene altura uniforme.
+  const _showAttach=isAdmin()||!t.privado;
+  const _attLinks=_showAttach?[t.link1,t.link2,t.link3].filter(Boolean):[];
+  const _attImgs=(_showAttach&&t.imagenes&&t.imagenes.length)?t.imagenes.length:0;
+  const _nAtt=_attLinks.length+_attImgs;
+  const attachIcon=_nAtt?`<span class="cattach-wrap"><span class="cattach-chip" onclick="event.stopPropagation();toggleAttachPicker(this)">${ICO.link}<b>${_nAtt}</b></span><span class="cattach-pop">${
+      _attLinks.map((u,i)=>`<span title="${escH(u)}" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')">${ICO.link} Link ${i+1}</span>`).join('')
+      +(_attImgs?`<span onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img} Imagen${_attImgs>1?'es ('+_attImgs+')':''}</span>`:'')
+    }</span></span>`:'';
   const pinIcon=_canInteract
-    ?`<span class="cpin${t.fijado?' on':''}" title="${t.fijado?'Desfijar':'Fijar arriba'}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`
+    ?`<span class="cpin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`
     :(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:'');
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
-  const clIcon=cl?`<span class="cpill" title="Lista de comprobación" style="background:${cl.every(x=>x.ok)?'#4ade8033;color:#16a34a':'var(--bg2)'};border-color:${cl.every(x=>x.ok)?'#4ade80':'var(--border)'}">☑ ${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'';
+  const clIcon=cl?`<span class="cpill clchip" onclick="event.stopPropagation();toggleChkTip(this,'${t.id}')" style="cursor:pointer;background:${cl.every(x=>x.ok)?'#4ade8033;color:#16a34a':'var(--bg2)'};border-color:${cl.every(x=>x.ok)?'#4ade80':'var(--border)'}">☑ ${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'';
   const _canDrag=!isFinal&&!(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false);
   const _isRecurring=frecBase(t.frecuencia)!=='Unica';
   const _frecSvg='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';
   const _frecTip=(()=>{const f=t.frecuencia;if(f&&f.startsWith('Personalizada:')){const d=f.split(':')[1];return `Se repite c/${d} día${d==='1'?'':'s'}`;}if(f==='Por Etapas')return 'Por etapas — genera nueva tarjeta al finalizar';return f;})();
   const _frecIcon=_isRecurring?`<span class="cfrec" title="${escH(_frecTip)}" style="top:${venc?30:8}px">${_frecSvg}</span>`:'';
-  const _finalTitle=isFinal?(isAdmin()?'Editar tarea finalizada':'Ver tarea finalizada'):'';
-  const _editClick=isFinal?'onclick="openTaskForm(\''+t.id+'\')" title="'+_finalTitle+'"':'';
+  const _editClick=isFinal?'onclick="openTaskForm(\''+t.id+'\')"':'';
   const _cardStyle='border-left-color:'+oc+(isFinal?';cursor:pointer':'');
   return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
     ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
     ${_editClick}
-    onmouseenter="showCardPreview(this,'${t.id}')" onmouseleave="hideCardPreview()"
     style="${_cardStyle}">
-    ${venc?`<span class="cvenc" title="Vencido hace ${Math.abs(dias)} día(s)">${Math.abs(dias)}d</span>`:''}
+    ${venc?`<span class="cvenc">${Math.abs(dias)}d</span>`:''}
     ${_frecIcon}
     <div class="ct" title="${t.tareas?escH(t.tareas):escH(t.tema)}">${escH((t.tema||'').length>30?(t.tema||'').slice(0,30)+'…':t.tema||'')}</div>
     <div class="cmeta">
       ${t.numero?`<span class="cnum">ID ${t.numero}</span>`:''}
-      ${(()=>{const _cr=USERS.find(u=>u.user===t.creado_por);return(_cr&&_cr.canFinalize===false&&t.creado_por!==t.operador)?`<span class="cop" style="background:${opColor(t.creado_por)}22;color:${opColor(t.creado_por)};border:1px solid ${opColor(t.creado_por)}66" title="Solicitante">${_cr.nombre}</span>`:'';})()}
-      <span class="cop" title="Abrir tarea" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${ocOp}22;color:${ocOp};border:1px solid ${ocOp}66;cursor:pointer">${nombreOp(t.operador)}</span>
+      ${(()=>{const _cr=USERS.find(u=>u.user===t.creado_por);return(_cr&&_cr.canFinalize===false&&t.creado_por!==t.operador)?`<span class="cop" style="background:${opColor(t.creado_por)}22;color:${opColor(t.creado_por)};border:1px solid ${opColor(t.creado_por)}66">${_cr.nombre}</span>`:'';})()}
+      <span class="cop" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${ocOp}22;color:${ocOp};border:1px solid ${ocOp}66;cursor:pointer">${nombreOp(t.operador)}</span>
       <span class="cpill">${t.area}</span>
       ${prioHtml}
       ${envIcon}
     </div>
     <div class="cfoot">
-      <span style="display:inline-flex;gap:6px"><span class="cdate" title="Creación">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" title="Vencimiento" style="${!isFinal&&!venc&&t.finalizacion===todayISO()?'background:#4ade80;color:#14532d;font-weight:700;border-radius:4px;padding:1px 5px':''}">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span></span>
-      <span class="cfoot-icons">${clIcon}${reacc}${imgIcon}${linkIcon}${pinIcon}</span>
+      <span style="display:inline-flex;gap:6px"><span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" style="${!isFinal&&!venc&&t.finalizacion===todayISO()?'background:#4ade80;color:#14532d;font-weight:700;border-radius:4px;padding:1px 5px':''}">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span></span>
+      <span class="cfoot-icons">${clIcon}${reacc}${attachIcon}${pinIcon}</span>
     </div>
   </div>`;
 }
@@ -916,6 +932,12 @@ function toggleReactPicker(el){
   if(!open)w.classList.add('open');
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.creact-wrap'))document.querySelectorAll('.creact-wrap.open').forEach(x=>x.classList.remove('open'));});
+function toggleAttachPicker(el){
+  const w=el.parentElement;const open=w.classList.contains('open');
+  document.querySelectorAll('.cattach-wrap.open,.creact-wrap.open').forEach(x=>x.classList.remove('open'));
+  if(!open)w.classList.add('open');
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.cattach-wrap'))document.querySelectorAll('.cattach-wrap.open').forEach(x=>x.classList.remove('open'));});
 async function setReaccion(id,emoji){
   const t=DATA.find(x=>x.id===id);if(!t)return;
   if(t.estado==='Finalizado'&&!isAdmin())return;
@@ -956,6 +978,29 @@ async function toggleCheckFromTip(id,idx){
   renderCurrent();
 }
 function hideCardPreview(){_cpTimer=setTimeout(()=>{document.getElementById('cardPreviewTip').style.display='none';},150);}
+// Lista de comprobación: se abre/cierra SOLO al hacer clic en el chip ☑ (no al pasar el mouse)
+let _chkTipId=null;
+function toggleChkTip(el,id){
+  const tip=document.getElementById('cardPreviewTip');
+  if(_chkTipId===id&&tip.style.display!=='none'){tip.style.display='none';_chkTipId=null;return;}
+  const t=DATA.find(x=>x.id===id);
+  if(!t||!Array.isArray(t.checklist)||!t.checklist.length)return;
+  clearTimeout(_cpTimer);
+  const canToggle=isAdmin()||(SESSION&&SESSION.user===t.operador);
+  _renderChkTip(tip,t.id,t.checklist,canToggle);
+  tip.style.display='block';
+  const r=el.getBoundingClientRect();
+  const left=Math.min(r.left,window.innerWidth-292);
+  let top=r.bottom+6;
+  if(top+tip.scrollHeight>window.innerHeight-8)top=r.top-tip.scrollHeight-6;
+  tip.style.left=Math.max(8,left)+'px';tip.style.top=Math.max(8,top)+'px';
+  _chkTipId=id;
+}
+document.addEventListener('click',e=>{
+  if(_chkTipId&&!e.target.closest('#cardPreviewTip')){
+    document.getElementById('cardPreviewTip').style.display='none';_chkTipId=null;
+  }
+});
 function openTaskImg(id){const t=DATA.find(x=>x.id===id);if(t&&t.imagenes&&t.imagenes.length){document.getElementById('imgLightboxImg').src=t.imagenes[0];document.getElementById('imgLightbox').classList.remove('hidden');}}
 function openTaskLink(id){const t=DATA.find(x=>x.id===id);if(!t)return;const url=t.link1||t.link2||t.link3;if(url)window.open(url,'_blank','noopener');}
 async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
@@ -1331,6 +1376,11 @@ async function saveTask(){
       vals.comentario_por=(_te&&_te.comentario_por)||null;
       vals.comentario_ok=(_te&&_te.comentario_ok)||false;
     }
+  }
+  // Aviso suave (no bloquea): al crear una tarea nueva, si ya hay una ACTIVA con el mismo título y el mismo operador.
+  if(!editingId){
+    const _dup=DATA.some(x=>x.estado!=='Finalizado'&&(x.tema||'').trim().toLowerCase()===tema.toLowerCase()&&x.operador===vals.operador);
+    if(_dup&&!confirm('⚠ Ya existe una tarea activa con el mismo título para '+nombreOp(vals.operador)+'.\n\n¿Querés crearla igual?'))return;
   }
   // Guard anti doble-envío: evita que dos clics/Enter creen tarjetas duplicadas (mismo numero, distinto id)
   if(window._savingTask)return;
