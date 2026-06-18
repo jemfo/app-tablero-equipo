@@ -989,7 +989,7 @@ function kanbanHTML(list){
 // Vista Workflow: columnas "por operador" (Programado/Pendiente/Finalizado) muestran SOLO lo del
 // usuario logueado; columnas "equipo" (En curso/Para ver juntos) muestran todo el equipo (informativas).
 // En las de equipo, solo el dueño puede mover su tarjeta.
-const WF_TEAM_COLS=['En curso','Para ver juntos'];
+const WF_TEAM_COLS=['En curso','Para ver juntos','Finalizado'];
 function workflowHTML(list){
   return '<div class="kanban fit5">'+ESTADOS.map(est=>{
     const dir=COL_SORT[est]||'asc';
