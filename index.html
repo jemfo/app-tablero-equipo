@@ -202,6 +202,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
         <label class="muted">Ver:</label>
         <select id="viewMode" onchange="renderEquipo()">
+          <option value="workflow">Workflow</option>
           <option value="operador">Por operador</option>
           <option value="estado">Por equipo</option>
         </select>
@@ -416,7 +417,7 @@ const EST_COLOR={
   'Para ver juntos':'#fb923c','Programado':'#38bdf8','Finalizado':'#4ade80'
 };
 
-let DATA=[], SESSION=null, editingId=null, filtroComentario=false;
+let DATA=[], SESSION=null, editingId=null, filtroComentario=false, VIEW_MODE='estado';
 
 // ── Utilidades ────────────────────────────────────────────────
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -703,8 +704,11 @@ function applyRole(){
   document.getElementById('btnPesos').style.display=admin?'inline-block':'none';
   document.getElementById('btnPassNav').style.display=admin?'inline-block':'none';
   if(!admin){document.getElementById('filterOp').value='';}
-  // Vista "Ver:" por defecto según rol: admin arranca en "Por equipo", operador en "Por operador"
-  const _vm=document.getElementById('viewMode');if(_vm)_vm.value=admin?'estado':'operador';
+  // Vista "Ver:" por defecto = Workflow para admin y operadores ejecutores (Diego/Maxi); watchers (Rubén) van a "Por operador"
+  const _isW=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
+  const _vm=document.getElementById('viewMode');if(_vm)_vm.value=_isW?'operador':'workflow';
+  // Workflow visible para todos menos watchers
+  const _wfOpt=_vm?_vm.querySelector('option[value="workflow"]'):null;if(_wfOpt)_wfOpt.hidden=_isW;
   const nav=document.getElementById('mainNav');
   const tools=document.getElementById('equipoTools');
   const btnNew=document.getElementById('btnNew');
@@ -749,7 +753,7 @@ function clearFilters(){
   document.getElementById('filterID').value='';
   document.getElementById('filterTxt').value='';
   const fo=document.getElementById('filterOp');if(fo)fo.value='';
-  document.getElementById('viewMode').value=isAdmin()?'estado':'operador';
+  document.getElementById('viewMode').value=(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'operador':'workflow';
   if(filtroComentario){
     filtroComentario=false;
     const btn=document.getElementById('btnEnvNot');
@@ -776,6 +780,7 @@ function toggleFiltroComentario(){
 function renderEquipo(){
   fillFilterOp();fillFiltros();
   const mode=document.getElementById('viewMode').value;
+  VIEW_MODE=mode;
   const fop=document.getElementById('filterOp').value;
   const far=document.getElementById('filterArea').value;
   const fpr=document.getElementById('filterPrio').value;
@@ -804,7 +809,7 @@ function renderEquipo(){
   // Vista "Por equipo": todos ven todos los trabajos (sin filtro por usuario)
   if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user);
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
-  document.getElementById('equipoBody').innerHTML=(mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list);
+  document.getElementById('equipoBody').innerHTML=mode==='workflow'?workflowHTML(list):((mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list));
 }
 
 // ── Íconos de línea (SVG finos, heredan color del contenedor) ─
@@ -981,6 +986,29 @@ function kanbanHTML(list){
   }).join('')+'</div>';
 }
 
+// Vista Workflow: columnas "por operador" (Programado/Pendiente/Finalizado) muestran SOLO lo del
+// usuario logueado; columnas "equipo" (En curso/Para ver juntos) muestran todo el equipo (informativas).
+// En las de equipo, solo el dueño puede mover su tarjeta.
+const WF_TEAM_COLS=['En curso','Para ver juntos'];
+function workflowHTML(list){
+  return '<div class="kanban fit5">'+ESTADOS.map(est=>{
+    const dir=COL_SORT[est]||'asc';
+    const _team=WF_TEAM_COLS.includes(est);
+    const _scope=_team?list:list.filter(t=>t.operador===SESSION.user);
+    const items=sortCards(_scope.filter(t=>t.estado===est),dir,est==='Finalizado');
+    const _tag=_team
+      ?'<span style="font-size:10px;font-weight:700;background:#fdba74;color:#7c2d12;border-radius:4px;padding:1px 6px;margin-left:5px">equipo</span>'
+      :'<span style="font-size:10px;font-weight:700;background:#7dd3fc;color:#075985;border-radius:4px;padding:1px 6px;margin-left:5px">por operador</span>';
+    return `<div class="col" data-estado="${est}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
+      <div class="col-hdr" style="border-top:3px solid #fb2118">
+        <span class="col-title" style="color:#fb2118">${est}${_tag}</span>
+        <span style="display:inline-flex;align-items:center;gap:5px">${colSortHTML(est)}<span class="col-count">${items.length}</span></span>
+      </div>
+      <div class="cards">${items.map(cardHTML).join('')}</div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
 function byOpHTML(list){
   let h='';
   USERS.forEach(u=>{
@@ -1027,6 +1055,12 @@ async function drop(e){
   const est=col.dataset.estado;
   const t=DATA.find(x=>x.id===dragId);
   if(!t||t.estado===est)return;
+  // Workflow: solo el operador dueño de la tarea puede moverla de estado (aplica también al admin en esta vista)
+  if(VIEW_MODE==='workflow'&&t.operador!==SESSION.user){
+    showToast('Solo el operador de la tarea puede moverla de estado','err');
+    renderEquipo();
+    return;
+  }
   if(est==='Finalizado'){await finalizarTarea(t);return;}
   t.estado=est;t.actualizado=nowStamp();t.fecha_estado=todayISO();upsertTask(t);renderEquipo();
 }
