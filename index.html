@@ -269,7 +269,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
           <button type="button" id="btnComentOk" onclick="toggleComentOk()" style="font-size:12px"></button>
         </div>
       </div>
-      <div class="full"><label>Tareas a realizar</label><textarea id="f_tareas" rows="3"></textarea></div>
+      <div class="full"><label>Tareas a realizar *</label><textarea id="f_tareas" rows="3" placeholder="Describir el trabajo a realizar (mín. 30 caracteres)"></textarea></div>
       <div id="wrapOperador"><label>Operador</label><select id="f_operador"></select></div>
       <div><label>Área</label><select id="f_area"></select></div>
       <div><label>Prioridad</label><select id="f_prioridad"></select></div>
@@ -282,12 +282,14 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
       </div>
       <div><label>Finalización *</label><input type="date" id="f_finalizacion"></div>
-      <div><label>Link 1 (fuente principal)</label><input id="f_link1" placeholder="https://..."></div>
+      <div><label>Link 1 (fuente principal)</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link1" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link1').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button></div></div>
       <div class="full" id="extraWrap">
         <div class="collapse-hdr" onclick="toggleExtra()"><span id="extraCaret">▸</span> Mail, links e imágenes
           <label id="privWrap" class="priv-chk" onclick="event.stopPropagation()" title="Reservado: oculta este contenido a los operadores (asigna la tarea al admin)"><input type="checkbox" id="f_privado" onchange="togglePriv()"></label>
         </div>
         <div id="extraFields" class="form2 hidden" style="margin-top:8px">
+          <div><label>Link 2</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link2" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link2').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button></div></div>
+          <div><label>Link 3</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link3" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link3').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button></div></div>
           <div class="full">
             <label id="chkLabel">Lista de comprobación</label>
             <div id="chkList" style="margin-bottom:6px"></div>
@@ -296,8 +298,6 @@ table.grid tr:nth-child(even){background:var(--bg2)}
               <button type="button" onclick="addCheckItem()" style="white-space:nowrap;padding:0 12px">+ Agregar</button>
             </div>
           </div>
-          <div><label>Link 2</label><input id="f_link2" placeholder="https://..."></div>
-          <div><label>Link 3</label><input id="f_link3" placeholder="https://..."></div>
           <div class="full">
             <label>Imágenes / recortes (pegá con Ctrl+V o subí archivos)</label>
             <div class="imgdrop">
@@ -358,6 +358,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 <div id="imgLightbox" class="modal-bg hidden" onclick="this.classList.add('hidden')">
   <img id="imgLightboxImg" style="max-width:92vw;max-height:92vh;border-radius:8px" alt="">
 </div>
+<div id="cardPreviewTip" style="display:none;position:fixed;z-index:900;background:#000;color:#fff;font-size:12px;line-height:1.4;padding:8px 10px;border-radius:6px;max-width:280px;max-height:220px;overflow-y:auto;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:text;border:1px solid #444;user-select:text;-webkit-user-select:text"></div>
 
 <div id="toastEl" class="toast hidden"></div>
 
@@ -418,7 +419,7 @@ const EST_COLOR={
 let DATA=[], SESSION=null, editingId=null, filtroComentario=false;
 
 // ── Utilidades ────────────────────────────────────────────────
-const todayISO=()=>new Date().toISOString().slice(0,10);
+const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const fmtDate=iso=>{if(!iso)return '';const[y,m,d]=iso.split('-');return d+'/'+m;};
 const diasPara=iso=>{if(!iso)return 9999;return Math.round((new Date(iso)-new Date(todayISO()))/86400000);};
 const nowStamp=()=>new Date().toISOString().slice(0,16).replace('T',' ');
@@ -516,7 +517,7 @@ async function finalizarTarea(t){
     await upsertTask(t);
     if(!yaExisteActiva){
       const nextNum=DATA.reduce((m,x)=>Math.max(m,x.numero||0),0)+1;
-      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false});
+      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
       extra=' · nueva etapa creada';
     }else{extra=' · ya existe una etapa activa, no se generó otra';}
@@ -526,7 +527,7 @@ async function finalizarTarea(t){
     await upsertTask(t);
     if(!yaExisteActiva){
       const nextNum=DATA.reduce((m,x)=>Math.max(m,x.numero||0),0)+1;
-      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false});
+      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
       extra=' · próxima: '+fmtDate(next);
     }else{extra=' · ya existe una copia activa, no se generó otra';}
@@ -830,11 +831,16 @@ function cardHTML(t){
     :t.prioridad==='Media'
     ?`<span class="cpill med">${t.prioridad}</span>`
     :`<span class="cpill">${t.prioridad}</span>`;
-  const reacc=`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" title="Reaccionar" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`;
+  const _canInteract=!isFinal||isAdmin();
+  const reacc=_canInteract
+    ?`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" title="Reaccionar" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`
+    :(t.reaccion?`<span class="creact-face has" style="pointer-events:none;opacity:.6">${t.reaccion}</span>`:'');
   const hasImg=(isAdmin()||!t.privado)&&t.imagenes&&t.imagenes.length;
   const imgIcon=hasImg?`<span class="cthumb" title="Ver imagen" onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img}</span>`:'';
   const linkIcon=(isAdmin()||!t.privado)?[t.link1,t.link2,t.link3].filter(Boolean).map(u=>`<span class="cthumb" title="${escH(u)}" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')">${ICO.link}</span>`).join(''):'';
-  const pinIcon=`<span class="cpin${t.fijado?' on':''}" title="${t.fijado?'Desfijar':'Fijar arriba'}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`;
+  const pinIcon=_canInteract
+    ?`<span class="cpin${t.fijado?' on':''}" title="${t.fijado?'Desfijar':'Fijar arriba'}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`
+    :(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:'');
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
   const clIcon=cl?`<span class="cpill" title="Lista de comprobación" style="background:${cl.every(x=>x.ok)?'#4ade8033;color:#16a34a':'var(--bg2)'};border-color:${cl.every(x=>x.ok)?'#4ade80':'var(--border)'}">☑ ${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'';
@@ -843,9 +849,14 @@ function cardHTML(t){
   const _frecSvg='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';
   const _frecTip=(()=>{const f=t.frecuencia;if(f&&f.startsWith('Personalizada:')){const d=f.split(':')[1];return `Se repite c/${d} día${d==='1'?'':'s'}`;}if(f==='Por Etapas')return 'Por etapas — genera nueva tarjeta al finalizar';return f;})();
   const _frecIcon=_isRecurring?`<span class="cfrec" title="${escH(_frecTip)}" style="top:${venc?30:8}px">${_frecSvg}</span>`:'';
+  const _finalTitle=isFinal?(isAdmin()?'Editar tarea finalizada':'Ver tarea finalizada'):'';
+  const _editClick=isFinal?'onclick="openTaskForm(\''+t.id+'\')" title="'+_finalTitle+'"':'';
+  const _cardStyle='border-left-color:'+oc+(isFinal?';cursor:pointer':'');
   return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
     ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
-    style="border-left-color:${oc}">
+    ${_editClick}
+    onmouseenter="showCardPreview(this,'${t.id}')" onmouseleave="hideCardPreview()"
+    style="${_cardStyle}">
     ${venc?`<span class="cvenc" title="Vencido hace ${Math.abs(dias)} día(s)">${Math.abs(dias)}d</span>`:''}
     ${_frecIcon}
     <div class="ct" title="${t.tareas?escH(t.tareas):escH(t.tema)}">${escH((t.tema||'').length>30?(t.tema||'').slice(0,30)+'…':t.tema||'')}</div>
@@ -858,7 +869,7 @@ function cardHTML(t){
       ${envIcon}
     </div>
     <div class="cfoot">
-      <span style="display:inline-flex;gap:6px"><span class="cdate" title="Creación">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" title="Vencimiento">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span></span>
+      <span style="display:inline-flex;gap:6px"><span class="cdate" title="Creación">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" title="Vencimiento" style="${!isFinal&&!venc&&t.finalizacion===todayISO()?'background:#4ade80;color:#14532d;font-weight:700;border-radius:4px;padding:1px 5px':''}">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span></span>
       <span class="cfoot-icons">${clIcon}${reacc}${imgIcon}${linkIcon}${pinIcon}</span>
     </div>
   </div>`;
@@ -872,13 +883,47 @@ function toggleReactPicker(el){
 document.addEventListener('click',e=>{if(!e.target.closest('.creact-wrap'))document.querySelectorAll('.creact-wrap.open').forEach(x=>x.classList.remove('open'));});
 async function setReaccion(id,emoji){
   const t=DATA.find(x=>x.id===id);if(!t)return;
+  if(t.estado==='Finalizado'&&!isAdmin())return;
   const nuevo=t.reaccion===emoji?'':emoji;
   const upd=Object.assign({},t,{reaccion:nuevo,actualizado:nowStamp()});
   const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}
 }
+let _cpTimer;
+function _renderChkTip(tip,taskId,cl,canToggle){
+  tip.innerHTML=cl.map((x,i)=>canToggle
+    ?`<div onclick="toggleCheckFromTip('${taskId}',${i})" onmouseenter="this.style.background='#1a1a1a'" onmouseleave="this.style.background=''" style="display:flex;gap:7px;align-items:baseline;padding:3px 0;cursor:pointer;border-radius:3px"><span style="color:${x.ok?'#4ade80':'#888'};flex-shrink:0;font-size:11px">${x.ok?'✓':'○'}</span><span>${escH(x.texto)}</span></div>`
+    :`<div style="display:flex;gap:7px;align-items:baseline;padding:3px 0"><span style="color:${x.ok?'#4ade80':'#888'};flex-shrink:0;font-size:11px">${x.ok?'✓':'○'}</span><span>${escH(x.texto)}</span></div>`
+  ).join('');
+}
+function showCardPreview(el,id){
+  const t=DATA.find(x=>x.id===id);
+  if(!t||t.estado==='Finalizado'||!Array.isArray(t.checklist)||!t.checklist.length)return;
+  clearTimeout(_cpTimer);
+  const tip=document.getElementById('cardPreviewTip');
+  const canToggle=isAdmin()||(SESSION&&SESSION.user===t.operador);
+  _renderChkTip(tip,t.id,t.checklist,canToggle);
+  tip.style.display='block';
+  const r=el.getBoundingClientRect();
+  const left=Math.min(r.right+8,window.innerWidth-292);
+  const top=Math.min(r.top,window.innerHeight-tip.scrollHeight-8);
+  tip.style.left=left+'px';tip.style.top=Math.max(8,top)+'px';
+  tip.onmouseenter=()=>clearTimeout(_cpTimer);
+  tip.onmouseleave=()=>{tip.style.display='none';};
+}
+async function toggleCheckFromTip(id,idx){
+  const t=DATA.find(x=>x.id===id);if(!t||!Array.isArray(t.checklist))return;
+  const newCl=t.checklist.map((x,i)=>i===idx?{...x,ok:!x.ok}:{...x});
+  const upd=Object.assign({},t,{checklist:newCl,actualizado:nowStamp()});
+  const di=DATA.findIndex(x=>x.id===id);if(di>=0)DATA[di]=upd;
+  const tip=document.getElementById('cardPreviewTip');
+  if(tip&&tip.style.display!=='none')_renderChkTip(tip,id,newCl,true);
+  await upsertTask(upd);
+  renderCurrent();
+}
+function hideCardPreview(){_cpTimer=setTimeout(()=>{document.getElementById('cardPreviewTip').style.display='none';},150);}
 function openTaskImg(id){const t=DATA.find(x=>x.id===id);if(t&&t.imagenes&&t.imagenes.length){document.getElementById('imgLightboxImg').src=t.imagenes[0];document.getElementById('imgLightbox').classList.remove('hidden');}}
 function openTaskLink(id){const t=DATA.find(x=>x.id===id);if(!t)return;const url=t.link1||t.link2||t.link3;if(url)window.open(url,'_blank','noopener');}
-async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
+async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
 // Orden de cada columna: fijadas primero, luego por finalizacion asc (excepto Finalizado que va por fecha_estado desc)
 let COL_SORT={};
 function toggleColSort(est){COL_SORT[est]=(COL_SORT[est]||'asc')==='asc'?'desc':'asc';renderCurrent();}
@@ -994,14 +1039,15 @@ function frecBase(f){if((f||'').startsWith('Personalizada:'))return'Personalizad
 // ── Imágenes de la tarea (base64) ─────────────────────────────
 let curImgs=[];
 let curChecklist=[];
+let _formReadOnly=false;
 function renderChecklist(){
   const done=curChecklist.filter(x=>x.ok).length,total=curChecklist.length;
   document.getElementById('chkLabel').textContent=total?`Lista de comprobación (${done} de ${total} completados)`:'Lista de comprobación';
   document.getElementById('chkList').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 8px">`+curChecklist.map((it,i)=>`
     <div style="display:flex;align-items:center;gap:4px;padding:1px 0;border-bottom:1px solid var(--border);min-width:0">
-      <input type="checkbox" ${it.ok?'checked':''} onchange="toggleCheckItem(${i})" style="flex-shrink:0;width:13px;height:13px;cursor:pointer">
+      <input type="checkbox" ${it.ok?'checked':''} ${_formReadOnly?'disabled':'onchange="toggleCheckItem('+i+')"'} style="flex-shrink:0;width:13px;height:13px;${_formReadOnly?'cursor:default;opacity:.5':'cursor:pointer'}">
       <span title="${escH(it.texto)}" style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${it.ok?'text-decoration:line-through;color:var(--muted)':''}">${escH(it.texto)}</span>
-      <span onclick="removeCheckItem(${i})" style="flex-shrink:0;cursor:pointer;color:var(--muted);font-size:13px;padding:0 2px;line-height:1" title="Eliminar">×</span>
+      ${_formReadOnly?'':`<span onclick="removeCheckItem(${i})" style="flex-shrink:0;cursor:pointer;color:var(--muted);font-size:13px;padding:0 2px;line-height:1" title="Eliminar">×</span>`}
     </div>`).join('')+`</div>`;
 }
 function addCheckItem(){
@@ -1075,6 +1121,7 @@ function setupOperadorField(isNew){
   if(_ffin){const _dt=new Date();_dt.setDate(_dt.getDate()+2);_ffin.value=_dt.getFullYear()+'-'+String(_dt.getMonth()+1).padStart(2,'0')+'-'+String(_dt.getDate()).padStart(2,'0');}
 }
 function openTaskForm(id){
+  document.getElementById('btnGuardarTarea').style.display='';
   editingId=id||null;
   fillSel('f_area',AREAS);fillSel('f_prioridad',PRIORIDADES);fillSelFrecuencia('f_frecuencia');
   document.getElementById('f_operador').innerHTML=USERS.filter(u=>!u.hidden).map(u=>`<option value="${u.user}">${u.nombre}</option>`).join('');
@@ -1104,7 +1151,7 @@ function openTaskForm(id){
   }else{
     document.getElementById('modalTitle').textContent='Nueva tarea';
     ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
-    document.getElementById('f_operador').value=SESSION.user;document.getElementById('f_area').value='COM';
+    document.getElementById('f_operador').value=SESSION.user;document.getElementById('f_area').value='A.Com';
     document.getElementById('f_prioridad').value='Baja';document.getElementById('f_frecuencia').value='Unica';
     curImgs=[];curChecklist=[];document.getElementById('btnDelete').style.display='none';
     document.getElementById('btnCerrarProyecto').style.display='none';
@@ -1155,6 +1202,19 @@ function openTaskForm(id){
   }else{
     _cw.style.display='none';_fcm.value='';
   }
+  _formReadOnly=false;
+  // Modo solo lectura: operadores no pueden editar tareas finalizadas
+  const _tFin=id?DATA.find(x=>x.id===id):null;
+  if(_tFin&&_tFin.estado==='Finalizado'&&!isAdmin()){
+    _formReadOnly=true;
+    ['f_tema','f_tareas','f_link1','f_link2','f_link3'].forEach(x=>{const e=document.getElementById(x);if(e){e.readOnly=true;e.style.color='var(--muted)';}});
+    ['f_area','f_prioridad','f_frecuencia','f_operador','f_finalizacion','f_copias','f_frec_dias','f_frec_dia','f_imgfile','f_chkNew'].forEach(x=>{const e=document.getElementById(x);if(e)e.disabled=true;});
+    document.querySelectorAll('.imgdrop button').forEach(e=>e.disabled=true);
+    document.querySelectorAll('#extraFields button').forEach(e=>e.disabled=true);
+    ['btnDelete','btnGuardarTarea','btnCerrarProyecto','btnFinalizarPersonalizada'].forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
+    document.getElementById('modalTitle').textContent='Tarea finalizada — Solo lectura';
+    renderChecklist();
+  }
   document.getElementById('modalBg').classList.remove('hidden');
 }
 function closeTaskForm(){document.getElementById('modalBg').classList.add('hidden');editingId=null;}
@@ -1185,6 +1245,8 @@ async function cerrarProyecto(){
 async function saveTask(){
   const tema=document.getElementById('f_tema').value.trim();
   if(!tema){alert('El tema es obligatorio.');return;}
+  const tareas=document.getElementById('f_tareas').value.trim();
+  if(tareas.length<30){const el=document.getElementById('f_tareas');el.focus();el.style.borderColor='var(--urg)';setTimeout(()=>el.style.borderColor='',2000);alert('Las tareas a realizar deben tener al menos 30 caracteres (escrito: '+tareas.length+').');return;}
   if(!document.getElementById('f_finalizacion').value){alert('La fecha de finalización es obligatoria.');return;}
   if(document.getElementById('f_frecuencia').value==='Personalizada'){const _fd=parseInt(document.getElementById('f_frec_dias').value||'0',10);if(!_fd||_fd<1){alert('Ingresá la cantidad de días para la frecuencia personalizada.');document.getElementById('f_frec_dias').focus();return;}}
   if(document.getElementById('f_frecuencia').value==='Mensual'){const _fd=parseInt(document.getElementById('f_frec_dia').value||'0',10);if(!_fd||_fd<1||_fd>28){alert('Ingresá el día del mes (1-28) para la frecuencia mensual.');document.getElementById('f_frec_dia').focus();return;}}
