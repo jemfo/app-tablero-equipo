@@ -37,7 +37,7 @@ nav{display:flex;gap:8px;padding:10px 16px;background:var(--bg2);border-bottom:1
 nav .tab{padding:7px 14px;border-radius:6px;cursor:pointer;border:1px solid transparent}
 nav .tab.active{background:var(--accent);color:#fff;font-weight:bold}
 nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
-.wrap{padding:16px}
+.wrap{padding:0 16px 16px}
 .hidden{display:none!important}
 /* ── LOGIN (siempre claro, estilo Vitolen) ─────────── */
 #loginView{min-height:100vh;background:#ffffff;display:flex;justify-content:center;align-items:flex-start;padding:70px 16px 30px}
@@ -55,8 +55,13 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 /* ── KANBAN ─────────────────────────────────────── */
 .kanban{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
 .kanban.fit5{overflow-x:visible}.kanban.fit5 .col{flex:1 1 0;min-width:0}
-.col{background:var(--bg2);border:1px solid var(--line);border-radius:10px;min-width:155px;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.col{background:var(--bg2);border:1px solid var(--line);border-radius:10px;min-width:155px;flex:1;display:flex;flex-direction:column;overflow:visible}
 .col-hdr{padding:8px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+/* ── CABECERA FIJA al hacer scroll vertical (top calculado por setupSticky) ── */
+.eq-header{position:sticky;top:0;z-index:60}
+#mainNav{position:sticky;z-index:55}
+#equipoTools{position:sticky;z-index:50;background:var(--bg);padding:4px 0}
+#equipoBody .col-hdr{position:sticky;z-index:40;background:var(--bg2);border-radius:9px 9px 0 0}
 .col-hdr .col-title{font-size:12px;font-weight:bold}
 .col-hdr .col-count{font-size:11px;font-weight:bold;background:var(--bg3);border-radius:10px;padding:1px 7px}
 .col .cards{padding:7px;display:flex;flex-direction:column;gap:7px;min-height:40px}
@@ -199,7 +204,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 
     <!-- TABLERO EQUIPO -->
     <div id="pageEquipo">
-      <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+      <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:0;align-items:center;flex-wrap:wrap">
         <label class="muted">Ver:</label>
         <select id="viewMode" onchange="renderEquipo()">
           <option value="workflow">Workflow</option>
@@ -695,6 +700,7 @@ const isAdmin=()=>SESSION&&SESSION.rol==='admin';
 function toggleNav(){
   const nav=document.getElementById('mainNav');
   nav.style.display=nav.style.display==='none'?'':'none';
+  setupSticky();
 }
 function applyRole(){
   const admin=isAdmin();
@@ -810,7 +816,31 @@ function renderEquipo(){
   if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user);
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
   document.getElementById('equipoBody').innerHTML=mode==='workflow'?workflowHTML(list):((mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list));
+  setupSticky();
 }
+
+// Calcula el "top" de cada capa fija (cabecera, barra de filtros, encabezados de columna)
+// midiendo las alturas reales, así funciona con o sin banner de TEST y con la barra nav plegada.
+function setupSticky(){
+  const hdr=document.querySelector('#appView .eq-header');
+  if(!hdr)return;
+  const nav=document.getElementById('mainNav');
+  const tools=document.getElementById('equipoTools');
+  const banner=document.getElementById('testBannerTop');
+  const bH=(banner&&getComputedStyle(banner).position==='sticky')?banner.getBoundingClientRect().height:0;
+  hdr.style.top=bH+'px';
+  let acc=bH+hdr.getBoundingClientRect().height;
+  if(nav&&nav.style.display!=='none'&&nav.offsetParent!==null){
+    nav.style.top=acc+'px';
+    acc+=nav.getBoundingClientRect().height;
+  }
+  if(tools&&tools.offsetParent!==null){
+    tools.style.top=acc+'px';
+    acc+=tools.getBoundingClientRect().height;
+  }
+  document.querySelectorAll('#equipoBody .col-hdr').forEach(h=>{h.style.top=acc+'px';});
+}
+window.addEventListener('resize',setupSticky);
 
 // ── Íconos de línea (SVG finos, heredan color del contenedor) ─
 const ICO={
