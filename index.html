@@ -1231,6 +1231,8 @@ function setupOperadorField(isNew){
 }
 function openTaskForm(id){
   document.getElementById('btnGuardarTarea').style.display='';
+  // Limpia disabled de una apertura anterior (ej: tarea finalizada → nueva tarea)
+  ['f_frec_dias','f_frec_dia','f_copias','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=false;});
   editingId=id||null;
   fillSel('f_area',AREAS);fillSel('f_prioridad',PRIORIDADES);fillSelFrecuencia('f_frecuencia');
   document.getElementById('f_operador').innerHTML=USERS.filter(u=>!u.hidden).map(u=>`<option value="${u.user}">${u.nombre}</option>`).join('');
