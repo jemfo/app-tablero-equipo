@@ -221,7 +221,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
   <div class="login">
     <h1 class="brand">Análisis Comercial</h1>
     <label>Usuario</label>
-    <input type="text" id="loginUser" placeholder="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="text" id="loginUser" placeholder="usuario" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" name="oe_user" onkeydown="if(event.key==='Enter')doLogin()">
     <label>Contraseña</label>
     <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="primary" onclick="doLogin()">Ingresar</button>
