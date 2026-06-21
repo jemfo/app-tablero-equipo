@@ -84,6 +84,7 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card .cdate{font-size:10px;color:var(--txt);display:inline-flex;align-items:center;gap:4px}
 .card .cdate.ovd{color:var(--urg)}
 .card .cfoot-icons{margin-left:auto;display:inline-flex;align-items:center;gap:6px}
+.card .cfoot-icons>*{flex-shrink:0}
 .card .cic{display:inline-flex}
 .card .cpin{cursor:pointer;display:inline-flex;color:var(--muted);opacity:.55;transition:color .12s,opacity .12s}
 .card .cpin.on{opacity:1;color:var(--accent)}
@@ -166,6 +167,51 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;z-index:200;transition:opacity .3s}
 .toast.terr{background:#c0392b}.loading{text-align:center;padding:40px;color:var(--muted)}
 #syncSt{font-size:11px;color:var(--muted)}
+/* ── Calendario de finalizadas ─────────────────────────────── */
+#equipoTools.calmode > *:not(.cal-keep){display:none}
+#opToggles{flex-shrink:0}
+/* En el calendario: VISTA a la izquierda (en el flujo), el mes centrado en la pantalla y los chips a la derecha.
+   El mes y los chips van en posición absoluta (la barra ya es sticky = contenedor); así no descentran a VISTA.
+   No usar position:relative aquí: el top que calcula setupSticky desplazaría la barra sobre el calendario. */
+#equipoTools.calmode > #calNavSlot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0}
+#equipoTools.calmode > #opToggles{position:absolute;right:0;top:50%;transform:translateY(-50%);margin:0}
+/* Resumen diario suave (Ayer y Hoy) */
+#dailyResumen{margin:8px 0 4px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;background:var(--bg2);padding:12px 16px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.10)}
+#dailyResumen .dr-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1}
+#dailyResumen .dr-hi{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;font-weight:700;margin:0 0 8px;padding-right:28px;color:var(--txt)}
+#dailyResumen .dr-hint{font-weight:400;color:var(--muted);font-size:12px}
+#dailyResumen .dr-cols{display:flex;gap:32px;flex-wrap:wrap}
+#dailyResumen .dr-col{flex:1 1 320px;min-width:240px}
+#dailyResumen .dr-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin-bottom:5px}
+#dailyResumen .dr-lbl b.n-fin{color:var(--ok);font-size:13px}
+#dailyResumen .dr-lbl b.n-venc{color:var(--blue);font-size:13px}
+#dailyResumen .dr-dt{font-weight:400;color:var(--muted);font-size:10px;letter-spacing:0;text-transform:none}
+/* Lista de tareas: hasta 5 filas, fluye en columnas (máx 4) para no crecer en alto */
+#dailyResumen .dr-grid{display:grid;grid-auto-flow:column;grid-auto-columns:max-content;gap:1px 24px;justify-content:start}
+#dailyResumen .dr-it{font-size:12px;line-height:1.55;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+#dailyResumen .dr-it::before{content:'•';color:var(--muted);margin-right:6px}
+#dailyResumen .dr-more{color:var(--muted);font-style:italic}
+#dailyResumen .dr-more::before{content:'';margin:0}
+#dailyResumen .dr-empty{font-size:12px;color:var(--muted);font-style:italic}
+#dailyResumen .dr-foot{font-size:11px;color:var(--muted);margin-top:8px}
+.cal-month{font-size:14px;font-weight:700;text-transform:capitalize;min-width:120px;text-align:center;color:var(--txt)}
+.cal-nav{background:var(--bg3);border:1px solid var(--line);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:15px;color:var(--txt)}
+.cal-today{background:var(--bg3);border:1px solid var(--line);border-radius:6px;height:30px;padding:0 12px;cursor:pointer;font-size:12px;color:var(--txt)}
+#calendarBody{padding:0 48px}
+.cal-grid{display:grid;grid-template-columns:repeat(5,2fr) repeat(2,1fr);gap:6px}
+.cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding-bottom:2px;min-width:0}
+.cal-dow.weekend{color:#9aa0a6}
+.cal-cell{background:var(--bg2);border:1px solid var(--line);border-radius:8px;min-height:112px;padding:5px 6px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.cal-cell.weekend{background:color-mix(in srgb,gray 16%,var(--bg2));border-color:color-mix(in srgb,gray 22%,var(--line))}
+.cal-cell.weekend .cal-daynum{color:#9aa0a6}
+.cal-cell.empty{background:transparent;border:1px dashed var(--line);opacity:.30}
+.cal-cell.empty.weekend{background:color-mix(in srgb,gray 10%,transparent)}
+.cal-cell.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.cal-daynum{font-size:12px;font-weight:700;color:var(--muted);align-self:flex-end;line-height:1}
+.cal-cell.today .cal-daynum{color:var(--accent)}
+.cal-tasks{display:flex;flex-direction:column;gap:3px;overflow:auto;max-height:260px}
+.cal-task{font-size:10px;line-height:1.3;padding:2px 5px;border-radius:4px;border-left:3px solid var(--blue);background:var(--bg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default}
+.cal-empty-day{font-size:10px;color:var(--muted);opacity:.5;margin-top:2px}
 </style>
 </head>
 <body>
@@ -214,12 +260,14 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <!-- TABLERO EQUIPO -->
     <div id="pageEquipo">
       <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:0;align-items:center;flex-wrap:wrap">
-        <label class="muted">Ver:</label>
-        <select id="viewMode" onchange="renderEquipo()">
+        <label class="cal-keep" style="font-weight:700;letter-spacing:.4px">VISTA</label>
+        <select id="viewMode" class="cal-keep" onchange="renderEquipo()">
           <option value="workflow">Workflow</option>
           <option value="operador">Por operador</option>
           <option value="estado">Por equipo</option>
+          <option value="calendario">Calendario</option>
         </select>
+        <span id="calNavSlot" class="cal-keep" style="display:flex;align-items:center;gap:8px"></span>
         <select id="filterOp" style="display:none" onchange="renderEquipo()"><option value="">Todos</option></select>
         <label class="muted">Área:</label>
         <select id="filterArea" onchange="renderEquipo()"><option value="">Todas</option></select>
@@ -229,9 +277,11 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         <input id="filterID" placeholder="ID…" oninput="renderEquipo()" style="width:60px">
         <button onclick="clearFilters()" title="Limpiar todos los filtros" style="background:#94a3b8;color:#fff;border-color:#94a3b8">✕ Limpiar</button>
         <!-- toggle visibilidad operadores -->
-        <div id="opToggles" style="display:none;gap:6px;margin-left:24px;flex-wrap:wrap;align-items:center"></div>
+        <div id="opToggles" class="cal-keep" style="display:none;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center"></div>
       </div>
+      <div id="dailyResumen" class="hidden"></div>
       <div id="equipoBody"><div class="loading">Conectando con Supabase…</div></div>
+      <div id="calendarBody" class="hidden"></div>
     </div>
 
     <!-- ANALISIS -->
@@ -608,8 +658,9 @@ function enterApp(found){
   // leyenda operadores
   renderOpToggles();
   applyRole();
-  loadData().then(()=>startRealtime());
+  loadData().then(()=>{startRealtime();showResumenInicio();});
   showPage('equipo');
+  startCierreWatcher();
 }
 // Si hay una sesión de Supabase guardada, entra solo al recargar la página
 async function restoreSession(){
@@ -626,7 +677,13 @@ async function restoreSession(){
     }
   });
 }
-async function logout(){
+function logout(){
+  // Al salir, si todavía no vio el balance del día, mostrarlo con botón "Cerrar sesión"
+  if(SESSION&&!_esWatcher()&&!_resumenSeen('cierre')){showResumenCierre(true);return;}
+  doLogout();
+}
+async function doLogout(){
+  if(_cierreTimer){clearInterval(_cierreTimer);_cierreTimer=null;}
   await _SB.auth.signOut();
   SESSION=null;
   document.getElementById('appView').classList.add('hidden');
@@ -731,7 +788,8 @@ function applyRole(){
   const tools=document.getElementById('equipoTools');
   const btnNew=document.getElementById('btnNew');
   nav.style.display='none';
-  tools.insertBefore(btnNew,tools.firstChild);
+  // VISTA queda primero; "+ Nueva tarea" segundo (después del selector de vista)
+  tools.insertBefore(btnNew,document.getElementById('calNavSlot'));
   // actualizar título del botón candado según rol
   const tog=document.getElementById('btnNavToggle');
   if(tog)tog.title=admin?'Mostrar/ocultar barra de navegación':'Cambiar contraseña';
@@ -799,6 +857,23 @@ function renderEquipo(){
   fillFilterOp();fillFiltros();
   const mode=document.getElementById('viewMode').value;
   VIEW_MODE=mode;
+  const _tools=document.getElementById('equipoTools');
+  const _body=document.getElementById('equipoBody');
+  const _calB=document.getElementById('calendarBody');
+  if(mode==='calendario'){
+    const entering=(_lastView!=='calendario');_lastView=mode;
+    _tools.classList.add('calmode');
+    _body.classList.add('hidden');_calB.classList.remove('hidden');
+    if(CAL_Y===undefined){const _n=new Date();CAL_Y=_n.getFullYear();CAL_M=_n.getMonth();}
+    if(entering||!CAL_LOADED){_calB.innerHTML='<div class="loading">Cargando finalizadas…</div>';loadRealCalendar(entering).then(renderCalendar);}
+    else renderCalendar();
+    setupSticky();
+    return;
+  }
+  _lastView=mode;
+  _tools.classList.remove('calmode');
+  _body.classList.remove('hidden');_calB.classList.add('hidden');
+  const _slot=document.getElementById('calNavSlot');if(_slot)_slot.innerHTML='';
   const fop=document.getElementById('filterOp').value;
   const far=document.getElementById('filterArea').value;
   const fpr=document.getElementById('filterPrio').value;
@@ -1018,12 +1093,11 @@ function renderOpToggles(){
   wrap.style.display='flex';
   const admin=isAdmin();
   const canFilter=admin;
-  // Rubén primero (canFinalize:false), luego el resto
+  // Orden de los chips: Rubén (watcher) primero, luego ejecutores (Diego/Maxi/Juan)
   const ordered=[...USERS.filter(u=>!u.hidden&&u.canFinalize===false),...USERS.filter(u=>!u.hidden&&u.canFinalize!==false)];
   wrap.innerHTML=ordered.map(u=>{
     const oc=opColor(u.user);
     const pill=`<span style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid ${oc};background:${oc};color:#fff">${u.nombre}</span>`;
-    if(u.canFinalize===false)return '';
     if(canFilter){
       const off=HIDDEN_OPS.has(u.user);
       return `<button onclick="toggleOpVis('${u.user}')" style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;border:1.5px solid ${off?'var(--line)':oc};background:${off?'var(--bg3)':oc};color:${off?'var(--muted)':'#fff'};text-decoration:${off?'line-through':'none'}">${u.nombre}</button>`;
@@ -1086,9 +1160,12 @@ function workflowHTML(list){
 
 function byOpHTML(list){
   let h='';
-  USERS.forEach(u=>{
+  // Orden fijo de las secciones SOLO en esta vista: Juan, Diego, Maxi, Rubén; el resto al final.
+  // (No afecta el orden de los chips de colores, que se arma en renderOpToggles.)
+  const _ord=['juan','diego','maxi','ruben'];
+  const _ops=[...USERS].sort((a,b)=>{const ia=_ord.indexOf(a.user),ib=_ord.indexOf(b.user);return (ia<0?99:ia)-(ib<0?99:ib);});
+  _ops.forEach(u=>{
     if(u.hidden&&(!SESSION||u.user!==SESSION.user))return;
-    if(u.canFinalize===false)return;
     if(HIDDEN_OPS.has(u.user))return;
     const items=list.filter(t=>t.operador===u.user);if(!items.length)return;
     const act=items.filter(t=>t.estado!=='Finalizado').length;
@@ -1556,6 +1633,152 @@ function renderRegistro(){
   document.getElementById('regBody').innerHTML=h;
 }
 function clearReg(){['regDesde','regHasta','regQuien','regArea','regTxt'].forEach(id=>document.getElementById(id).value='');renderRegistro();}
+
+// ── Calendario de tareas finalizadas (opción del desplegable "Ver:") ──
+let CAL_Y, CAL_M, REAL_CAL=[], CAL_LOADED=false, _lastView=null;
+const CAL_MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+async function loadRealCalendar(force){
+  if(CAL_LOADED&&!force)return;
+  setSyncSt('Cargando finalizadas…');
+  const{data,error}=await _SB.from('realizaciones').select('tema,operador,completado_por,completado_en,tipo').order('completado_en',{ascending:false});
+  setSyncSt('');
+  if(error){REAL_CAL=[];return;}
+  REAL_CAL=(data||[]).filter(r=>r.tipo!=='eliminado'&&r.completado_en);
+  CAL_LOADED=true;
+}
+// ── Tarjetas suaves de resumen (forman hábito): inicio y cierre ──
+const _DOWN=['dom','lun','mar','mié','jue','vie','sáb'];
+const _locISO=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const _dowLabel=iso=>{const[y,m,d]=iso.split('-').map(Number);return _DOWN[new Date(y,m-1,d).getDay()];};
+// próximo (dir=1) / anterior (dir=-1) día hábil saltando sáb y dom
+const _addBusiness=(iso,dir)=>{const[y,m,d]=iso.split('-').map(Number);const dt=new Date(y,m-1,d);do{dt.setDate(dt.getDate()+dir);}while(dt.getDay()===0||dt.getDay()===6);return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');};
+const _esWatcher=()=>USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
+// Fin de semana: el equipo trabaja lun–vie, no mostrar las tarjetas sáb(6)/dom(0)
+const _esFinde=()=>{const d=new Date().getDay();return d===0||d===6;};
+const _resumenSeen=kind=>localStorage.getItem('resumen_'+kind+'_'+SESSION.user+'_'+todayISO())==='1';
+const _markResumen=kind=>localStorage.setItem('resumen_'+kind+'_'+SESSION.user+'_'+todayISO(),'1');
+// Finalizadas propias en una fecha (de realizaciones)
+const _finPropias=iso=>REAL_CAL.filter(r=>(r.operador||r.completado_por)===SESSION.user&&_locISO(r.completado_en)===iso);
+// Trabajos propios activos que vencen en una fecha
+const _vencenEn=iso=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&(t.finalizacion||'')===iso);
+// Lista de temas en grilla: hasta 5 filas, fluye por columnas (máx 4 ⇒ 20 visibles), resto en "+N más"
+const _temasGrid=arr=>{
+  if(!arr.length)return '<div class="dr-empty">Nada por acá</div>';
+  const MAXR=5,CAP=MAXR*4;// 20
+  let shown=arr,extra=0;
+  if(arr.length>CAP){shown=arr.slice(0,CAP-1);extra=arr.length-(CAP-1);}
+  const cells=shown.length+(extra?1:0);
+  const rows=Math.min(MAXR,cells);
+  let h='<div class="dr-grid" style="grid-template-rows:repeat('+rows+',auto)">';
+  h+=shown.map(t=>'<div class="dr-it" title="'+escH(t.tema||'')+'">'+escH(t.tema||'(sin título)')+'</div>').join('');
+  if(extra)h+='<div class="dr-it dr-more">+'+extra+' más</div>';
+  return h+'</div>';
+};
+function dismissResumen(){const b=document.getElementById('dailyResumen');if(b)b.classList.add('hidden');}
+
+// Tarjeta de INICIO: ayer finalizadas + lo que vence hoy
+async function showResumenInicio(){
+  if(!SESSION||_esWatcher()||(!SESSION.demo&&(_esFinde()||_resumenSeen('inicio'))))return;
+  const box=document.getElementById('dailyResumen');if(!box)return;
+  await loadRealCalendar();
+  const hoy=todayISO();const ayer=_addBusiness(hoy,-1);
+  const fin=_finPropias(ayer);const venc=_vencenEn(hoy);
+  box.innerHTML=
+    '<button class="dr-close" onclick="dismissResumen()" title="Cerrar">✕</button>'
+    +'<div class="dr-hi"><span>👋 Hola '+escH(SESSION.nombre)+' — arranquemos el día</span><span class="dr-hint">📅 Revisá tu Vista de calendario</span></div>'
+    +'<div class="dr-cols">'
+    +'<div class="dr-col"><div class="dr-lbl">Ayer finalizaste <b class="n-fin">'+fin.length+'</b> <span class="dr-dt">'+_dowLabel(ayer)+' '+fmtDate(ayer)+'</span></div>'+_temasGrid(fin)+'</div>'
+    +'<div class="dr-col"><div class="dr-lbl">Vencen hoy <b class="n-venc">'+venc.length+'</b> <span class="dr-dt">'+fmtDate(hoy)+'</span></div>'+_temasGrid(venc)+'</div>'
+    +'</div>';
+  box.classList.remove('hidden');
+  _markResumen('inicio');
+}
+// Tarjeta de CIERRE: hoy finalizadas + lo que vence el próximo día hábil. conSalir=true agrega botón "Cerrar sesión".
+async function showResumenCierre(conSalir){
+  if(!SESSION||_esWatcher()||(!SESSION.demo&&(_esFinde()||_resumenSeen('cierre')))){if(conSalir)doLogout();return;}
+  const box=document.getElementById('dailyResumen');if(!box){if(conSalir)doLogout();return;}
+  await loadRealCalendar(true);// refrescar para contar lo finalizado hoy
+  const hoy=todayISO();const man=_addBusiness(hoy,1);
+  const fin=_finPropias(hoy);const venc=_vencenEn(man);
+  box.innerHTML=
+    '<button class="dr-close" onclick="dismissResumen()" title="Cerrar">✕</button>'
+    +'<div class="dr-hi"><span>🏁 Gran trabajo '+escH(SESSION.nombre)+' !!!, así cerrarte el día</span></div>'
+    +'<div class="dr-cols">'
+    +'<div class="dr-col"><div class="dr-lbl">Hoy finalizaste <b class="n-fin">'+fin.length+'</b> <span class="dr-dt">'+fmtDate(hoy)+'</span></div>'+_temasGrid(fin)+'</div>'
+    +'<div class="dr-col"><div class="dr-lbl">Vencen mañana <b class="n-venc">'+venc.length+'</b> <span class="dr-dt">'+_dowLabel(man)+' '+fmtDate(man)+'</span></div>'+_temasGrid(venc)+'</div>'
+    +'</div>'
+    +(conSalir
+      ?'<div class="dr-foot" style="display:flex;justify-content:flex-end;align-items:center"><button class="primary" onclick="doLogout()">Cerrar sesión</button></div>'
+      :'<div class="dr-foot">Lo de mañana ya te espera en el tablero.</div>');
+  box.classList.remove('hidden');
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  _markResumen('cierre');
+}
+// A las 17:00, si la pestaña sigue abierta, muestra la tarjeta de cierre (una vez por día)
+let _cierreTimer=null;
+function startCierreWatcher(){
+  if(_cierreTimer)clearInterval(_cierreTimer);
+  _cierreTimer=setInterval(()=>{
+    if(!SESSION||_esWatcher())return;
+    if(new Date().getHours()>=17&&!_resumenSeen('cierre'))showResumenCierre(false);
+  },60000);
+}
+function calNav(d){CAL_M+=d;if(CAL_M<0){CAL_M=11;CAL_Y--;}if(CAL_M>11){CAL_M=0;CAL_Y++;}renderCalendar();}
+function calHoy(){const n=new Date();CAL_Y=n.getFullYear();CAL_M=n.getMonth();renderCalendar();}
+function renderCalendar(){
+  const cal=document.getElementById('calendarBody');
+  // Cada operador ve SOLO sus finalizadas; el admin ve todo el equipo
+  const soloMias=!isAdmin();
+  // Agrupar finalizadas del mes mostrado por día (fecha local)
+  const byDay={};
+  REAL_CAL.forEach(r=>{
+    const who=r.operador||r.completado_por;
+    if(soloMias){if(who!==SESSION.user)return;}        // operador: solo lo suyo
+    else if(HIDDEN_OPS.has(who))return;                 // admin: aplica filtro de chips
+    const dt=new Date(r.completado_en);
+    if(dt.getFullYear()!==CAL_Y||dt.getMonth()!==CAL_M)return;
+    const dd=dt.getDate();
+    (byDay[dd]=byDay[dd]||[]).push(r);
+  });
+  // Navegación de mes: va en la barra VISTA (no flota dentro del calendario)
+  const navH='<button class="cal-nav" onclick="calNav(-1)" title="Mes anterior">‹</button>'
+    +'<span class="cal-month">'+CAL_MESES[CAL_M]+' '+CAL_Y+'</span>'
+    +'<button class="cal-nav" onclick="calNav(1)" title="Mes siguiente">›</button>'
+    +'<button class="cal-today" onclick="calHoy()">Hoy</button>';
+  const slot=document.getElementById('calNavSlot');if(slot)slot.innerHTML=navH;
+  // Grilla mensual (semana empieza lunes; sáb/dom son media columna y en gris)
+  let h='';
+  const DOW=['lun','mar','mié','jue','vie','sáb','dom'];
+  h+='<div class="cal-grid">'+DOW.map((d,i)=>'<div class="cal-dow'+(i>=5?' weekend':'')+'">'+d+'</div>').join('');
+  let startDow=new Date(CAL_Y,CAL_M,1).getDay();// 0=dom..6=sáb
+  startDow=(startDow+6)%7;// lun=0
+  for(let i=0;i<startDow;i++)h+='<div class="cal-cell empty'+(i>=5?' weekend':'')+'"></div>';
+  const diasMes=new Date(CAL_Y,CAL_M+1,0).getDate();
+  const hoyISO=todayISO();
+  for(let d=1;d<=diasMes;d++){
+    const iso=CAL_Y+'-'+String(CAL_M+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const esHoy=iso===hoyISO;
+    const gd=new Date(CAL_Y,CAL_M,d).getDay();// 0=dom,6=sáb
+    const esWknd=(gd===0||gd===6);
+    const items=byDay[d]||[];
+    let cell='<div class="cal-cell'+(esHoy?' today':'')+(esWknd?' weekend':'')+'"><span class="cal-daynum">'+d+'</span>';
+    if(items.length){
+      cell+='<div class="cal-tasks">';
+      items.forEach(r=>{
+        const oc=opColor(r.operador||r.completado_por);
+        const tt=(r.tema||'')+' — '+nombreOp(r.operador||r.completado_por);
+        cell+='<div class="cal-task" style="border-left-color:'+oc+';background:'+oc+'1f" title="'+escH(tt)+'">'+escH(r.tema||'(sin título)')+'</div>';
+      });
+      cell+='</div>';
+    }else{
+      cell+='<div class="cal-empty-day">—</div>';
+    }
+    cell+='</div>';
+    h+=cell;
+  }
+  h+='</div>';
+  cal.innerHTML=h;
+}
 async function exportFinalizadosNav(){
   if(!REAL.length)await loadRealizaciones();
   exportRegistro();
