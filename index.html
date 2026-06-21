@@ -379,6 +379,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       <button id="btnDelete" class="danger" onclick="deleteTask()">Eliminar</button>
       <button id="btnCerrarProyecto" style="display:none;background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="cerrarProyecto()" title="Finaliza el proyecto sin generar una nueva etapa">Cerrar proyecto</button>
       <button id="btnFinalizarPersonalizada" style="display:none;background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="finalizarPersonalizada()" title="Finaliza esta tarea sin generar una nueva">Finalizar tarea</button>
+      <button id="btnDuplicar" style="display:none;background:#0ea5e9;color:#fff;border-color:#0ea5e9" onclick="duplicarTarea(editingId)" title="Crear una tarea nueva copiando este contenido (ID nuevo, fecha a completar)">Duplicar</button>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button onclick="closeTaskForm()">Cancelar</button>
         <button id="btnGuardarTarea" class="primary" onclick="saveTask()">Guardar</button>
@@ -548,6 +549,9 @@ function startOfWeekISO(){
   dt.setDate(dt.getDate()-off);
   return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
 }
+// Ventana móvil: hoy y los 6 días previos (7 días corridos). Reemplaza el corte por semana calendario
+// en la columna Finalizado, para que no se "vacíe" cada lunes.
+function rolling7ISO(){const d=new Date();d.setDate(d.getDate()-6);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
 // ── Registro de realizaciones (histórico para reportes) ───────
 async function logRealizacion(t,tipo='finalizado'){
@@ -885,9 +889,21 @@ function renderEquipo(){
   if(fpr)list=list.filter(t=>t.prioridad===fpr);
   if(fid)list=list.filter(t=>String(t.numero||'')===fid);
   if(ftx)list=list.filter(t=>((t.tema||'')+' '+(t.tareas||'')).toLowerCase().includes(ftx));
-  // La columna Finalizado solo muestra lo cerrado en la semana en curso (el resto vive en el registro)
-  const _wk=startOfWeekISO();
-  list=list.filter(t=>t.estado!=='Finalizado'||(t.fecha_estado||'')>=_wk);
+  // Columna Finalizado: ventana móvil de 7 días por defecto (sin búsqueda).
+  // Con búsqueda activa (texto o ID), un NO-admin SOLO puede filtrar SUS PROPIAS tarjetas
+  // (no puede traer cards de otros operadores, ni activas ni finalizadas, en ninguna vista).
+  // El admin con búsqueda ve todo lo que coincida.
+  {
+    const _searching=!!(ftx||fid);
+    if(!_searching){
+      const _wk=rolling7ISO();
+      list=list.filter(t=>t.estado!=='Finalizado'||(t.fecha_estado||'')>=_wk);
+    }else if(!isAdmin()){
+      const _w=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
+      const _mia=_w?(t=>t.creado_por===SESSION.user):(t=>t.operador===SESSION.user);
+      list=list.filter(_mia);
+    }
+  }
   // Filtro por rol en vista "Por operador"
   if(mode==='operador'&&!isAdmin()){
     const isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
@@ -1226,6 +1242,9 @@ function frecBase(f){if((f||'').startsWith('Personalizada:'))return'Personalizad
 let curImgs=[];
 let curChecklist=[];
 let _formReadOnly=false;
+// Al "Duplicar" una tarea, guarda el creado_por original para que la copia conserve quién la solicitó
+// (importante en tareas de Rubén: operador=ejecutor, creado_por=Rubén). saveTask lo usa en el alta nueva.
+let _dupCreadoPor=null;
 function renderChecklist(){
   const done=curChecklist.filter(x=>x.ok).length,total=curChecklist.length;
   document.getElementById('chkLabel').textContent=total?`Lista de comprobación (${done} de ${total} completados)`:'Lista de comprobación';
@@ -1336,6 +1355,7 @@ function openTaskForm(id){
     document.getElementById('btnDelete').style.display=_canDel?'inline-block':'none';
     document.getElementById('btnCerrarProyecto').style.display=(t.frecuencia==='Por Etapas'&&isAdmin())?'inline-block':'none';
     document.getElementById('btnFinalizarPersonalizada').style.display=((frecBase(t.frecuencia)==='Personalizada'||frecBase(t.frecuencia)==='Mensual')&&isAdmin())?'inline-block':'none';
+    document.getElementById('btnDuplicar').style.display=(isAdmin()&&t.estado==='Finalizado')?'inline-block':'none';
   }else{
     document.getElementById('modalTitle').textContent='Nueva tarea';
     ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
@@ -1344,6 +1364,7 @@ function openTaskForm(id){
     curImgs=[];curChecklist=[];document.getElementById('btnDelete').style.display='none';
     document.getElementById('btnCerrarProyecto').style.display='none';
     document.getElementById('btnFinalizarPersonalizada').style.display='none';
+    document.getElementById('btnDuplicar').style.display='none';
   }
   setupOperadorField(!id);
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
@@ -1405,7 +1426,38 @@ function openTaskForm(id){
   }
   document.getElementById('modalBg').classList.remove('hidden');
 }
-function closeTaskForm(){document.getElementById('modalBg').classList.add('hidden');editingId=null;}
+function closeTaskForm(){document.getElementById('modalBg').classList.add('hidden');editingId=null;_dupCreadoPor=null;}
+// Duplicar (solo admin): crea una tarea NUEVA copiando el contenido de una existente (típicamente finalizada),
+// con ID nuevo y fecha de finalización VACÍA para completar. No revive la original (que queda intacta en el historial).
+function duplicarTarea(id){
+  if(!isAdmin())return;
+  const t=DATA.find(x=>x.id===id);if(!t)return;
+  openTaskForm(null);// abre el formulario "Nueva tarea" (resetea todo)
+  document.getElementById('f_tema').value=t.tema||'';
+  document.getElementById('f_tareas').value=t.tareas||'';
+  const _fop=document.getElementById('f_operador');
+  if(t.operador&&!Array.from(_fop.options).some(o=>o.value===t.operador))_fop.insertAdjacentHTML('beforeend',`<option value="${t.operador}">${nombreOp(t.operador)||t.operador}</option>`);
+  _fop.value=t.operador;// la copia queda con el operador original
+  document.getElementById('f_area').value=t.area||'A.Com';
+  document.getElementById('f_prioridad').value=t.prioridad||'Baja';
+  const _fb=frecBase(t.frecuencia);
+  document.getElementById('f_frecuencia').value=_fb;
+  if(_fb==='Personalizada'){const d=document.getElementById('f_frec_dias');if(d)d.value=(t.frecuencia||'').split(':')[1]||'';}
+  if(_fb==='Mensual'){const d=document.getElementById('f_frec_dia');if(d)d.value=(t.frecuencia||'').split(':')[1]||'';}
+  document.getElementById('f_link1').value=t.link1||'';
+  document.getElementById('f_link2').value=t.link2||'';
+  document.getElementById('f_link3').value=t.link3||'';
+  curImgs=Array.isArray(t.imagenes)?t.imagenes.slice():[];
+  curChecklist=Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):[];// checklist reseteado
+  document.getElementById('f_privado').checked=!!t.privado;togglePriv();
+  toggleCopias();
+  // Fecha VACÍA y editable: obliga a completarla antes de guardar (sin señal falsa en el tablero)
+  const _fin=document.getElementById('f_finalizacion');_fin.value='';_fin.readOnly=false;_fin.style.background='';
+  renderThumbs();renderChecklist();
+  if(t.link2||t.link3||(t.imagenes&&t.imagenes.length)||(t.checklist&&t.checklist.length))expandExtra();
+  _dupCreadoPor=t.creado_por||null;
+  document.getElementById('modalTitle').textContent='Duplicar tarea — completá la fecha';
+}
 async function finalizarPersonalizada(){
   if(!editingId)return;
   const t=DATA.find(x=>x.id===editingId);if(!t)return;
@@ -1477,7 +1529,7 @@ async function saveTask(){
       const isDemo=USERS.find(u=>u.user===SESSION.user)?.demo;
       const nextNum=isDemo?null:DATA.reduce((m,t)=>Math.max(m,t.numero||0),0)+1;
       const _estInicial=(vals.frecuencia==='Personalizada'||vals.frecuencia==='Por Etapas'||(vals.frecuencia||'').startsWith('Personalizada:')||(vals.frecuencia||'').startsWith('Mensual:'))?'Programado':'Pendiente';
-      const nw=Object.assign({id:uid(),numero:nextNum,creado_por:SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:_estInicial},vals);
+      const nw=Object.assign({id:uid(),numero:nextNum,creado_por:_dupCreadoPor||SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:_estInicial},vals);
       const ok=await upsertTask(nw);if(ok)DATA.push(nw);
     }
     closeTaskForm();renderCurrent();
