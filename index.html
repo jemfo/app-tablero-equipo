@@ -783,11 +783,16 @@ function applyRole(){
   document.getElementById('btnPesos').style.display=admin?'inline-block':'none';
   document.getElementById('btnPassNav').style.display=admin?'inline-block':'none';
   if(!admin){document.getElementById('filterOp').value='';}
-  // Vista "Ver:" por defecto = Workflow para admin y operadores ejecutores (Diego/Maxi); watchers (Rubén) van a "Por operador"
+  // Vista por defecto: Workflow para admin y operadores; el gerente (Rubén/watcher) arranca en "Por equipo"
+  // (tiene pocos tickets propios → así dimensiona el trabajo en curso de todo el equipo).
   const _isW=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
-  const _vm=document.getElementById('viewMode');if(_vm)_vm.value=_isW?'operador':'workflow';
+  const _vm=document.getElementById('viewMode');if(_vm)_vm.value=_isW?'estado':'workflow';
   // Workflow visible para todos menos watchers
   const _wfOpt=_vm?_vm.querySelector('option[value="workflow"]'):null;if(_wfOpt)_wfOpt.hidden=_isW;
+  // "Por equipo" (estado): oculta para OPERADORES (no-admin y no-gerente); visible para admin y gerente (Rubén)
+  const _estOpt=_vm?_vm.querySelector('option[value="estado"]'):null;if(_estOpt)_estOpt.hidden=(!admin&&!_isW);
+  // "Calendario": oculta para el GERENTE/watcher (Rubén) — nunca finaliza, su calendario siempre estaría vacío
+  const _calOpt=_vm?_vm.querySelector('option[value="calendario"]'):null;if(_calOpt)_calOpt.hidden=_isW;
   const nav=document.getElementById('mainNav');
   const tools=document.getElementById('equipoTools');
   const btnNew=document.getElementById('btnNew');
@@ -833,7 +838,7 @@ function clearFilters(){
   document.getElementById('filterID').value='';
   document.getElementById('filterTxt').value='';
   const fo=document.getElementById('filterOp');if(fo)fo.value='';
-  document.getElementById('viewMode').value=(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'operador':'workflow';
+  document.getElementById('viewMode').value=(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow';
   if(filtroComentario){
     filtroComentario=false;
     const btn=document.getElementById('btnEnvNot');
