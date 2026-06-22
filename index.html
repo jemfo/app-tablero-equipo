@@ -142,7 +142,14 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .form2 input,.form2 select,.form2 textarea{width:100%}
 /* Textarea "Tareas a realizar": tamaño fijo, no desborda el formulario */
 .ta-wrap{position:relative}
-#f_tareas{resize:none;box-sizing:border-box;max-width:100%;width:100%;padding-bottom:30px}
+#f_tareas{resize:vertical;box-sizing:border-box;max-width:100%;width:100%;padding-bottom:30px}
+/* Comentario del equipo — campo reservado a terceros (azul) */
+#comentWrap label{color:#3b82f6!important}
+#f_comentario{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+#f_comentario:disabled{background:#dbeafe;color:#1e40af;opacity:1;cursor:default}
+/* Tarjeta de nota personal del admin */
+.card-nota{background:#ccfbf1!important;border-left-color:#0d9488!important}
+.card-nota .ct{color:#0f766e!important}
 .emoji-btn{position:absolute;left:6px;bottom:8px;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;cursor:pointer;line-height:1.3}
 .emoji-btn:hover{border-color:var(--accent)}
 .rt-emojis{position:absolute;left:6px;bottom:36px;z-index:30;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:4px;display:none;grid-template-columns:repeat(6,1fr);gap:2px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
@@ -222,6 +229,9 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .cal-tasks{display:flex;flex-direction:column;gap:3px;overflow:auto;max-height:260px}
 .cal-task{font-size:10px;line-height:1.3;padding:2px 5px;border-radius:4px;border-left:3px solid var(--blue);background:var(--bg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default}
 .cal-empty-day{font-size:10px;color:var(--muted);opacity:.5;margin-top:2px}
+.view-btn{box-sizing:border-box;width:32px;padding:6px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--txt);transition:background .15s,color .15s,border-color .15s}
+.view-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.view-btn:hover:not(.active){background:var(--bg3)}
 </style>
 </head>
 <body>
@@ -259,6 +269,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <div class="spacer" id="navSpacer">
       <span id="syncSt"></span>
       <button class="primary" id="btnNew" onclick="openTaskForm()">+ Nueva tarea</button>
+      <button id="btnNewNota" onclick="openNotaForm()" style="display:none;background:#374151;color:#f9fafb;border-color:#4b5563" title="Crear nota personal (solo visible para vos)">🗒 Nota</button>
       <button id="btnPassNav" onclick="openPassModal()" style="display:none;width:32px;height:32px;padding:0" title="Cambiar contraseña"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
       <button id="btnPesos" onclick="openTEPesos()" style="display:none">⚖ Pesos</button>
       <button id="btnExport" onclick="exportCSV()" style="display:none">⬇ En curso</button>
@@ -270,13 +281,13 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <!-- TABLERO EQUIPO -->
     <div id="pageEquipo">
       <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:0;align-items:center;flex-wrap:wrap">
-        <label class="cal-keep" style="font-weight:700;letter-spacing:.4px;cursor:pointer" title="Ir al inicio" onclick="goHomeView()">VISTA</label>
-        <select id="viewMode" class="cal-keep" onchange="renderEquipo()">
-          <option value="workflow">Workflow</option>
-          <option value="operador">Por operador</option>
-          <option value="estado">Por equipo</option>
-          <option value="calendario">Calendario</option>
-        </select>
+        <input type="hidden" id="viewMode" value="workflow">
+        <div class="cal-keep" style="display:inline-flex;gap:4px;align-items:center">
+          <button id="btnVW" class="view-btn" onclick="setViewMode('workflow')" title="Workflow&#10;es el flujo del equipo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+          <button id="btnVE" class="view-btn" onclick="setViewMode('estado')" title="Por equipo&#10;consolidado de tareas"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><path d="M2 16c0-2.2 1.3-3 3-3s3 .8 3 3"/><circle cx="12" cy="6" r="2"/><path d="M9 16c0-2.2 1.3-3 3-3s3 .8 3 3"/><circle cx="19" cy="6" r="2"/><path d="M16 16c0-2.2 1.3-3 3-3s3 .8 3 3"/></svg></button>
+          <button id="btnVO" class="view-btn" onclick="setViewMode('operador')" title="Por operador&#10;estas son tus tareas"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
+          <button id="btnVC" class="view-btn" onclick="setViewMode('calendario')" title="Calendario&#10;estos son tus finalizados"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+        </div>
         <span id="calNavSlot" class="cal-keep" style="display:flex;align-items:center;gap:8px"></span>
         <select id="filterOp" style="display:none" onchange="renderEquipo()"><option value="">Todos</option></select>
         <label class="muted">Área:</label>
@@ -285,7 +296,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         <select id="filterPrio" onchange="renderEquipo()"><option value="">Todas</option></select>
         <input id="filterTxt" class="cal-keep" placeholder="Buscar tema o tarea…" oninput="renderEquipo()" style="min-width:170px">
         <input id="filterID" class="cal-keep" placeholder="ID…" oninput="renderEquipo()" style="width:60px">
-        <button class="cal-keep" onclick="clearFilters()" title="Limpiar todos los filtros" style="background:#94a3b8;color:#fff;border-color:#94a3b8">✕ Limpiar</button>
+        <button class="cal-keep" onclick="clearFilters()" title="Limpiar todos los filtros" style="background:#ccfbf1;color:#000;border-color:#5eead4;padding:6px 12px;font-size:12px;line-height:1">✕ Limpiar</button>
         <!-- toggle visibilidad operadores -->
         <div id="opToggles" class="cal-keep" style="display:none;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center"></div>
       </div>
@@ -337,14 +348,15 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <h2 id="modalTitle" style="margin:0 0 8px">Nueva tarea</h2>
     <div class="form2">
       <div><label>Tema *</label><input id="f_tema"></div>
-      <div id="comentWrap" style="display:none">
-        <label style="font-size:11px;color:var(--muted)">Comentario del equipo <span id="comentAutor" style="font-weight:400;font-style:italic"></span></label>
-        <input id="f_comentario" maxlength="300" placeholder="Dejá una nota corta para el equipo…">
-        <div id="comentOkWrap" style="margin-top:4px;display:none">
-          <button type="button" id="btnComentOk" onclick="toggleComentOk()" style="font-size:12px"></button>
+      <div id="comentWrap" style="display:none;position:relative">
+        <label id="comentLabel" style="font-size:11px;color:var(--muted)">Comentario del equipo</label>
+        <span id="comentAutor" style="font-size:11px;font-weight:400;font-style:italic;color:var(--muted);display:none"></span>
+        <div id="comentOkWrap" style="display:none;position:absolute;top:0;right:0">
+          <button type="button" id="btnComentOk" onclick="toggleComentOk()" style="font-size:10px;padding:1px 8px;line-height:1.4"></button>
         </div>
+        <input id="f_comentario" maxlength="300" placeholder="Dejá una nota corta para el equipo…">
       </div>
-      <div class="full"><label>Tareas a realizar *</label>
+      <div id="wrapTareas" class="full"><label>Tareas a realizar *</label>
         <div class="ta-wrap">
           <textarea id="f_tareas" rows="3" placeholder="Describir el trabajo a realizar (mín. 30 caracteres)"></textarea>
           <button type="button" class="emoji-btn" onclick="rtToggleEmojis(event)" title="Insertar emoji">😊</button>
@@ -352,9 +364,9 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
       </div>
       <div id="wrapOperador"><label>Operador</label><select id="f_operador"></select></div>
-      <div><label>Área</label><select id="f_area"></select></div>
-      <div><label>Prioridad</label><select id="f_prioridad"></select></div>
-      <div><label>Frecuencia</label>
+      <div id="wrapArea"><label>Área</label><select id="f_area"></select></div>
+      <div id="wrapPrioridad"><label>Prioridad</label><select id="f_prioridad"></select></div>
+      <div id="wrapFrecuencia"><label>Frecuencia</label>
         <div style="display:flex;gap:6px;align-items:center">
           <select id="f_frecuencia" onchange="toggleCopias()" style="flex:1;min-width:0"></select>
           <input type="number" id="f_frec_dias" min="1" placeholder="días" title="Cada cuántos días se repite" style="width:65px;display:none" oninput="actualizarFechaPersonalizada()">
@@ -362,8 +374,8 @@ table.grid tr:nth-child(even){background:var(--bg2)}
           <input type="number" id="f_copias" min="0" value="0" placeholder="Veces" title="Cantidad de repeticiones a clonar" style="width:74px;display:none">
         </div>
       </div>
-      <div><label>Finalización *</label><input type="date" id="f_finalizacion"></div>
-      <div><label>Link 1 (fuente principal)</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link1" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link1').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button></div></div>
+      <div id="wrapFinalizacion"><label>Finalización *</label><input type="date" id="f_finalizacion"></div>
+      <div id="wrapLink1"><label>Link 1 (fuente principal)</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link1" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link1').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button></div></div>
       <div class="full" id="extraWrap">
         <div class="collapse-hdr" onclick="toggleExtra()"><span id="extraCaret">▸</span> Mail, links e imágenes
           <label id="privWrap" class="priv-chk" onclick="event.stopPropagation()" title="Reservado: oculta este contenido a los operadores (asigna la tarea al admin)"><input type="checkbox" id="f_privado" onchange="togglePriv()"></label>
@@ -602,7 +614,7 @@ async function finalizarTarea(t){
     if(!logged&&!confirm('No se pudo registrar en el historial. ¿Finalizar de todos modos?'))return;
     let extra='';
     if(esEtapas){
-      t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
+      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
       await upsertTask(t);
       const nextNum=DATA.reduce((m,x)=>Math.max(m,x.numero||0),0)+1;
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
@@ -610,14 +622,14 @@ async function finalizarTarea(t){
       extra=' · nueva etapa creada';
     }else if(esPersonalizada||esMensual){
       const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
-      t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
+      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
       await upsertTask(t);
       const nextNum=DATA.reduce((m,x)=>Math.max(m,x.numero||0),0)+1;
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
       extra=' · próxima: '+fmtDate(next);
     }else{
-      t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
+      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
       await upsertTask(t);
     }
     renderCurrent();
@@ -797,18 +809,20 @@ function applyRole(){
   document.getElementById('tabAnalisis').style.display=admin?'block':'none';
   document.getElementById('tabRegistro').style.display=admin?'block':'none';
   document.getElementById('btnPesos').style.display=admin?'inline-block':'none';
+  document.getElementById('btnNewNota').style.display=admin?'inline-block':'none';
   document.getElementById('btnPassNav').style.display=admin?'inline-block':'none';
   if(!admin){document.getElementById('filterOp').value='';}
   // Vista por defecto: Workflow para admin y operadores; el gerente (Rubén/watcher) arranca en "Por equipo"
   // (tiene pocos tickets propios → así dimensiona el trabajo en curso de todo el equipo).
   const _isW=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
-  const _vm=document.getElementById('viewMode');if(_vm)_vm.value=_isW?'estado':'workflow';
-  // Workflow visible para todos menos watchers
-  const _wfOpt=_vm?_vm.querySelector('option[value="workflow"]'):null;if(_wfOpt)_wfOpt.hidden=_isW;
-  // "Por equipo" (estado): oculta para OPERADORES (no-admin y no-gerente); visible para admin y gerente (Rubén)
-  const _estOpt=_vm?_vm.querySelector('option[value="estado"]'):null;if(_estOpt)_estOpt.hidden=(!admin&&!_isW);
-  // "Calendario": oculta para el GERENTE/watcher (Rubén) — nunca finaliza, su calendario siempre estaría vacío
-  const _calOpt=_vm?_vm.querySelector('option[value="calendario"]'):null;if(_calOpt)_calOpt.hidden=_isW;
+  // Workflow: oculto para watchers (Rubén)
+  const _bVW=document.getElementById('btnVW');if(_bVW)_bVW.style.display=_isW?'none':'inline-flex';
+  // Por equipo (estado): oculto para operadores (no-admin y no-watcher)
+  const _bVE=document.getElementById('btnVE');if(_bVE)_bVE.style.display=(!admin&&!_isW)?'none':'inline-flex';
+  // Calendario: oculto para watchers (Rubén)
+  const _bVC=document.getElementById('btnVC');if(_bVC)_bVC.style.display=_isW?'none':'inline-flex';
+  // Vista por defecto: Workflow para admin/operadores; Por equipo para watchers (Rubén)
+  setViewMode(_isW?'estado':'workflow',false);
   const nav=document.getElementById('mainNav');
   const tools=document.getElementById('equipoTools');
   const btnNew=document.getElementById('btnNew');
@@ -856,7 +870,7 @@ function clearFilters(){
   const fo=document.getElementById('filterOp');if(fo)fo.value='';
   // En Calendario, Limpiar solo resetea los filtros y mantiene la vista
   if(document.getElementById('viewMode').value!=='calendario')
-    document.getElementById('viewMode').value=(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow';
+    setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow',false);
   if(filtroComentario){
     filtroComentario=false;
     const btn=document.getElementById('btnEnvNot');
@@ -864,10 +878,15 @@ function clearFilters(){
   }
   renderEquipo();
 }
-// Click en el rótulo VISTA: vuelve a la vista de inicio (Workflow; el gerente/watcher a "Por equipo")
+function setViewMode(mode,render=true){
+  document.getElementById('viewMode').value=mode;
+  ['btnVW','btnVO','btnVE','btnVC'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  const _map={workflow:'btnVW',operador:'btnVO',estado:'btnVE',calendario:'btnVC'};
+  const _ab=document.getElementById(_map[mode]);if(_ab)_ab.classList.add('active');
+  if(render)renderEquipo();
+}
 function goHomeView(){
-  document.getElementById('viewMode').value=(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow';
-  renderEquipo();
+  setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow');
 }
 // ── Selector de emojis para "Tareas a realizar" ──
 const RT_EMOJIS=['😊','👍','✅','❌','⚠️','📌','🔴','🟢','🟡','📅','📎','💬','⭐','🔥','❤️','🚀','📝','⏰'];
@@ -957,6 +976,7 @@ function renderEquipo(){
   }
   // Vista "Por equipo": todos ven todos los trabajos (sin filtro por usuario)
   if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user);
+  if(!isAdmin())list=list.filter(t=>t.frecuencia!=='Nota');
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
   document.getElementById('equipoBody').innerHTML=mode==='workflow'?workflowHTML(list):((mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list));
   setupSticky();
@@ -1023,10 +1043,10 @@ function cardHTML(t){
       +(_attImgs?`<span onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img} Imagen${_attImgs>1?'es ('+_attImgs+')':''}</span>`:'')
     }</span></span>`:'';
   // Fijar: solo el operador dueño de la tarea (o el admin). Los demás ven el pin como referencia.
-  const _canPin=isAdmin()||(!isFinal&&t.operador===SESSION.user);
-  const pinIcon=_canPin
+  const _canPin=!isFinal&&(isAdmin()||t.operador===SESSION.user);
+  const pinIcon=isFinal?'':(_canPin
     ?`<span class="cpin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`
-    :(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:'');
+    :(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:''));
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
   const clIcon=cl?`<span class="cpill clchip" onclick="event.stopPropagation();toggleChkTip(this,'${t.id}')" style="cursor:pointer;background:${cl.every(x=>x.ok)?'#4ade8033;color:#16a34a':'var(--bg2)'};border-color:${cl.every(x=>x.ok)?'#4ade80':'var(--border)'}">☑ ${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'';
@@ -1036,8 +1056,26 @@ function cardHTML(t){
   // Marca del tipo de recurrencia: E=Por Etapas, M=Mensual, N=cada N días (Personalizada)
   const _frecMark=(()=>{const f=t.frecuencia||'';if(f==='Por Etapas')return 'E';if(frecBase(f)==='Mensual')return 'M';if(f.startsWith('Personalizada:'))return f.split(':')[1];if(frecBase(f)==='Personalizada')return 'P';return '';})();
   const _frecIcon=_isRecurring?`<span class="cfrec" style="top:${venc?30:8}px">${_frecSvg}${_frecMark?`<b class="cfrec-mk">${escH(_frecMark)}</b>`:''}</span>`:'';
-  const _editClick=isFinal?'onclick="openTaskForm(\''+t.id+'\')"':'';
+  const _isNota=t.frecuencia==='Nota';
+  const _editClick=(isFinal||_isNota)?'onclick="openTaskForm(\''+t.id+'\')"':'';
   const _cardStyle='border-left-color:'+oc;
+  if(_isNota){
+    const _notaPin=_canPin?`<span class="cpin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`:(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:'');
+    const _pendientes=(t.checklist||[]).filter(x=>!x.ok).slice(0,3);
+    const _pendHtml=_pendientes.map(it=>`<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#0f766e;padding:1px 0;min-width:0">
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">· ${escH(it.texto)}</span>
+      ${it.link?`<a href="${escH(it.link)}" target="_blank" onclick="event.stopPropagation()" style="flex-shrink:0;color:#0d9488;line-height:1" title="${escH(it.link)}"><svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-3"/><polyline points="10 1 15 1 15 6"/><line x1="15" y1="1" x2="7" y2="9"/></svg></a>`:''}
+    </div>`).join('');
+    return `<div class="card card-nota" draggable="true" data-id="${t.id}"
+      ondragstart="dragStart(event)" ondragend="dragEnd(event)"
+      onclick="openTaskForm('${t.id}')" style="cursor:default;padding:6px 8px;min-height:74px;max-height:74px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:6px;min-width:0">
+        <span class="ct" style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600">${escH((t.tema||'').length>35?(t.tema||'').slice(0,35)+'…':t.tema||'(sin título)')}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0">${clIcon}${_notaPin}</span>
+      </div>
+      ${_pendHtml}
+    </div>`;
+  }
   return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
     ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
     ${_editClick}
@@ -1165,7 +1203,7 @@ function renderOpToggles(){
   }).join('');
 }
 const sortCards=(arr,dir='asc',byEstado=false)=>arr.slice().sort((a,b)=>{
-  if((b.fijado?1:0)!==(a.fijado?1:0))return(b.fijado?1:0)-(a.fijado?1:0);
+  if(!byEstado&&(b.fijado?1:0)!==(a.fijado?1:0))return(b.fijado?1:0)-(a.fijado?1:0);
   if(byEstado)return(dir==='asc'?1:-1)*((b.fecha_estado||'').localeCompare(a.fecha_estado||''));
   const fd=(dir==='asc'?1:-1)*((a.finalizacion||'').localeCompare(b.finalizacion||''));
   if(fd!==0)return fd;
@@ -1272,6 +1310,7 @@ async function drop(e){
     renderEquipo();
     return;
   }
+  if(t.frecuencia==='Nota'&&est==='Finalizado'){showToast('Las notas no se pueden finalizar','err');renderEquipo();return;}
   if(est==='Finalizado'){await finalizarTarea(t);return;}
   t.estado=est;t.actualizado=nowStamp();t.fecha_estado=todayISO();upsertTask(t);renderEquipo();
 }
@@ -1291,16 +1330,39 @@ let _dupCreadoPor=null;
 function renderChecklist(){
   const done=curChecklist.filter(x=>x.ok).length,total=curChecklist.length;
   document.getElementById('chkLabel').textContent=total?`Lista de comprobación (${done} de ${total} completados)`:'Lista de comprobación';
-  document.getElementById('chkList').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 8px">`+curChecklist.map((it,i)=>`
-    <div style="display:flex;align-items:center;gap:4px;padding:1px 0;border-bottom:1px solid var(--border);min-width:0">
-      <input type="checkbox" ${it.ok?'checked':''} ${_formReadOnly?'disabled':'onchange="toggleCheckItem('+i+')"'} style="flex-shrink:0;width:13px;height:13px;${_formReadOnly?'cursor:default;opacity:.5':'cursor:pointer'}">
-      <span title="${escH(it.texto)}" style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${it.ok?'text-decoration:line-through;color:var(--muted)':''}">${escH(it.texto)}</span>
-      ${_formReadOnly?'':`<span onclick="removeCheckItem(${i})" style="flex-shrink:0;cursor:pointer;color:var(--muted);font-size:13px;padding:0 2px;line-height:1" title="Eliminar">×</span>`}
-    </div>`).join('')+`</div>`;
+  if(_notaMode){
+    document.getElementById('chkList').innerHTML=curChecklist.map((it,i)=>`
+      <div data-chk="${i}" draggable="true" ondragstart="chkDragStart(event,${i})" ondragover="chkDragOver(event,${i})" ondrop="chkDrop(event,${i})" ondragend="chkDragEnd(event)"
+        style="display:flex;align-items:center;gap:6px;padding:4px 2px;border-bottom:1px solid var(--border);${it.ok?'opacity:.5':''}">
+        <span style="cursor:grab;color:var(--muted);font-size:15px;flex-shrink:0;user-select:none;line-height:1">≡</span>
+        <input type="checkbox" ${it.ok?'checked':''} onchange="toggleCheckItem(${i})" style="flex-shrink:0;width:13px;height:13px;cursor:pointer">
+        <input value="${escH(it.texto)}" oninput="curChecklist[${i}].texto=this.value" onclick="event.stopPropagation()" style="flex:1;font-size:12px;border:none;background:transparent;padding:0;min-width:0;outline:none;${it.ok?'text-decoration:line-through;color:var(--muted)':''}">
+        <input value="${escH(it.link||'')}" oninput="curChecklist[${i}].link=this.value" placeholder="link…" onclick="event.stopPropagation()" style="width:120px;font-size:11px;padding:2px 5px;flex-shrink:0">
+        <span onclick="removeCheckItem(${i})" style="flex-shrink:0;cursor:pointer;color:var(--muted);font-size:14px;padding:0 3px;line-height:1" title="Eliminar">×</span>
+      </div>`).join('');
+  }else{
+    document.getElementById('chkList').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 8px">`+curChecklist.map((it,i)=>`
+      <div style="display:flex;align-items:center;gap:4px;padding:1px 0;border-bottom:1px solid var(--border);min-width:0">
+        <input type="checkbox" ${it.ok?'checked':''} ${_formReadOnly?'disabled':'onchange="toggleCheckItem('+i+')"'} style="flex-shrink:0;width:13px;height:13px;${_formReadOnly?'cursor:default;opacity:.5':'cursor:pointer'}">
+        <span title="${escH(it.texto)}" style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${it.ok?'text-decoration:line-through;color:var(--muted)':''}">${escH(it.texto)}</span>
+        ${_formReadOnly?'':`<span onclick="removeCheckItem(${i})" style="flex-shrink:0;cursor:pointer;color:var(--muted);font-size:13px;padding:0 2px;line-height:1" title="Eliminar">×</span>`}
+      </div>`).join('')+`</div>`;
+  }
 }
+let _chkDragIdx=null;
+function chkDragStart(ev,i){_chkDragIdx=i;ev.dataTransfer.effectAllowed='move';ev.currentTarget.style.opacity='.4';}
+function chkDragOver(ev,i){ev.preventDefault();ev.dataTransfer.dropEffect='move';}
+function chkDrop(ev,i){
+  ev.preventDefault();
+  if(_chkDragIdx===null||_chkDragIdx===i)return;
+  const item=curChecklist.splice(_chkDragIdx,1)[0];
+  curChecklist.splice(i,0,item);
+  renderChecklist();
+}
+function chkDragEnd(ev){if(ev&&ev.currentTarget)ev.currentTarget.style.opacity='';_chkDragIdx=null;}
 function addCheckItem(){
   const inp=document.getElementById('f_chkNew');const txt=inp.value.trim();if(!txt)return;
-  curChecklist.push({texto:txt,ok:false});inp.value='';renderChecklist();
+  curChecklist.push({texto:txt,ok:false,link:''});inp.value='';renderChecklist();
 }
 function toggleCheckItem(i){if(curChecklist[i])curChecklist[i].ok=!curChecklist[i].ok;renderChecklist();}
 function removeCheckItem(i){curChecklist.splice(i,1);renderChecklist();}
@@ -1398,7 +1460,16 @@ function openTaskForm(id){
     document.getElementById('btnDelete').style.display=_canDel?'inline-block':'none';
     document.getElementById('btnCerrarProyecto').style.display=(t.frecuencia==='Por Etapas'&&isAdmin())?'inline-block':'none';
     document.getElementById('btnFinalizarPersonalizada').style.display=((frecBase(t.frecuencia)==='Personalizada'||frecBase(t.frecuencia)==='Mensual')&&isAdmin())?'inline-block':'none';
-    document.getElementById('btnDuplicar').style.display=(isAdmin()&&t.estado==='Finalizado')?'inline-block':'none';
+    document.getElementById('btnDuplicar').style.display=(isAdmin()&&t.estado==='Finalizado'&&t.frecuencia!=='Nota')?'inline-block':'none';
+    if(t.frecuencia==='Nota'){
+      _notaMode=true;
+      document.getElementById('modalTitle').textContent='📝 Nota personal';
+      document.getElementById('btnDelete').style.display='inline-block';
+      document.getElementById('btnCerrarProyecto').style.display='none';
+      document.getElementById('btnFinalizarPersonalizada').style.display='none';
+      document.getElementById('btnDuplicar').style.display='none';
+      _notaSetForm(true);
+    }
   }else{
     document.getElementById('modalTitle').textContent='Nueva tarea';
     ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
@@ -1436,21 +1507,32 @@ function openTaskForm(id){
   const _cw=document.getElementById('comentWrap');
   const _fcm=document.getElementById('f_comentario');
   const _fca=document.getElementById('comentAutor');
+  const _fclbl=document.getElementById('comentLabel');
   const _fcok=document.getElementById('comentOkWrap');
   const _fcbtn=document.getElementById('btnComentOk');
   if(_t){
-    _cw.style.display='';
-    const _canC=isAdmin()||SESSION.user!==_t.creado_por;
-    _fcm.value=_t.comentario||'';
-    _fcm.disabled=!_canC;
-    _fcm.placeholder=_canC?'Dejá una nota corta para el equipo…':'Solo otros operadores pueden comentar aquí';
-    if(_t.comentario&&_t.comentario_por){
-      _fca.style.display='block';
-      _fca.textContent='Comentó '+nombreOp(_t.comentario_por)+(_t.comentario_ok?' · ✓ Leído':'');
-    }else{_fca.style.display='none';}
-    const _showOk=!!(_t.comentario&&(SESSION.user===_t.operador||SESSION.user===_t.creado_por));
-    _fcok.style.display=_showOk?'':'none';
-    if(_showOk)_fcbtn.textContent=_t.comentario_ok?'✓ Ya leído':'👍 Marcar como leído';
+    const _esCreador=SESSION.user===_t.creado_por;
+    const _tieneComentario=!!(_t.comentario&&_t.comentario_por);
+    if(_esCreador&&!_tieneComentario){
+      _cw.style.display='none';_fcm.value='';
+    }else{
+      _cw.style.display='';
+      const _canC=!_esCreador;
+      _fcm.value=_t.comentario||'';
+      _fcm.disabled=!_canC;
+      _fcm.placeholder=_canC?'Dejá una nota corta para el equipo…':'';
+      if(_tieneComentario){
+        if(_fclbl)_fclbl.style.display='none';
+        _fca.style.display='inline';
+        _fca.textContent='Comentó '+nombreOp(_t.comentario_por)+(_t.comentario_ok?' · ✓ Leído':'');
+      }else{
+        if(_fclbl)_fclbl.style.display='';
+        _fca.style.display='none';
+      }
+      const _showOk=!!(_t.comentario&&(SESSION.user===_t.operador||SESSION.user===_t.creado_por));
+      _fcok.style.display=_showOk?'':'none';
+      if(_showOk)_fcbtn.textContent=_t.comentario_ok?'✓ Ya leído':'👍 Marcar como leído';
+    }
   }else{
     _cw.style.display='none';_fcm.value='';
   }
@@ -1469,7 +1551,40 @@ function openTaskForm(id){
   }
   document.getElementById('modalBg').classList.remove('hidden');
 }
-function closeTaskForm(){document.getElementById('modalBg').classList.add('hidden');editingId=null;_dupCreadoPor=null;}
+function closeTaskForm(){document.getElementById('modalBg').classList.add('hidden');editingId=null;_dupCreadoPor=null;if(_notaMode){_notaMode=false;_notaSetForm(false);}}
+// ── Notas personales del admin ────────────────────────────────
+let _notaMode=false;
+const _NOTA_HIDE=['wrapTareas','wrapOperador','wrapArea','wrapPrioridad','wrapFrecuencia','wrapFinalizacion','wrapLink1','comentWrap'];
+function _notaSetForm(on){
+  _NOTA_HIDE.forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=on?'none':'';});
+  const ew=document.getElementById('extraWrap');
+  const ef=document.getElementById('extraFields');
+  const ch=ew&&ew.querySelector('.collapse-hdr');
+  const pw=document.getElementById('privWrap');
+  const fp=document.getElementById('f_privado');
+  if(on){
+    if(ew)ew.style.display='';
+    if(ch)ch.style.display='none';
+    if(pw)pw.style.display='none';
+    if(fp){fp.checked=false;}
+    if(ef){ef.classList.remove('hidden','priv-blur');}
+    document.querySelectorAll('#extraFields > div:not(.full)').forEach(el=>el.style.display='none');
+    document.querySelectorAll('#extraFields .full').forEach((el,i)=>{if(i>0)el.style.display='none';});
+  }else{
+    if(ch)ch.style.display='';
+    document.querySelectorAll('#extraFields > div:not(.full)').forEach(el=>el.style.display='');
+    document.querySelectorAll('#extraFields .full').forEach(el=>el.style.display='');
+    if(ef)ef.classList.add('hidden');
+  }
+}
+function openNotaForm(){
+  if(!isAdmin())return;
+  _notaMode=true;
+  openTaskForm();
+  document.getElementById('modalTitle').textContent='📝 Nueva nota personal';
+  document.getElementById('f_tema').placeholder='Título de la nota…';
+  _notaSetForm(true);
+}
 // Duplicar (solo admin): crea una tarea NUEVA copiando el contenido de una existente (típicamente finalizada),
 // con ID nuevo y fecha de finalización VACÍA para completar. No revive la original (que queda intacta en el historial).
 function duplicarTarea(id){
@@ -1528,18 +1643,20 @@ async function cerrarProyecto(){
 async function saveTask(){
   const tema=document.getElementById('f_tema').value.trim();
   if(!tema){alert('El tema es obligatorio.');return;}
-  const tareas=document.getElementById('f_tareas').value.trim();
-  if(tareas.length<30){const el=document.getElementById('f_tareas');el.focus();el.style.borderColor='var(--urg)';setTimeout(()=>el.style.borderColor='',2000);alert('Las tareas a realizar deben tener al menos 30 caracteres (escrito: '+tareas.length+').');return;}
-  if(!document.getElementById('f_finalizacion').value){alert('La fecha de finalización es obligatoria.');return;}
-  if(document.getElementById('f_frecuencia').value==='Personalizada'){const _fd=parseInt(document.getElementById('f_frec_dias').value||'0',10);if(!_fd||_fd<1){alert('Ingresá la cantidad de días para la frecuencia personalizada.');document.getElementById('f_frec_dias').focus();return;}}
-  if(document.getElementById('f_frecuencia').value==='Mensual'){const _fd=parseInt(document.getElementById('f_frec_dia').value||'0',10);if(!_fd||_fd<1||_fd>28){alert('Ingresá el día del mes (1-28) para la frecuencia mensual.');document.getElementById('f_frec_dia').focus();return;}}
-  const vals={tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,checklist:curChecklist.length?curChecklist.slice():null};
+  const tareas=_notaMode?'':document.getElementById('f_tareas').value.trim();
+  if(!_notaMode&&tareas.length<30){const el=document.getElementById('f_tareas');el.focus();el.style.borderColor='var(--urg)';setTimeout(()=>el.style.borderColor='',2000);alert('Las tareas a realizar deben tener al menos 30 caracteres (escrito: '+tareas.length+').');return;}
+  if(!_notaMode&&!document.getElementById('f_finalizacion').value){alert('La fecha de finalización es obligatoria.');return;}
+  if(!_notaMode&&document.getElementById('f_frecuencia').value==='Personalizada'){const _fd=parseInt(document.getElementById('f_frec_dias').value||'0',10);if(!_fd||_fd<1){alert('Ingresá la cantidad de días para la frecuencia personalizada.');document.getElementById('f_frec_dias').focus();return;}}
+  if(!_notaMode&&document.getElementById('f_frecuencia').value==='Mensual'){const _fd=parseInt(document.getElementById('f_frec_dia').value||'0',10);if(!_fd||_fd<1||_fd>28){alert('Ingresá el día del mes (1-28) para la frecuencia mensual.');document.getElementById('f_frec_dia').focus();return;}}
+  const vals=_notaMode
+    ?{tema,tareas:'',operador:SESSION.user,area:'A.Com',prioridad:'Baja',frecuencia:'Nota',finalizacion:'',link1:'',link2:'',link3:'',imagenes:[],privado:true,checklist:curChecklist.length?curChecklist.slice():null,comentario:null,comentario_por:null,comentario_ok:false}
+    :{tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,checklist:curChecklist.length?curChecklist.slice():null};
   const _ejSel=document.getElementById('f_ejecutor_sel');
-  if(_ejSel){if(!_ejSel.value){alert('Seleccioná el operador que va a realizar la tarea.');_ejSel.focus();return;}vals.operador=_ejSel.value;}
-  if(vals.privado)vals.operador=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
-  {
+  if(!_notaMode&&_ejSel){if(!_ejSel.value){alert('Seleccioná el operador que va a realizar la tarea.');_ejSel.focus();return;}vals.operador=_ejSel.value;}
+  if(!_notaMode&&vals.privado)vals.operador=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
+  if(!_notaMode){
     const _te=editingId?DATA.find(x=>x.id===editingId):null;
-    const _canC=editingId&&(isAdmin()||SESSION.user!==(_te&&_te.creado_por));
+    const _canC=editingId&&SESSION.user!==(_te&&_te.creado_por);
     if(_canC){
       const nc=document.getElementById('f_comentario').value.trim();
       vals.comentario=nc||null;
@@ -1552,8 +1669,8 @@ async function saveTask(){
     }
   }
   // Aviso suave (no bloquea): al crear una tarea nueva, si ya hay una ACTIVA con el mismo título y el mismo operador.
-  if(!editingId){
-    const _dup=DATA.some(x=>x.estado!=='Finalizado'&&(x.tema||'').trim().toLowerCase()===tema.toLowerCase()&&x.operador===vals.operador);
+  if(!editingId&&!_notaMode){
+    const _dup=DATA.some(x=>x.estado!=='Finalizado'&&x.frecuencia!=='Nota'&&(x.tema||'').trim().toLowerCase()===tema.toLowerCase()&&x.operador===vals.operador);
     if(_dup&&!confirm('⚠ Ya existe una tarea activa con el mismo título para '+nombreOp(vals.operador)+'.\n\n¿Querés crearla igual?'))return;
   }
   // Guard anti doble-envío: evita que dos clics/Enter creen tarjetas duplicadas (mismo numero, distinto id)
@@ -1570,7 +1687,7 @@ async function saveTask(){
       const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;}
     }else{
       const isDemo=USERS.find(u=>u.user===SESSION.user)?.demo;
-      const nextNum=isDemo?null:DATA.reduce((m,t)=>Math.max(m,t.numero||0),0)+1;
+      const nextNum=(isDemo||_notaMode)?null:DATA.reduce((m,t)=>Math.max(m,t.numero||0),0)+1;
       const _estInicial=(vals.frecuencia==='Personalizada'||vals.frecuencia==='Por Etapas'||(vals.frecuencia||'').startsWith('Personalizada:')||(vals.frecuencia||'').startsWith('Mensual:'))?'Programado':'Pendiente';
       const nw=Object.assign({id:uid(),numero:nextNum,creado_por:_dupCreadoPor||SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:_estInicial},vals);
       const ok=await upsertTask(nw);if(ok)DATA.push(nw);
