@@ -74,7 +74,8 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card .csub{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .cmeta{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;margin-top:auto;margin-bottom:2px;overflow:hidden;min-width:0}
 .card .cnum{font-size:10px;font-weight:700;color:var(--txt);letter-spacing:.3px;white-space:nowrap;flex-shrink:0}
-.cfrec{position:absolute;right:8px;color:#000;line-height:0}
+.cfrec{position:absolute;right:8px;color:#000;line-height:0;display:inline-flex;align-items:center;gap:2px}
+.cfrec-mk{font-size:10px;font-weight:700;line-height:1;color:#000}
 .card .cop{font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.3px}
 .card .cpill{font-size:9px;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:transparent;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .card .cpill.med{color:#16a34a;border-color:#16a34a88}
@@ -139,6 +140,15 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .form2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .form2 .full{grid-column:1/3}.form2 label{display:block;color:var(--muted);font-size:11px;margin-bottom:3px}
 .form2 input,.form2 select,.form2 textarea{width:100%}
+/* Textarea "Tareas a realizar": tamaño fijo, no desborda el formulario */
+.ta-wrap{position:relative}
+#f_tareas{resize:none;box-sizing:border-box;max-width:100%;width:100%;padding-bottom:30px}
+.emoji-btn{position:absolute;left:6px;bottom:8px;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;cursor:pointer;line-height:1.3}
+.emoji-btn:hover{border-color:var(--accent)}
+.rt-emojis{position:absolute;left:6px;bottom:36px;z-index:30;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:4px;display:none;grid-template-columns:repeat(6,1fr);gap:2px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.rt-emojis.open{display:grid}
+.rt-emojis span{cursor:pointer;font-size:16px;padding:3px;border-radius:4px;text-align:center}
+.rt-emojis span:hover{background:var(--bg3)}
 .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 .imgdrop{border:1px dashed var(--line);border-radius:8px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .thumbs{display:flex;flex-wrap:wrap;gap:8px;width:100%}
@@ -260,7 +270,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <!-- TABLERO EQUIPO -->
     <div id="pageEquipo">
       <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:0;align-items:center;flex-wrap:wrap">
-        <label class="cal-keep" style="font-weight:700;letter-spacing:.4px">VISTA</label>
+        <label class="cal-keep" style="font-weight:700;letter-spacing:.4px;cursor:pointer" title="Ir al inicio" onclick="goHomeView()">VISTA</label>
         <select id="viewMode" class="cal-keep" onchange="renderEquipo()">
           <option value="workflow">Workflow</option>
           <option value="operador">Por operador</option>
@@ -273,9 +283,9 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         <select id="filterArea" onchange="renderEquipo()"><option value="">Todas</option></select>
         <label class="muted">Prioridad:</label>
         <select id="filterPrio" onchange="renderEquipo()"><option value="">Todas</option></select>
-        <input id="filterTxt" placeholder="Buscar tema o tarea…" oninput="renderEquipo()" style="min-width:170px">
-        <input id="filterID" placeholder="ID…" oninput="renderEquipo()" style="width:60px">
-        <button onclick="clearFilters()" title="Limpiar todos los filtros" style="background:#94a3b8;color:#fff;border-color:#94a3b8">✕ Limpiar</button>
+        <input id="filterTxt" class="cal-keep" placeholder="Buscar tema o tarea…" oninput="renderEquipo()" style="min-width:170px">
+        <input id="filterID" class="cal-keep" placeholder="ID…" oninput="renderEquipo()" style="width:60px">
+        <button class="cal-keep" onclick="clearFilters()" title="Limpiar todos los filtros" style="background:#94a3b8;color:#fff;border-color:#94a3b8">✕ Limpiar</button>
         <!-- toggle visibilidad operadores -->
         <div id="opToggles" class="cal-keep" style="display:none;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center"></div>
       </div>
@@ -334,7 +344,13 @@ table.grid tr:nth-child(even){background:var(--bg2)}
           <button type="button" id="btnComentOk" onclick="toggleComentOk()" style="font-size:12px"></button>
         </div>
       </div>
-      <div class="full"><label>Tareas a realizar *</label><textarea id="f_tareas" rows="3" placeholder="Describir el trabajo a realizar (mín. 30 caracteres)"></textarea></div>
+      <div class="full"><label>Tareas a realizar *</label>
+        <div class="ta-wrap">
+          <textarea id="f_tareas" rows="3" placeholder="Describir el trabajo a realizar (mín. 30 caracteres)"></textarea>
+          <button type="button" class="emoji-btn" onclick="rtToggleEmojis(event)" title="Insertar emoji">😊</button>
+          <div class="rt-emojis" id="f_emojis"></div>
+        </div>
+      </div>
       <div id="wrapOperador"><label>Operador</label><select id="f_operador"></select></div>
       <div><label>Área</label><select id="f_area"></select></div>
       <div><label>Prioridad</label><select id="f_prioridad"></select></div>
@@ -589,7 +605,7 @@ async function finalizarTarea(t){
       t.estado='Finalizado';t.fecha_estado=todayISO();t.actualizado=nowStamp();
       await upsertTask(t);
       const nextNum=DATA.reduce((m,x)=>Math.max(m,x.numero||0),0)+1;
-      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
+      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
       extra=' · nueva etapa creada';
     }else if(esPersonalizada||esMensual){
@@ -838,7 +854,9 @@ function clearFilters(){
   document.getElementById('filterID').value='';
   document.getElementById('filterTxt').value='';
   const fo=document.getElementById('filterOp');if(fo)fo.value='';
-  document.getElementById('viewMode').value=(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow';
+  // En Calendario, Limpiar solo resetea los filtros y mantiene la vista
+  if(document.getElementById('viewMode').value!=='calendario')
+    document.getElementById('viewMode').value=(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow';
   if(filtroComentario){
     filtroComentario=false;
     const btn=document.getElementById('btnEnvNot');
@@ -846,6 +864,23 @@ function clearFilters(){
   }
   renderEquipo();
 }
+// Click en el rótulo VISTA: vuelve a la vista de inicio (Workflow; el gerente/watcher a "Por equipo")
+function goHomeView(){
+  document.getElementById('viewMode').value=(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow';
+  renderEquipo();
+}
+// ── Selector de emojis para "Tareas a realizar" ──
+const RT_EMOJIS=['😊','👍','✅','❌','⚠️','📌','🔴','🟢','🟡','📅','📎','💬','⭐','🔥','❤️','🚀','📝','⏰'];
+function rtToggleEmojis(e){if(e)e.stopPropagation();const box=document.getElementById('f_emojis');if(!box)return;
+  if(!box.dataset.filled){box.innerHTML=RT_EMOJIS.map(x=>`<span onclick="rtInsertEmoji('${x}')">${x}</span>`).join('');box.dataset.filled='1';}
+  box.classList.toggle('open');}
+function rtInsertEmoji(em){
+  const el=document.getElementById('f_tareas');if(!el)return;
+  const s=el.selectionStart,e2=el.selectionEnd;
+  el.value=el.value.slice(0,s)+em+el.value.slice(e2);
+  el.selectionStart=el.selectionEnd=s+em.length;el.focus();
+  const box=document.getElementById('f_emojis');if(box)box.classList.remove('open');}
+document.addEventListener('click',()=>{const b=document.getElementById('f_emojis');if(b)b.classList.remove('open');});
 function updateEnvBadge(){
   if(!SESSION)return;
   const count=DATA.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user).length;
@@ -987,7 +1022,9 @@ function cardHTML(t){
       _attLinks.map((u,i)=>`<span title="${escH(u)}" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')">${ICO.link} Link ${i+1}</span>`).join('')
       +(_attImgs?`<span onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img} Imagen${_attImgs>1?'es ('+_attImgs+')':''}</span>`:'')
     }</span></span>`:'';
-  const pinIcon=_canInteract
+  // Fijar: solo el operador dueño de la tarea (o el admin). Los demás ven el pin como referencia.
+  const _canPin=isAdmin()||(!isFinal&&t.operador===SESSION.user);
+  const pinIcon=_canPin
     ?`<span class="cpin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`
     :(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:'');
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
@@ -996,8 +1033,9 @@ function cardHTML(t){
   const _canDrag=!isFinal&&!(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false);
   const _isRecurring=frecBase(t.frecuencia)!=='Unica';
   const _frecSvg='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';
-  const _frecTip=(()=>{const f=t.frecuencia;if(f&&f.startsWith('Personalizada:')){const d=f.split(':')[1];return `Se repite c/${d} día${d==='1'?'':'s'}`;}if(f==='Por Etapas')return 'Por etapas — genera nueva tarjeta al finalizar';return f;})();
-  const _frecIcon=_isRecurring?`<span class="cfrec" title="${escH(_frecTip)}" style="top:${venc?30:8}px">${_frecSvg}</span>`:'';
+  // Marca del tipo de recurrencia: E=Por Etapas, M=Mensual, N=cada N días (Personalizada)
+  const _frecMark=(()=>{const f=t.frecuencia||'';if(f==='Por Etapas')return 'E';if(frecBase(f)==='Mensual')return 'M';if(f.startsWith('Personalizada:'))return f.split(':')[1];if(frecBase(f)==='Personalizada')return 'P';return '';})();
+  const _frecIcon=_isRecurring?`<span class="cfrec" style="top:${venc?30:8}px">${_frecSvg}${_frecMark?`<b class="cfrec-mk">${escH(_frecMark)}</b>`:''}</span>`:'';
   const _editClick=isFinal?'onclick="openTaskForm(\''+t.id+'\')"':'';
   const _cardStyle='border-left-color:'+oc;
   return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
@@ -1016,7 +1054,7 @@ function cardHTML(t){
       ${envIcon}
     </div>
     <div class="cfoot">
-      <span style="display:inline-flex;gap:6px"><span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" style="${!isFinal&&!venc&&t.finalizacion===todayISO()?'background:#4ade80;color:#14532d;font-weight:700;border-radius:4px;padding:1px 5px':''}">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span></span>
+      <span style="display:inline-flex;gap:6px"><span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" style="${!isFinal&&!venc&&t.frecuencia!=='Por Etapas'&&t.finalizacion===todayISO()?'background:#4ade80;color:#14532d;font-weight:700;border-radius:4px;padding:1px 5px':''}">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span></span>
       <span class="cfoot-icons">${clIcon}${reacc}${attachIcon}${pinIcon}</span>
     </div>
   </div>`;
@@ -1099,7 +1137,7 @@ document.addEventListener('click',e=>{
 });
 function openTaskImg(id){const t=DATA.find(x=>x.id===id);if(t&&t.imagenes&&t.imagenes.length){document.getElementById('imgLightboxImg').src=t.imagenes[0];document.getElementById('imgLightbox').classList.remove('hidden');}}
 function openTaskLink(id){const t=DATA.find(x=>x.id===id);if(!t)return;const url=t.link1||t.link2||t.link3;if(url)window.open(url,'_blank','noopener');}
-async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
+async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;if(!isAdmin()&&t.operador!==SESSION.user)return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
 // Orden de cada columna: fijadas primero, luego por finalizacion asc (excepto Finalizado que va por fecha_estado desc)
 let COL_SORT={};
 function toggleColSort(est){COL_SORT[est]=(COL_SORT[est]||'asc')==='asc'?'desc':'asc';renderCurrent();}
@@ -1697,7 +1735,7 @@ const CAL_MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agost
 async function loadRealCalendar(force){
   if(CAL_LOADED&&!force)return;
   setSyncSt('Cargando finalizadas…');
-  const{data,error}=await _SB.from('realizaciones').select('tema,operador,completado_por,completado_en,tipo').order('completado_en',{ascending:false});
+  const{data,error}=await _SB.from('realizaciones').select('tema,operador,completado_por,completado_en,tipo,numero').order('completado_en',{ascending:false});
   setSyncSt('');
   if(error){REAL_CAL=[];return;}
   REAL_CAL=(data||[]).filter(r=>r.tipo!=='eliminado'&&r.completado_en);
@@ -1786,12 +1824,17 @@ function renderCalendar(){
   const cal=document.getElementById('calendarBody');
   // Cada operador ve SOLO sus finalizadas; el admin ve todo el equipo
   const soloMias=!isAdmin();
+  // Filtros Buscar (tema/tarea) e ID, compartidos con la barra del tablero
+  const ftx=document.getElementById('filterTxt').value.trim().toLowerCase();
+  const fid=document.getElementById('filterID').value.trim();
   // Agrupar finalizadas del mes mostrado por día (fecha local)
   const byDay={};
   REAL_CAL.forEach(r=>{
     const who=r.operador||r.completado_por;
     if(soloMias){if(who!==SESSION.user)return;}        // operador: solo lo suyo
     else if(HIDDEN_OPS.has(who))return;                 // admin: aplica filtro de chips
+    if(fid&&String(r.numero||'')!==fid)return;
+    if(ftx&&!((r.tema||'').toLowerCase().includes(ftx)))return;
     const dt=new Date(r.completado_en);
     if(dt.getFullYear()!==CAL_Y||dt.getMonth()!==CAL_M)return;
     const dd=dt.getDate();
