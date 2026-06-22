@@ -1187,7 +1187,7 @@ function kanbanHTML(list){
     return `<div class="col" data-estado="${est}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
       <div class="col-hdr" style="border-top:3px solid #fb2118">
         <span class="col-title" style="color:#fb2118">${est}</span>
-        <span style="display:inline-flex;align-items:center;gap:5px">${colSortHTML(est)}<span class="col-count">${items.length}</span></span>
+        <span style="display:inline-flex;align-items:center;gap:5px">${est==='Finalizado'?'':colSortHTML(est)}<span class="col-count">${items.length}</span></span>
       </div>
       <div class="cards">${items.map(cardHTML).join('')}</div>
     </div>`;
@@ -1210,7 +1210,7 @@ function workflowHTML(list){
     return `<div class="col" data-estado="${est}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
       <div class="col-hdr" style="border-top:3px solid #fb2118">
         <span class="col-title" style="color:#fb2118">${est}${_tag}</span>
-        <span style="display:inline-flex;align-items:center;gap:5px">${colSortHTML(est)}<span class="col-count">${items.length}</span></span>
+        <span style="display:inline-flex;align-items:center;gap:5px">${est==='Finalizado'?'':colSortHTML(est)}<span class="col-count">${items.length}</span></span>
       </div>
       <div class="cards">${items.map(cardHTML).join('')}</div>
     </div>`;
@@ -1243,7 +1243,7 @@ function byOpHTML(list){
       h+=`<div class="col" data-estado="${est}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
         <div class="col-hdr" style="border-top:3px solid #fb2118">
           <span class="col-title" style="color:#fb2118">${est}</span>
-          <span style="display:inline-flex;align-items:center;gap:5px">${colSortHTML(est)}<span class="col-count">${its.length}</span></span>
+          <span style="display:inline-flex;align-items:center;gap:5px">${est==='Finalizado'?'':colSortHTML(est)}<span class="col-count">${its.length}</span></span>
         </div>
         <div class="cards">${its.map(cardHTML).join('')}</div>
       </div>`;
