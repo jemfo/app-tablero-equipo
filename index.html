@@ -1243,10 +1243,10 @@ function workflowHTML(list){
     const _scope=_team?list:list.filter(t=>t.operador===SESSION.user);
     const _filtered=_scope.filter(t=>t.estado===est);
     let items;
-    if(_team){
+    if(_team&&est!=='Finalizado'){
       const _base=['diego','maxi','juan','ruben'];
       const _ord=[SESSION.user,..._base.filter(u=>u!==SESSION.user)];
-      items=_ord.flatMap(uid=>sortCards(_filtered.filter(t=>t.operador===uid),dir,est==='Finalizado'));
+      items=_ord.flatMap(uid=>sortCards(_filtered.filter(t=>t.operador===uid),dir,false));
     }else{
       items=sortCards(_filtered,dir,est==='Finalizado');
     }
