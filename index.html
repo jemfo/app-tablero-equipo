@@ -1241,7 +1241,15 @@ function workflowHTML(list){
     const dir=COL_SORT[est]||'asc';
     const _team=WF_TEAM_COLS.includes(est);
     const _scope=_team?list:list.filter(t=>t.operador===SESSION.user);
-    const items=sortCards(_scope.filter(t=>t.estado===est),dir,est==='Finalizado');
+    const _filtered=_scope.filter(t=>t.estado===est);
+    let items;
+    if(_team){
+      const _base=['diego','maxi','juan','ruben'];
+      const _ord=[SESSION.user,..._base.filter(u=>u!==SESSION.user)];
+      items=_ord.flatMap(uid=>sortCards(_filtered.filter(t=>t.operador===uid),dir,est==='Finalizado'));
+    }else{
+      items=sortCards(_filtered,dir,est==='Finalizado');
+    }
     const _tag=_team
       ?'<span style="font-size:10px;font-weight:700;background:#fdba74;color:#7c2d12;border-radius:4px;padding:1px 6px;margin-left:5px">equipo</span>'
       :'<span style="font-size:10px;font-weight:700;background:#7dd3fc;color:#075985;border-radius:4px;padding:1px 6px;margin-left:5px">por operador</span>';
