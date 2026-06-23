@@ -1510,6 +1510,14 @@ function openTaskForm(id){
   document.getElementById('f_copias').value=0;toggleCopias();renderThumbs();renderChecklist();
   collapseExtra();
   const _t=id?DATA.find(x=>x.id===id):null;
+  // Rubén: solo lectura en tareas ajenas (puede comentar, no editar nada más)
+  if(_isWatcher&&id&&_t&&_t.creado_por!==SESSION.user){
+    ['f_tema','f_tareas','f_frec_dias','f_frec_dia','f_link1','f_link2','f_link3'].forEach(x=>{const el=document.getElementById(x);if(el){el.readOnly=true;el.style.background='var(--border)';}});
+    ['f_operador','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=true;});
+    document.querySelectorAll('.imgdrop button').forEach(e=>e.disabled=true);
+    document.querySelectorAll('#extraFields button').forEach(e=>e.disabled=true);
+    document.querySelectorAll('#wrapLink1 button').forEach(e=>e.disabled=true);
+  }
   // Reservado/privado: solo el admin controla el check
   const _priv=!!(_t&&_t.privado);
   document.getElementById('f_privado').checked=_priv;
