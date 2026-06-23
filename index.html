@@ -410,6 +410,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       <button id="btnDuplicar" style="display:none;background:#0ea5e9;color:#fff;border-color:#0ea5e9" onclick="duplicarTarea(editingId)" title="Crear una tarea nueva copiando este contenido (ID nuevo, fecha a completar)">Duplicar</button>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button onclick="closeTaskForm()">Cancelar</button>
+        <button id="btnAprobar" style="display:none;background:var(--bg3);border:1px solid #fbbf24;color:var(--txt);font-size:12px" onclick="aprobarSolicitud(editingId)">Asignar →</button>
         <button id="btnGuardarTarea" class="primary" onclick="saveTask()">Guardar</button>
       </div>
     </div>
@@ -949,8 +950,8 @@ function renderEquipo(){
   if(fid)list=list.filter(t=>String(t.numero||'')===fid);
   if(ftx)list=list.filter(t=>((t.tema||'')+' '+(t.tareas||'')).toLowerCase().includes(ftx));
   // Columna Finalizado: ventana móvil de 7 días por defecto (sin búsqueda).
-  // Con búsqueda activa (texto o ID), un NO-admin SOLO puede filtrar SUS PROPIAS tarjetas
-  // (no puede traer cards de otros operadores, ni activas ni finalizadas, en ninguna vista).
+  // Con búsqueda activa (texto o ID): operadores solo ven sus propias tarjetas.
+  // Watchers (Rubén): en "Por equipo" ven todo el equipo también al buscar (misma regla que sin búsqueda).
   // El admin con búsqueda ve todo lo que coincida.
   {
     const _searching=!!(ftx||fid);
@@ -959,8 +960,7 @@ function renderEquipo(){
       list=list.filter(t=>t.estado!=='Finalizado'||(t.fecha_estado||'')>=_wk);
     }else if(!isAdmin()){
       const _w=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
-      const _mia=_w?(t=>t.creado_por===SESSION.user):(t=>t.operador===SESSION.user);
-      list=list.filter(_mia);
+      if(!_w) list=list.filter(t=>t.operador===SESSION.user);
     }
   }
   // Filtro por rol en vista "Por operador"
@@ -1175,6 +1175,14 @@ document.addEventListener('click',e=>{
 });
 function openTaskImg(id){const t=DATA.find(x=>x.id===id);if(t&&t.imagenes&&t.imagenes.length){document.getElementById('imgLightboxImg').src=t.imagenes[0];document.getElementById('imgLightbox').classList.remove('hidden');}}
 function openTaskLink(id){const t=DATA.find(x=>x.id===id);if(!t)return;const url=t.link1||t.link2||t.link3;if(url)window.open(url,'_blank','noopener');}
+async function aprobarSolicitud(id){
+  const t=DATA.find(x=>x.id===id);
+  if(!t||!(t.comentario_por||'').startsWith('para:'))return;
+  const executor=t.comentario_por.replace('para:','');
+  const upd=Object.assign({},t,{operador:executor,comentario:null,comentario_por:null,comentario_ok:false,actualizado:nowStamp()});
+  const ok=await upsertTask(upd);
+  if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;closeTaskForm();renderCurrent();}
+}
 async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;if(!isAdmin()&&t.operador!==SESSION.user)return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
 // Orden de cada columna: fijadas primero, luego por finalizacion asc (excepto Finalizado que va por fecha_estado desc)
 let COL_SORT={};
@@ -1469,6 +1477,9 @@ function openTaskForm(id){
     document.getElementById('btnCerrarProyecto').style.display=(t.frecuencia==='Por Etapas'&&isAdmin())?'inline-block':'none';
     document.getElementById('btnFinalizarPersonalizada').style.display=((frecBase(t.frecuencia)==='Personalizada'||frecBase(t.frecuencia)==='Mensual')&&isAdmin())?'inline-block':'none';
     document.getElementById('btnDuplicar').style.display=(isAdmin()&&t.estado==='Finalizado'&&t.frecuencia!=='Nota')?'inline-block':'none';
+    const _isRuta=isAdmin()&&(t.comentario_por||'').startsWith('para:')&&!t.comentario&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false;
+    const _btnAp=document.getElementById('btnAprobar');
+    if(_btnAp){_btnAp.style.display=_isRuta?'inline-block':'none';if(_isRuta){const _ex=t.comentario_por.replace('para:','');_btnAp.textContent='Asignar a '+(nombreOp(_ex)||_ex)+' →';}}
     if(t.frecuencia==='Nota'){
       _notaMode=true;
       document.getElementById('modalTitle').textContent='📝 Nota personal';
@@ -1487,6 +1498,7 @@ function openTaskForm(id){
     document.getElementById('btnCerrarProyecto').style.display='none';
     document.getElementById('btnFinalizarPersonalizada').style.display='none';
     document.getElementById('btnDuplicar').style.display='none';
+    document.getElementById('btnAprobar').style.display='none';
   }
   setupOperadorField(!id);
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
@@ -1553,7 +1565,7 @@ function openTaskForm(id){
     ['f_area','f_prioridad','f_frecuencia','f_operador','f_finalizacion','f_copias','f_frec_dias','f_frec_dia','f_imgfile','f_chkNew'].forEach(x=>{const e=document.getElementById(x);if(e)e.disabled=true;});
     document.querySelectorAll('.imgdrop button').forEach(e=>e.disabled=true);
     document.querySelectorAll('#extraFields button').forEach(e=>e.disabled=true);
-    ['btnDelete','btnGuardarTarea','btnCerrarProyecto','btnFinalizarPersonalizada'].forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
+    ['btnDelete','btnGuardarTarea','btnCerrarProyecto','btnFinalizarPersonalizada','btnAprobar'].forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
     document.getElementById('modalTitle').textContent='Tarea finalizada — Solo lectura';
     renderChecklist();
   }
@@ -1674,6 +1686,17 @@ async function saveTask(){
       vals.comentario=(_te&&_te.comentario)||null;
       vals.comentario_por=(_te&&_te.comentario_por)||null;
       vals.comentario_ok=(_te&&_te.comentario_ok)||false;
+    }
+  }
+  // Routing: tarea nueva de watcher → pasa primero por el admin para que la derive
+  if(_esWatcher()&&!editingId){
+    const _admin=USERS.find(u=>u.rol==='admin');
+    if(_admin&&vals.operador!==_admin.user){
+      vals.comentario_por='para:'+vals.operador;
+      vals.comentario=null;
+      vals.comentario_ok=false;
+      vals.operador=_admin.user;
+      vals.fijado=true;
     }
   }
   // Aviso suave (no bloquea): al crear una tarea nueva, si ya hay una ACTIVA con el mismo título y el mismo operador.
