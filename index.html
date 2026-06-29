@@ -364,8 +364,11 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
       </div>
       <div id="wrapOperador"><label>Operador</label><select id="f_operador"></select></div>
-      <div id="wrapArea"><label>Área que lo solicita</label><select id="f_area"></select>
+      <div id="wrapArea"><label>Área que lo solicita</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="f_area" style="flex:1;min-width:0"></select>
           <label id="devWrap" title="Marca el ticket como Desarrollo (lo ejecuta el admin). Aparece al filtrar por DES sin cambiar el área que lo solicita." style="display:none;align-items:center;gap:4px;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--muted)"><input type="checkbox" id="f_desarrollo"> 🔧 Desarrollo</label>
+        </div>
       </div>
       <div id="wrapPrioridad"><label>Prioridad</label><select id="f_prioridad"></select></div>
       <div id="wrapFrecuencia"><label>Frecuencia</label>
