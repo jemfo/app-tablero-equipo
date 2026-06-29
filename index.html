@@ -256,7 +256,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
   <div class="eq-header">
     <h1>Análisis Comercial</h1>
     <span class="userbox">Sesión: <b id="curUser"></b></span>
-    <button id="btnEnvNot" onclick="toggleFiltroComentario()" title="Comentarios pendientes para mí" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px">✉<span id="envBadge" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <button id="btnEnvNot" onclick="toggleEnvButton()" title="Notificaciones pendientes" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <span class="date" id="todayLabel"></span>
     <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
     <button id="themeBtn" onclick="toggleTheme()" title="Cambiar tema" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg id="themeIco" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
@@ -516,7 +516,7 @@ const EST_COLOR={
   'Para ver juntos':'#fb923c','Programado':'#38bdf8','Finalizado':'#4ade80'
 };
 
-let DATA=[], SESSION=null, editingId=null, filtroComentario=false, VIEW_MODE='estado';
+let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, VIEW_MODE='estado';
 
 // ── Utilidades ────────────────────────────────────────────────
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -539,6 +539,11 @@ function showToast(msg,tipo='ok'){
 const setSyncSt=msg=>document.getElementById('syncSt').textContent=msg;
 
 // ── Supabase CRUD ─────────────────────────────────────────────
+// Consulta el MAX(numero) directamente en BD para evitar race condition entre usuarios simultáneos.
+async function getNextNumero(){
+  const{data}=await _SB.from('trabajos').select('numero').order('numero',{ascending:false}).limit(1).maybeSingle();
+  return (data?.numero||0)+1;
+}
 async function loadData(){
   setSyncSt('Cargando…');
   const{data,error}=await _SB.from('trabajos').select('*').order('actualizado',{ascending:false});
@@ -622,7 +627,7 @@ async function finalizarTarea(t){
     if(esEtapas){
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
       await upsertTask(t);
-      const nextNum=DATA.reduce((m,x)=>Math.max(m,x.numero||0),0)+1;
+      const nextNum=await getNextNumero();
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
       extra=' · nueva etapa creada';
@@ -630,7 +635,7 @@ async function finalizarTarea(t){
       const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
       await upsertTask(t);
-      const nextNum=DATA.reduce((m,x)=>Math.max(m,x.numero||0),0)+1;
+      const nextNum=await getNextNumero();
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
       extra=' · próxima: '+fmtDate(next);
@@ -651,7 +656,7 @@ function startRealtime(){
       if(p.eventType==='INSERT'){if(!DATA.find(x=>x.id===p.new.id))DATA.push(p.new);}
       else if(p.eventType==='UPDATE'){const i=DATA.findIndex(x=>x.id===p.new.id);if(i>=0)DATA[i]=p.new;else DATA.push(p.new);}
       else if(p.eventType==='DELETE') DATA=DATA.filter(x=>x.id!==p.old.id);
-      renderCurrent();
+      updateEnvBadge();renderCurrent();
     }).subscribe();
 }
 
@@ -880,10 +885,11 @@ function clearFilters(){
   // En Calendario, Limpiar solo resetea los filtros y mantiene la vista
   if(document.getElementById('viewMode').value!=='calendario')
     setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow',false);
-  if(filtroComentario){
-    filtroComentario=false;
-    const btn=document.getElementById('btnEnvNot');
-    if(btn){btn.style.background='';btn.style.borderColor='';btn.style.color='';}
+  if(filtroComentario||filtroRuben){
+    const _wasRuben=filtroRuben;
+    filtroComentario=false;filtroRuben=false;
+    _syncEnvBtn();
+    if(_wasRuben){setViewMode('workflow',false);}
   }
   renderEquipo();
 }
@@ -915,15 +921,33 @@ function updateEnvBadge(){
   const badge=document.getElementById('envBadge');
   const btn=document.getElementById('btnEnvNot');
   if(!badge||!btn)return;
-  if(count>0){badge.textContent=count;badge.style.display='inline-flex';btn.style.color='#16a34a';}
-  else{badge.style.display='none';btn.style.color='';}
+  if(count>0){badge.textContent=count;badge.style.display='inline-flex';if(!filtroRuben&&!filtroComentario)btn.style.color='#16a34a';}
+  else{badge.style.display='none';}
+  const rb=document.getElementById('rubenBadge');
+  if(rb&&isAdmin()){
+    const rc=DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length;
+    if(rc>0){rb.textContent=rc;rb.style.display='inline-flex';}
+    else{rb.style.display='none';if(filtroRuben){filtroRuben=false;_syncEnvBtn();}}
+  }
+  _syncEnvBtn();
+}
+function _syncEnvBtn(){
+  const btn=document.getElementById('btnEnvNot');if(!btn)return;
+  if(filtroRuben){btn.style.background='#e91e8c';btn.style.borderColor='#e91e8c';btn.style.color='#fff';}
+  else if(filtroComentario){btn.style.background='#dc2626';btn.style.borderColor='#dc2626';btn.style.color='#fff';}
+  else{btn.style.background='';btn.style.borderColor='';btn.style.color='';}
 }
 function toggleFiltroComentario(){
   filtroComentario=!filtroComentario;
-  const btn=document.getElementById('btnEnvNot');
-  if(btn){btn.style.background=filtroComentario?'#dc2626':'';btn.style.borderColor=filtroComentario?'#dc2626':'';btn.style.color=filtroComentario?'#fff':'';}
-
+  if(filtroComentario)filtroRuben=false;
+  _syncEnvBtn();
   renderCurrent();
+}
+function toggleEnvButton(){
+  const rc=isAdmin()?DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length:0;
+  if(filtroRuben){filtroRuben=false;_syncEnvBtn();setViewMode('workflow');return;}
+  if(rc>0){filtroRuben=true;filtroComentario=false;_syncEnvBtn();setViewMode('estado');return;}
+  filtroComentario=!filtroComentario;_syncEnvBtn();renderCurrent();
 }
 function renderEquipo(){
   fillFilterOp();fillFiltros();
@@ -984,6 +1008,7 @@ function renderEquipo(){
   }
   // Vista "Por equipo": todos ven todos los trabajos (sin filtro por usuario)
   if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user);
+  if(filtroRuben)list=list.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false);
   if(!isAdmin())list=list.filter(t=>t.frecuencia!=='Nota');
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
   document.getElementById('equipoBody').innerHTML=mode==='workflow'?workflowHTML(list):((mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list));
@@ -1189,7 +1214,15 @@ async function aprobarSolicitud(id){
   const executor=t.comentario_por.replace('para:','');
   const upd=Object.assign({},t,{operador:executor,comentario:null,comentario_por:null,comentario_ok:false,actualizado:nowStamp()});
   const ok=await upsertTask(upd);
-  if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;closeTaskForm();renderCurrent();}
+  if(ok){
+    const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;
+    closeTaskForm();
+    if(filtroRuben){
+      const rem=DATA.filter(x=>(x.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===x.creado_por)?.canFinalize===false).length;
+      if(rem===0){filtroRuben=false;_syncEnvBtn();setViewMode('workflow');return;}
+    }
+    renderCurrent();
+  }
 }
 async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;if(!isAdmin()&&t.operador!==SESSION.user)return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
 // Orden de cada columna: fijadas primero, luego por finalizacion asc (excepto Finalizado que va por fecha_estado desc)
@@ -1737,7 +1770,7 @@ async function saveTask(){
       const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;}
     }else{
       const isDemo=USERS.find(u=>u.user===SESSION.user)?.demo;
-      const nextNum=(isDemo||_notaMode)?null:DATA.reduce((m,t)=>Math.max(m,t.numero||0),0)+1;
+      const nextNum=(isDemo||_notaMode)?null:await getNextNumero();
       const _estInicial=(vals.frecuencia==='Personalizada'||vals.frecuencia==='Por Etapas'||(vals.frecuencia||'').startsWith('Personalizada:')||(vals.frecuencia||'').startsWith('Mensual:'))?'Programado':'Pendiente';
       const nw=Object.assign({id:uid(),numero:nextNum,creado_por:_dupCreadoPor||SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:_estInicial},vals);
       const ok=await upsertTask(nw);if(ok)DATA.push(nw);
