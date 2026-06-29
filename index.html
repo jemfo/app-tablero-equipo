@@ -1089,6 +1089,7 @@ function cardHTML(t){
   // Marca del tipo de recurrencia: E=Por Etapas, M=Mensual, N=cada N días (Personalizada)
   const _frecMark=(()=>{const f=t.frecuencia||'';if(f==='Por Etapas')return 'E';if(frecBase(f)==='Mensual')return 'M';if(f.startsWith('Personalizada:'))return f.split(':')[1];if(frecBase(f)==='Personalizada')return 'P';return '';})();
   const _frecIcon=_isRecurring?`<span class="cfrec" style="top:${venc?30:8}px">${_frecSvg}${_frecMark?`<b class="cfrec-mk">${escH(_frecMark)}</b>`:''}</span>`:'';
+  const _desIcon=t.desarrollo?`<span title="Tarea con Desarrollo" style="font-size:12px;filter:grayscale(1) brightness(0.45);flex-shrink:0;line-height:1">🔧</span>`:'';
   const _isNota=t.frecuencia==='Nota';
   const _editClick=(isFinal||_isNota)?'onclick="openTaskForm(\''+t.id+'\')"':'';
   const _cardStyle='border-left-color:'+oc;
@@ -1125,7 +1126,7 @@ function cardHTML(t){
       ${envIcon}
     </div>
     <div class="cfoot">
-      <span style="display:inline-flex;gap:6px"><span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" style="${!isFinal&&!venc&&t.frecuencia!=='Por Etapas'&&t.finalizacion===todayISO()?'background:#4ade80;color:#14532d;font-weight:700;border-radius:4px;padding:1px 5px':''}">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span></span>
+      <span style="display:inline-flex;gap:6px;align-items:center"><span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" style="${!isFinal&&!venc&&t.frecuencia!=='Por Etapas'&&t.finalizacion===todayISO()?'background:#4ade80;color:#14532d;font-weight:700;border-radius:4px;padding:1px 5px':''}">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span>${_desIcon}</span>
       <span class="cfoot-icons">${clIcon}${reacc}${attachIcon}${pinIcon}</span>
     </div>
   </div>`;
