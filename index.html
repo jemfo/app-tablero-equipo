@@ -364,7 +364,9 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
       </div>
       <div id="wrapOperador"><label>Operador</label><select id="f_operador"></select></div>
-      <div id="wrapArea"><label>Área</label><select id="f_area"></select></div>
+      <div id="wrapArea"><label>Área que lo solicita</label><select id="f_area"></select>
+          <label id="devWrap" title="Marca el ticket como Desarrollo (lo ejecuta el admin). Aparece al filtrar por DES sin cambiar el área que lo solicita." style="display:none;align-items:center;gap:4px;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--muted)"><input type="checkbox" id="f_desarrollo"> 🔧 Desarrollo</label>
+      </div>
       <div id="wrapPrioridad"><label>Prioridad</label><select id="f_prioridad"></select></div>
       <div id="wrapFrecuencia"><label>Frecuencia</label>
         <div style="display:flex;gap:6px;align-items:center">
@@ -492,7 +494,7 @@ const opColor=u=>OP_COLOR[u]||'#5b9bd5';
 const opColorBg=u=>{const c=opColor(u);return c+'28';};  // semi-transparente
 
 // ── Catálogos ─────────────────────────────────────────────────
-const AREAS      =['A.Com','COM','MKT','ARM','LC','PROD','GER','DES'];
+const AREAS      =['DES','COM','A.Com','GER','ARM','MKT','LC','PROD'];
 const PRIORIDADES=['Baja','Media','Alta','Urgente'];
 const FRECUENCIAS=['Unica','Personalizada','Mensual','Por Etapas'];
 const ESTADOS    =['Programado','Pendiente','En curso','Para ver juntos','Finalizado'];
@@ -801,8 +803,11 @@ async function savePass(){
 const isAdmin=()=>SESSION&&SESSION.rol==='admin';
 function toggleNav(){
   const nav=document.getElementById('mainNav');
-  nav.style.display=nav.style.display==='none'?'':'none';
+  const hiding=nav.style.display!=='none';
+  nav.style.display=hiding?'none':'';
   setupSticky();
+  if(hiding&&!document.getElementById('pageEquipo').classList.contains('hidden'))return;
+  if(hiding)showPage('equipo');
 }
 function applyRole(){
   const admin=isAdmin();
@@ -859,7 +864,7 @@ function fillFilterOp(){
 }
 function fillFiltros(){
   const fa=document.getElementById('filterArea');const ca=fa.value;
-  fa.innerHTML='<option value="">Todas</option>'+AREAS.map(a=>`<option value="${a}">${a}</option>`).join('');fa.value=ca;
+  fa.innerHTML='<option value="">Todas</option>'+AREAS.filter(a=>isAdmin()||a!=='DES').map(a=>`<option value="${a}">${a}</option>`).join('');fa.value=ca;
   const fp=document.getElementById('filterPrio');const cp=fp.value;
   fp.innerHTML='<option value="">Todas</option>'+PRIORIDADES.map(p=>`<option value="${p}">${p}</option>`).join('');fp.value=cp;
 }
@@ -945,7 +950,7 @@ function renderEquipo(){
   const fid=document.getElementById('filterID').value.trim();
   let list=DATA.slice();
   if(fop)list=list.filter(t=>t.operador===fop);
-  if(far)list=list.filter(t=>t.area===far);
+  if(far)list=list.filter(t=> far==='DES' ? (t.area==='DES'||t.desarrollo) : t.area===far);
   if(fpr)list=list.filter(t=>t.prioridad===fpr);
   if(fid)list=list.filter(t=>String(t.numero||'')===fid);
   if(ftx)list=list.filter(t=>((t.tema||'')+' '+(t.tareas||'')).toLowerCase().includes(ftx));
@@ -1522,6 +1527,8 @@ function openTaskForm(id){
   const _priv=!!(_t&&_t.privado);
   document.getElementById('f_privado').checked=_priv;
   document.getElementById('privWrap').style.display=isAdmin()?'flex':'none';
+  document.getElementById('f_desarrollo').checked=!!(_t&&_t.desarrollo);
+  document.getElementById('devWrap').style.display=isAdmin()?'inline-flex':'none';
   togglePriv();
   document.getElementById('extraWrap').style.display='';
   if(!isAdmin()&&_priv){
@@ -1636,6 +1643,7 @@ function duplicarTarea(id){
   curImgs=Array.isArray(t.imagenes)?t.imagenes.slice():[];
   curChecklist=Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):[];// checklist reseteado
   document.getElementById('f_privado').checked=!!t.privado;togglePriv();
+  document.getElementById('f_desarrollo').checked=!!t.desarrollo;
   toggleCopias();
   // Fecha VACÍA y editable: obliga a completarla antes de guardar (sin señal falsa en el tablero)
   const _fin=document.getElementById('f_finalizacion');_fin.value='';_fin.readOnly=false;_fin.style.background='';
@@ -1677,8 +1685,8 @@ async function saveTask(){
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Personalizada'){const _fd=parseInt(document.getElementById('f_frec_dias').value||'0',10);if(!_fd||_fd<1){alert('Ingresá la cantidad de días para la frecuencia personalizada.');document.getElementById('f_frec_dias').focus();return;}}
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Mensual'){const _fd=parseInt(document.getElementById('f_frec_dia').value||'0',10);if(!_fd||_fd<1||_fd>28){alert('Ingresá el día del mes (1-28) para la frecuencia mensual.');document.getElementById('f_frec_dia').focus();return;}}
   const vals=_notaMode
-    ?{tema,tareas:'',operador:SESSION.user,area:'A.Com',prioridad:'Baja',frecuencia:'Nota',finalizacion:'',link1:'',link2:'',link3:'',imagenes:[],privado:true,checklist:curChecklist.length?curChecklist.slice():null,comentario:null,comentario_por:null,comentario_ok:false}
-    :{tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,checklist:curChecklist.length?curChecklist.slice():null};
+    ?{tema,tareas:'',operador:SESSION.user,area:'A.Com',prioridad:'Baja',frecuencia:'Nota',finalizacion:'',link1:'',link2:'',link3:'',imagenes:[],privado:true,desarrollo:false,checklist:curChecklist.length?curChecklist.slice():null,comentario:null,comentario_por:null,comentario_ok:false}
+    :{tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,desarrollo:document.getElementById('f_desarrollo').checked,checklist:curChecklist.length?curChecklist.slice():null};
   const _ejSel=document.getElementById('f_ejecutor_sel');
   if(!_notaMode&&_ejSel){if(!_ejSel.value){alert('Seleccioná el operador que va a realizar la tarea.');_ejSel.focus();return;}vals.operador=_ejSel.value;}
   if(!_notaMode&&vals.privado)vals.operador=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
