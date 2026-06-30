@@ -202,6 +202,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #dailyResumen .dr-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin-bottom:5px}
 #dailyResumen .dr-lbl b.n-fin{color:var(--ok);font-size:13px}
 #dailyResumen .dr-lbl b.n-venc{color:var(--blue);font-size:13px}
+#dailyResumen .dr-lbl b.n-atr{color:#d97706;font-size:13px}
 #dailyResumen .dr-dt{font-weight:400;color:var(--muted);font-size:10px;letter-spacing:0;text-transform:none}
 /* Lista de tareas: hasta 5 filas, fluye en columnas (máx 4) para no crecer en alto */
 #dailyResumen .dr-grid{display:grid;grid-auto-flow:column;grid-auto-columns:max-content;gap:1px 24px;justify-content:start}
@@ -211,6 +212,11 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #dailyResumen .dr-more::before{content:'';margin:0}
 #dailyResumen .dr-empty{font-size:12px;color:var(--muted);font-style:italic}
 #dailyResumen .dr-foot{font-size:11px;color:var(--muted);margin-top:8px}
+#dailyResumen .dr-acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+#dailyResumen .dr-btn{font-size:11px;padding:4px 11px;border-radius:6px;border:1px solid var(--line);background:var(--bg3);color:var(--txt);cursor:pointer;line-height:1.5;font-weight:600}
+#dailyResumen .dr-btn:hover{border-color:var(--accent)}
+.card.marked{background:rgba(34,197,94,.18)!important}
+.card.marked-y{background:rgba(250,204,21,.22)!important}
 .cal-month{font-size:14px;font-weight:700;text-transform:capitalize;min-width:120px;text-align:center;color:var(--txt)}
 .cal-nav{background:var(--bg3);border:1px solid var(--line);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:15px;color:var(--txt)}
 .cal-today{background:var(--bg3);border:1px solid var(--line);border-radius:6px;height:30px;padding:0 12px;cursor:pointer;font-size:12px;color:var(--txt)}
@@ -257,6 +263,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <h1>Análisis Comercial</h1>
     <span class="userbox">Sesión: <b id="curUser"></b></span>
     <button id="btnEnvNot" onclick="toggleEnvButton()" title="Notificaciones pendientes" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <button id="btnDevFilter" onclick="toggleDevButton()" title="Filtrar Desarrollos / Comercial" style="margin-left:6px;width:32px;height:32px;padding:0;display:none;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></button>
     <span class="date" id="todayLabel"></span>
     <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
     <button id="themeBtn" onclick="toggleTheme()" title="Cambiar tema" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg id="themeIco" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
@@ -516,7 +523,7 @@ const EST_COLOR={
   'Para ver juntos':'#fb923c','Programado':'#38bdf8','Finalizado':'#4ade80'
 };
 
-let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, VIEW_MODE='estado';
+let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDev='todos', VIEW_MODE='estado';
 
 // ── Utilidades ────────────────────────────────────────────────
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -891,6 +898,7 @@ function clearFilters(){
     _syncEnvBtn();
     if(_wasRuben){setViewMode('workflow',false);}
   }
+  if(filtroDev!=='todos'){filtroDev='todos';_syncDevBtn();}
   renderEquipo();
 }
 function setViewMode(mode,render=true){
@@ -930,6 +938,7 @@ function updateEnvBadge(){
     else{rb.style.display='none';if(filtroRuben){filtroRuben=false;_syncEnvBtn();}}
   }
   _syncEnvBtn();
+  _syncDevBtn();
 }
 function _syncEnvBtn(){
   const btn=document.getElementById('btnEnvNot');if(!btn)return;
@@ -942,6 +951,26 @@ function toggleFiltroComentario(){
   if(filtroComentario)filtroRuben=false;
   _syncEnvBtn();
   renderCurrent();
+}
+// Botón 🔧: cicla Todos → Comercial → Desarrollos → Todos. Solo admin.
+function toggleDevButton(){
+  filtroDev = filtroDev==='todos' ? 'comercial' : (filtroDev==='comercial' ? 'desarrollos' : 'todos');
+  _syncDevBtn();
+  renderCurrent();
+}
+function _syncDevBtn(){
+  const btn=document.getElementById('btnDevFilter');if(!btn)return;
+  btn.style.display=isAdmin()?'inline-flex':'none';
+  if(filtroDev==='comercial'){
+    btn.style.background='#22c55e';btn.style.borderColor='#22c55e';btn.style.color='#fff';
+    btn.title='Mostrando solo COMERCIAL — clic: ver solo Desarrollos';
+  }else if(filtroDev==='desarrollos'){
+    btn.style.background='#fbbf24';btn.style.borderColor='#fbbf24';btn.style.color='#1f2430';
+    btn.title='Mostrando solo DESARROLLOS — clic: ver todo';
+  }else{
+    btn.style.background='#9ca3af';btn.style.borderColor='#9ca3af';btn.style.color='#fff';
+    btn.title='Mostrando TODO — clic: ver solo Comercial';
+  }
 }
 function toggleEnvButton(){
   const rc=isAdmin()?DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length:0;
@@ -978,6 +1007,9 @@ function renderEquipo(){
   let list=DATA.slice();
   if(fop)list=list.filter(t=>t.operador===fop);
   if(far)list=list.filter(t=> far==='DES' ? (t.area==='DES'||t.desarrollo) : t.area===far);
+  // Toggle Comercial/Desarrollos (botón 🔧, solo admin): 'comercial' oculta desarrollos, 'desarrollos' deja solo desarrollos.
+  if(filtroDev==='comercial')list=list.filter(t=>!(t.desarrollo||t.area==='DES'));
+  else if(filtroDev==='desarrollos')list=list.filter(t=>t.desarrollo||t.area==='DES');
   if(fpr)list=list.filter(t=>t.prioridad===fpr);
   if(fid)list=list.filter(t=>String(t.numero||'')===fid);
   if(ftx)list=list.filter(t=>((t.tema||'')+' '+(t.tareas||'')).toLowerCase().includes(ftx));
@@ -1092,6 +1124,7 @@ function cardHTML(t){
   const _desIcon=t.desarrollo?`<span title="Tarea con Desarrollo" style="font-size:12px;filter:grayscale(1) brightness(0.45);flex-shrink:0;line-height:1">🔧</span>`:'';
   const _isNota=t.frecuencia==='Nota';
   const _editClick=(isFinal||_isNota)?'onclick="openTaskForm(\''+t.id+'\')"':'';
+  const _mc=isFinal?null:_marcaColor(t.id);
   const _cardStyle='border-left-color:'+oc;
   if(_isNota){
     const _notaPin=_canPin?`<span class="cpin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`:(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:'');
@@ -1110,7 +1143,7 @@ function cardHTML(t){
       ${_pendHtml}
     </div>`;
   }
-  return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
+  return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}${_mc==='verde'?' marked':''}${_mc==='amarillo'?' marked-y':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
     ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
     ${_editClick}
     style="${_cardStyle}">
@@ -1957,6 +1990,49 @@ const _markResumen=kind=>localStorage.setItem('resumen_'+kind+'_'+SESSION.user+'
 const _finPropias=iso=>REAL_CAL.filter(r=>(r.operador||r.completado_por)===SESSION.user&&_locISO(r.completado_en)===iso);
 // Trabajos propios activos que vencen en una fecha
 const _vencenEn=iso=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&(t.finalizacion||'')===iso);
+// Las 3 tareas propias más atrasadas (vencimiento anterior a hoy), de más vieja a más nueva. Excluye Notas y Por Etapas.
+const _atrasadas=()=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&t.frecuencia!=='Nota'&&t.frecuencia!=='Por Etapas'&&(t.finalizacion||'')&&(t.finalizacion||'')<todayISO())
+  .sort((a,b)=>(a.finalizacion||'').localeCompare(b.finalizacion||''))
+  .slice(0,3);
+// Devuelve la lista propia de un grupo: 'venc' (vencen hoy) o 'atras' (atrasadas)
+const _grupoLista=g=>g==='atras'?_atrasadas():_vencenEn(todayISO());
+// ── Resaltado personal de tickets (12 h, por usuario, en localStorage). Dos colores independientes: 'v'=verde (vence hoy), 'a'=amarillo (atrasadas) ──
+function _markKey(kind){return 'marcados_'+SESSION.user+'_'+kind;}
+function _getMarcados(kind){
+  try{const raw=localStorage.getItem(_markKey(kind));if(!raw)return null;
+    const o=JSON.parse(raw);
+    if(!o||!o.until||Date.now()>o.until){localStorage.removeItem(_markKey(kind));return null;}
+    return o;}catch(e){return null;}
+}
+function _isMarcado(id,kind){const o=_getMarcados(kind);return !!(o&&Array.isArray(o.ids)&&o.ids.includes(id));}
+// Color de marca activo de una tarjeta: 'verde' | 'amarillo' | null
+function _marcaColor(id){return _isMarcado(id,'v')?'verde':(_isMarcado(id,'a')?'amarillo':null);}
+// Botón "Resaltar 12 h": toggle sobre el grupo ('venc'→verde, 'atras'→amarillo)
+function toggleMarcar(grupo){
+  if(_esWatcher())return;// nunca para Rubén
+  const arr=_grupoLista(grupo);
+  if(!arr.length)return;
+  const kind=grupo==='atras'?'a':'v';
+  const ids=arr.map(t=>t.id);
+  if(ids.every(id=>_isMarcado(id,kind))){
+    localStorage.removeItem(_markKey(kind));
+    showToast('Resaltado quitado','ok');
+  }else{
+    localStorage.setItem(_markKey(kind),JSON.stringify({until:Date.now()+12*3600*1000,ids}));
+    showToast(ids.length+' tarea(s) resaltada(s) por 12 h','ok');
+  }
+  _paintResumenInicio();renderCurrent();
+}
+// Botón "Mover a En curso": pasa las tareas del grupo al estado En curso (con confirmación)
+async function moverEnCurso(grupo){
+  if(_esWatcher())return;// nunca para Rubén
+  const arr=_grupoLista(grupo).filter(t=>t.estado!=='En curso'&&t.frecuencia!=='Nota');
+  if(!arr.length){showToast('No hay tareas para mover','err');return;}
+  if(!confirm('¿Mover '+arr.length+' tarea(s) a "En curso"?'))return;
+  for(const t of arr){t.estado='En curso';t.fecha_estado=todayISO();t.actualizado=nowStamp();await upsertTask(t);}
+  showToast(arr.length+' tarea(s) movida(s) a En curso','ok');
+  _paintResumenInicio();renderCurrent();
+}
 // Lista de temas en grilla: hasta 5 filas, fluye por columnas (máx 4 ⇒ 20 visibles), resto en "+N más"
 const _temasGrid=arr=>{
   if(!arr.length)return '<div class="dr-empty">Nada por acá</div>';
@@ -1977,17 +2053,32 @@ async function showResumenInicio(){
   if(!SESSION||_esWatcher()||(!SESSION.demo&&(_esFinde()||_resumenSeen('inicio'))))return;
   const box=document.getElementById('dailyResumen');if(!box)return;
   await loadRealCalendar();
+  _paintResumenInicio();
+  box.classList.remove('hidden');
+  _markResumen('inicio');
+}
+// Pinta el contenido de la tarjeta de inicio (reutilizable: los botones la repintan sin volver a evaluar los guards)
+function _paintResumenInicio(){
+  const box=document.getElementById('dailyResumen');if(!box)return;
   const hoy=todayISO();const ayer=_addBusiness(hoy,-1);
-  const fin=_finPropias(ayer);const venc=_vencenEn(hoy);
+  const fin=_finPropias(ayer);const venc=_vencenEn(hoy);const atras=_atrasadas();
+  // Botones de un grupo ('venc'→verde, 'atras'→amarillo), solo si tiene tareas
+  const _accionesGrupo=(arr,grupo,kind,emoji)=>{
+    if(!arr.length)return '';
+    const ya=arr.every(t=>_isMarcado(t.id,kind));
+    return '<div class="dr-acts">'
+      +'<button class="dr-btn" onclick="toggleMarcar(\''+grupo+'\')">'+(ya?'✓ Quitar resaltado':emoji+' Resaltar 12 h')+'</button>'
+      +'<button class="dr-btn" onclick="moverEnCurso(\''+grupo+'\')">▶️ Mover a En curso</button>'
+    +'</div>';
+  };
   box.innerHTML=
     '<button class="dr-close" onclick="dismissResumen()" title="Cerrar">✕</button>'
     +'<div class="dr-hi"><span>👋 Hola '+escH(SESSION.nombre)+' — arranquemos el día</span><span class="dr-hint">📅 Revisá tu Vista de calendario</span></div>'
     +'<div class="dr-cols">'
     +'<div class="dr-col"><div class="dr-lbl">Ayer finalizaste <b class="n-fin">'+fin.length+'</b> <span class="dr-dt">'+_dowLabel(ayer)+' '+fmtDate(ayer)+'</span></div>'+_temasGrid(fin)+'</div>'
-    +'<div class="dr-col"><div class="dr-lbl">Vencen hoy <b class="n-venc">'+venc.length+'</b> <span class="dr-dt">'+fmtDate(hoy)+'</span></div>'+_temasGrid(venc)+'</div>'
+    +'<div class="dr-col"><div class="dr-lbl">Vencen hoy <b class="n-venc">'+venc.length+'</b> <span class="dr-dt">'+fmtDate(hoy)+'</span></div>'+_temasGrid(venc)+_accionesGrupo(venc,'venc','v','🟢')+'</div>'
+    +'<div class="dr-col"><div class="dr-lbl">Atrasadas <b class="n-atr">'+atras.length+'</b> <span class="dr-dt">las más viejas</span></div>'+_temasGrid(atras)+_accionesGrupo(atras,'atras','a','🟡')+'</div>'
     +'</div>';
-  box.classList.remove('hidden');
-  _markResumen('inicio');
 }
 // Tarjeta de CIERRE: hoy finalizadas + lo que vence el próximo día hábil. conSalir=true agrega botón "Cerrar sesión".
 async function showResumenCierre(conSalir){
