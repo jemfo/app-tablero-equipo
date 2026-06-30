@@ -548,8 +548,28 @@ const setSyncSt=msg=>document.getElementById('syncSt').textContent=msg;
 // ── Supabase CRUD ─────────────────────────────────────────────
 // Consulta el MAX(numero) directamente en BD para evitar race condition entre usuarios simultáneos.
 async function getNextNumero(){
-  const{data}=await _SB.from('trabajos').select('numero').order('numero',{ascending:false}).limit(1).maybeSingle();
+  // .not('numero','is',null): evita que un row con numero NULL (demo) quede primero en el orden desc y devuelva 1
+  const{data}=await _SB.from('trabajos').select('numero').not('numero','is',null).order('numero',{ascending:false}).limit(1).maybeSingle();
   return (data?.numero||0)+1;
+}
+// Inserta una tarea NUEVA con numero. Si choca con el índice único trabajos_numero_unico (race entre dos altas
+// simultáneas, error 23505), vuelve a pedir un número libre y reintenta. Para UPDATES usar upsertTask normal.
+async function insertConNumero(task){
+  for(let intento=0;intento<5;intento++){
+    setSyncSt('Guardando…');
+    const{error}=await _SB.from('trabajos').upsert(task);
+    setSyncSt('');
+    if(!error){showToast('Guardado ✓');return true;}
+    const choque = error.code==='23505' || /duplicate key|trabajos_numero_unico/i.test(error.message||'');
+    if(choque && task.numero!=null){
+      task.numero=await getNextNumero();// pedir un número nuevo y reintentar
+      continue;
+    }
+    showToast('Error: '+error.message,'err');
+    return false;
+  }
+  showToast('No se pudo asignar un número único (reintentos agotados)','err');
+  return false;
 }
 async function loadData(){
   setSyncSt('Cargando…');
@@ -636,15 +656,15 @@ async function finalizarTarea(t){
       await upsertTask(t);
       const nextNum=await getNextNumero();
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
-      const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
+      const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
       extra=' · nueva etapa creada';
     }else if(esPersonalizada||esMensual){
       const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
       await upsertTask(t);
       const nextNum=await getNextNumero();
-      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
-      const ok=await upsertTask(nueva);if(ok)DATA.push(nueva);
+      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
+      const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
       extra=' · próxima: '+fmtDate(next);
     }else{
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
@@ -1831,7 +1851,7 @@ async function saveTask(){
       const nextNum=(isDemo||_notaMode)?null:await getNextNumero();
       const _estInicial=(vals.frecuencia==='Personalizada'||vals.frecuencia==='Por Etapas'||(vals.frecuencia||'').startsWith('Personalizada:')||(vals.frecuencia||'').startsWith('Mensual:'))?'Programado':'Pendiente';
       const nw=Object.assign({id:uid(),numero:nextNum,creado_por:_dupCreadoPor||SESSION.user,ingreso:todayISO(),actualizado:nowStamp(),fecha_estado:todayISO(),estado:_estInicial},vals);
-      const ok=await upsertTask(nw);if(ok)DATA.push(nw);
+      const ok=await insertConNumero(nw);if(ok)DATA.push(nw);
     }
     closeTaskForm();renderCurrent();
   }finally{
