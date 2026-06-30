@@ -263,7 +263,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <h1>Análisis Comercial</h1>
     <span class="userbox">Sesión: <b id="curUser"></b></span>
     <button id="btnEnvNot" onclick="toggleEnvButton()" title="Notificaciones pendientes" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
-    <button id="btnDevFilter" onclick="toggleDevButton()" title="Filtrar Desarrollos / Comercial" style="margin-left:6px;width:32px;height:32px;padding:0;display:none;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></button>
+    <button id="btnDevFilter" onclick="toggleDevButton()" style="margin-left:6px;width:32px;height:32px;padding:0;display:none;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></button>
     <span class="date" id="todayLabel"></span>
     <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
     <button id="themeBtn" onclick="toggleTheme()" title="Cambiar tema" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg id="themeIco" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
@@ -695,7 +695,13 @@ async function doLogin(){
   const{error}=await _SB.auth.signInWithPassword({email:meta.email,password:p});
   if(btn){btn.disabled=false;btn.textContent='Ingresar';}
   if(error){errEl.textContent='Usuario o contraseña incorrectos.';return;}
+  try{localStorage.setItem('lastUser',raw);}catch(e){}
   enterApp(meta);
+}
+// Precarga el último usuario que entró (solo el nombre, nunca la contraseña). Sirve para el input de PROD y el select de TEST.
+function _prefillLastUser(){
+  const lu=document.getElementById('loginUser');if(!lu)return;
+  const last=localStorage.getItem('lastUser');if(last)lu.value=last;
 }
 // Muestra la app una vez autenticado (reutilizado por login y por restoreSession)
 function enterApp(found){
@@ -739,6 +745,7 @@ async function doLogout(){
   document.getElementById('appView').classList.add('hidden');
   document.getElementById('loginView').classList.remove('hidden');
   document.getElementById('loginPass').value='';document.getElementById('loginUser').value='';
+  _prefillLastUser();
 }
 // ── Pesos de priorización (admin) ─────────────────────────────
 function openTEPesos(){
@@ -963,13 +970,10 @@ function _syncDevBtn(){
   btn.style.display=isAdmin()?'inline-flex':'none';
   if(filtroDev==='comercial'){
     btn.style.background='#22c55e';btn.style.borderColor='#22c55e';btn.style.color='#fff';
-    btn.title='Mostrando solo COMERCIAL — clic: ver solo Desarrollos';
   }else if(filtroDev==='desarrollos'){
     btn.style.background='#fbbf24';btn.style.borderColor='#fbbf24';btn.style.color='#1f2430';
-    btn.title='Mostrando solo DESARROLLOS — clic: ver todo';
   }else{
     btn.style.background='#9ca3af';btn.style.borderColor='#9ca3af';btn.style.color='#fff';
-    btn.title='Mostrando TODO — clic: ver solo Comercial';
   }
 }
 function toggleEnvButton(){
@@ -1171,12 +1175,32 @@ function toggleReactPicker(el){
   if(!open)w.classList.add('open');
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.creact-wrap'))document.querySelectorAll('.creact-wrap.open').forEach(x=>x.classList.remove('open'));});
+// Limpia el posicionamiento fixed de los popovers de adjuntos (vuelven al CSS por defecto)
+function _resetAttachPops(){
+  document.querySelectorAll('.cattach-pop').forEach(p=>{p.style.position='';p.style.left='';p.style.right='';p.style.top='';p.style.bottom='';p.style.zIndex='';});
+}
 function toggleAttachPicker(el){
   const w=el.parentElement;const open=w.classList.contains('open');
   document.querySelectorAll('.cattach-wrap.open,.creact-wrap.open').forEach(x=>x.classList.remove('open'));
-  if(!open)w.classList.add('open');
+  _resetAttachPops();
+  if(!open){
+    w.classList.add('open');
+    // Posición fija calculada: el popover queda SIEMPRE arriba del chip y por encima de todo, sin que lo recorte la columna
+    const pop=w.querySelector('.cattach-pop');
+    if(pop){
+      const r=el.getBoundingClientRect();
+      const pw=pop.offsetWidth||140;
+      pop.style.position='fixed';
+      pop.style.right='auto';
+      pop.style.top='auto';
+      pop.style.zIndex='1000';
+      let left=r.right-pw; if(left<6)left=6;
+      pop.style.left=left+'px';
+      pop.style.bottom=(window.innerHeight-r.top+6)+'px';
+    }
+  }
 }
-document.addEventListener('click',e=>{if(!e.target.closest('.cattach-wrap'))document.querySelectorAll('.cattach-wrap.open').forEach(x=>x.classList.remove('open'));});
+document.addEventListener('click',e=>{if(!e.target.closest('.cattach-wrap')){document.querySelectorAll('.cattach-wrap.open').forEach(x=>x.classList.remove('open'));_resetAttachPops();}});
 async function setReaccion(id,emoji){
   const t=DATA.find(x=>x.id===id);if(!t)return;
   if(t.estado==='Finalizado'&&!isAdmin())return;
@@ -1990,12 +2014,14 @@ const _markResumen=kind=>localStorage.setItem('resumen_'+kind+'_'+SESSION.user+'
 const _finPropias=iso=>REAL_CAL.filter(r=>(r.operador||r.completado_por)===SESSION.user&&_locISO(r.completado_en)===iso);
 // Trabajos propios activos que vencen en una fecha
 const _vencenEn=iso=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&(t.finalizacion||'')===iso);
+// "Vencen hoy" del aviso de inicio: excluye lo que ya está en "En curso" (decisión 30/06: si ya lo arrancaste, no lo recuerda)
+const _vencenHoy=()=>_vencenEn(todayISO()).filter(t=>t.estado!=='En curso');
 // Las 3 tareas propias más atrasadas (vencimiento anterior a hoy), de más vieja a más nueva. Excluye Notas y Por Etapas.
 const _atrasadas=()=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&t.frecuencia!=='Nota'&&t.frecuencia!=='Por Etapas'&&(t.finalizacion||'')&&(t.finalizacion||'')<todayISO())
   .sort((a,b)=>(a.finalizacion||'').localeCompare(b.finalizacion||''))
   .slice(0,3);
 // Devuelve la lista propia de un grupo: 'venc' (vencen hoy) o 'atras' (atrasadas)
-const _grupoLista=g=>g==='atras'?_atrasadas():_vencenEn(todayISO());
+const _grupoLista=g=>g==='atras'?_atrasadas():_vencenHoy();
 // ── Resaltado personal de tickets (12 h, por usuario, en localStorage). Dos colores independientes: 'v'=verde (vence hoy), 'a'=amarillo (atrasadas) ──
 function _markKey(kind){return 'marcados_'+SESSION.user+'_'+kind;}
 function _getMarcados(kind){
@@ -2061,7 +2087,7 @@ async function showResumenInicio(){
 function _paintResumenInicio(){
   const box=document.getElementById('dailyResumen');if(!box)return;
   const hoy=todayISO();const ayer=_addBusiness(hoy,-1);
-  const fin=_finPropias(ayer);const venc=_vencenEn(hoy);const atras=_atrasadas();
+  const fin=_finPropias(ayer);const venc=_vencenHoy();const atras=_atrasadas();
   // Botones de un grupo ('venc'→verde, 'atras'→amarillo), solo si tiene tareas
   const _accionesGrupo=(arr,grupo,kind,emoji)=>{
     if(!arr.length)return '';
@@ -2253,6 +2279,7 @@ function exportCSV(){
 initLogin();
 applyTheme(localStorage.getItem('oe_theme')||'light');
 restoreSession();
+_prefillLastUser();
 </script>
 </body>
 </html>
