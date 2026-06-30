@@ -1570,6 +1570,7 @@ function openTaskForm(id){
   // Limpia disabled de una apertura anterior (ej: tarea finalizada → nueva tarea)
   ['f_frec_dias','f_frec_dia','f_copias','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=false;});
   editingId=id||null;
+  {const _ft=document.getElementById('f_tareas');if(_ft){_ft.readOnly=false;_ft.style.color='';}const _em=document.getElementById('f_emojis');if(_em)_em.classList.remove('open');}
   fillSel('f_area',AREAS);fillSel('f_prioridad',PRIORIDADES);fillSelFrecuencia('f_frecuencia');
   document.getElementById('f_operador').innerHTML=USERS.filter(u=>!u.hidden).map(u=>`<option value="${u.user}">${u.nombre}</option>`).join('');
   if(id){
