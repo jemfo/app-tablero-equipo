@@ -1619,6 +1619,8 @@ function openTaskForm(id){
     document.getElementById('btnDuplicar').style.display='none';
     document.getElementById('btnAprobar').style.display='none';
   }
+  // A) Tope de fecha de vencimiento: en alta nueva no deja elegir antes de hoy; al editar se permite (tareas ya vencidas son válidas)
+  {const _ffinEl=document.getElementById('f_finalizacion');if(editingId)_ffinEl.removeAttribute('min');else _ffinEl.min=todayISO();}
   setupOperadorField(!id);
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
   document.getElementById('f_prioridad').disabled=_isWatcher;
@@ -1796,6 +1798,7 @@ async function saveTask(){
   const tareas=_notaMode?'':document.getElementById('f_tareas').value.trim();
   if(!_notaMode&&tareas.length<30){const el=document.getElementById('f_tareas');el.focus();el.style.borderColor='var(--urg)';setTimeout(()=>el.style.borderColor='',2000);alert('Las tareas a realizar deben tener al menos 30 caracteres (escrito: '+tareas.length+').');return;}
   if(!_notaMode&&!document.getElementById('f_finalizacion').value){alert('La fecha de finalización es obligatoria.');return;}
+  if(!_notaMode&&!editingId){const _fv=document.getElementById('f_finalizacion').value;if(_fv&&_fv<todayISO()&&!confirm('La fecha de vencimiento ('+fmtDate(_fv)+') es anterior a hoy: la tarea nacería vencida. ¿Continuar igual?'))return;}
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Personalizada'){const _fd=parseInt(document.getElementById('f_frec_dias').value||'0',10);if(!_fd||_fd<1){alert('Ingresá la cantidad de días para la frecuencia personalizada.');document.getElementById('f_frec_dias').focus();return;}}
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Mensual'){const _fd=parseInt(document.getElementById('f_frec_dia').value||'0',10);if(!_fd||_fd<1||_fd>28){alert('Ingresá el día del mes (1-28) para la frecuencia mensual.');document.getElementById('f_frec_dia').focus();return;}}
   const vals=_notaMode
