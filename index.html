@@ -68,7 +68,7 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 
 /* ── CARD ───────────────────────────────────────── */
 .card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:3px 12px 5px;cursor:default;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s;min-height:74px;display:flex;flex-direction:column}
-.card:hover{box-shadow:0 3px 10px rgba(0,0,0,.14);transform:translateY(-1px)}
+.card:hover{box-shadow:0 3px 10px rgba(0,0,0,.14)}
 .card.drag{opacity:.35;transform:scale(.97)}
 .card .ct{font-weight:600;font-size:12.5px;line-height:1.3;margin-bottom:3px;letter-spacing:-.1px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .csub{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -204,8 +204,8 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #dailyResumen .dr-lbl b.n-venc{color:var(--blue);font-size:13px}
 #dailyResumen .dr-lbl b.n-atr{color:#d97706;font-size:13px}
 #dailyResumen .dr-dt{font-weight:400;color:var(--muted);font-size:10px;letter-spacing:0;text-transform:none}
-/* Lista de tareas: hasta 5 filas, fluye en columnas (máx 4) para no crecer en alto */
-#dailyResumen .dr-grid{display:grid;grid-auto-flow:column;grid-auto-columns:max-content;gap:1px 24px;justify-content:start}
+/* Lista de tareas: columna única (no desborda el ancho de dr-col); alto fijo ~5 filas, con scroll si hay más */
+#dailyResumen .dr-grid{display:flex;flex-direction:column;gap:1px;max-height:96px;overflow-y:auto}
 #dailyResumen .dr-it{font-size:12px;line-height:1.55;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
 #dailyResumen .dr-it::before{content:'•';color:var(--muted);margin-right:6px}
 #dailyResumen .dr-more{color:var(--muted);font-style:italic}
@@ -1205,18 +1205,25 @@ function toggleAttachPicker(el){
   _resetAttachPops();
   if(!open){
     w.classList.add('open');
-    // Posición fija calculada: el popover queda SIEMPRE arriba del chip y por encima de todo, sin que lo recorte la columna
+    // Posición fija calculada: abre hacia abajo si hay lugar (no tapa la tarjeta de arriba);
+    // si no entra, cae al comportamiento anterior (arriba del chip, por encima de todo)
     const pop=w.querySelector('.cattach-pop');
     if(pop){
       const r=el.getBoundingClientRect();
       const pw=pop.offsetWidth||140;
+      const ph=pop.offsetHeight||40;
       pop.style.position='fixed';
       pop.style.right='auto';
-      pop.style.top='auto';
       pop.style.zIndex='1000';
       let left=r.right-pw; if(left<6)left=6;
       pop.style.left=left+'px';
-      pop.style.bottom=(window.innerHeight-r.top+6)+'px';
+      if(r.bottom+6+ph<=window.innerHeight-8){
+        pop.style.top=(r.bottom+6)+'px';
+        pop.style.bottom='auto';
+      }else{
+        pop.style.top='auto';
+        pop.style.bottom=(window.innerHeight-r.top+6)+'px';
+      }
     }
   }
 }
@@ -2041,6 +2048,7 @@ const _vencenEn=iso=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Final
 // "Vencen hoy" del aviso de inicio: excluye lo que ya está en "En curso" (decisión 30/06: si ya lo arrancaste, no lo recuerda)
 const _vencenHoy=()=>_vencenEn(todayISO()).filter(t=>t.estado!=='En curso');
 // Las 3 tareas propias más atrasadas (vencimiento anterior a hoy), de más vieja a más nueva. Excluye Notas y Por Etapas.
+// Límite intencional (no todas): "Mover a En curso" en este grupo mueve solo estas 3, para no alterar de golpe la dinámica del día.
 const _atrasadas=()=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&t.frecuencia!=='Nota'&&t.frecuencia!=='Por Etapas'&&(t.finalizacion||'')&&(t.finalizacion||'')<todayISO())
   .sort((a,b)=>(a.finalizacion||'').localeCompare(b.finalizacion||''))
   .slice(0,3);
@@ -2083,20 +2091,22 @@ async function moverEnCurso(grupo){
   showToast(arr.length+' tarea(s) movida(s) a En curso','ok');
   _paintResumenInicio();renderCurrent();
 }
-// Lista de temas en grilla: hasta 5 filas, fluye por columnas (máx 4 ⇒ 20 visibles), resto en "+N más"
+// Lista de temas en columna única con scroll (~5 filas de alto vía CSS .dr-grid). El header (n-fin/n-venc/n-atr) siempre muestra el total real.
 const _temasGrid=arr=>{
   if(!arr.length)return '<div class="dr-empty">Nada por acá</div>';
-  const MAXR=5,CAP=MAXR*4;// 20
-  let shown=arr,extra=0;
-  if(arr.length>CAP){shown=arr.slice(0,CAP-1);extra=arr.length-(CAP-1);}
-  const cells=shown.length+(extra?1:0);
-  const rows=Math.min(MAXR,cells);
-  let h='<div class="dr-grid" style="grid-template-rows:repeat('+rows+',auto)">';
-  h+=shown.map(t=>'<div class="dr-it" title="'+escH(t.tema||'')+'">'+escH(t.tema||'(sin título)')+'</div>').join('');
-  if(extra)h+='<div class="dr-it dr-more">+'+extra+' más</div>';
-  return h+'</div>';
+  return '<div class="dr-grid">'+arr.map(t=>'<div class="dr-it" title="'+escH(t.tema||'')+'">'+escH(t.tema||'(sin título)')+'</div>').join('')+'</div>';
 };
 function dismissResumen(){const b=document.getElementById('dailyResumen');if(b)b.classList.add('hidden');}
+// Cierre con confirmación (solo tarjeta de inicio): 1er click en la X muestra el botón "Cerrar" (no cierra solo);
+// 2do click (en ese botón) recién cierra. Igual idea que el botón "Cerrar sesión" del resumen de cierre.
+function askDismissResumen(){
+  const box=document.getElementById('dailyResumen');if(!box||box.querySelector('.dr-close-confirm'))return;
+  const bar=document.createElement('div');
+  bar.className='dr-foot dr-close-confirm';
+  bar.style.cssText='display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:8px';
+  bar.innerHTML='<span>¿Cerrar este resumen?</span><button class="primary" onclick="dismissResumen()">Cerrar</button>';
+  box.appendChild(bar);
+}
 
 // Tarjeta de INICIO: ayer finalizadas + lo que vence hoy
 async function showResumenInicio(){
@@ -2122,7 +2132,7 @@ function _paintResumenInicio(){
     +'</div>';
   };
   box.innerHTML=
-    '<button class="dr-close" onclick="dismissResumen()" title="Cerrar">✕</button>'
+    '<button class="dr-close" onclick="askDismissResumen()" title="Cerrar">✕</button>'
     +'<div class="dr-hi"><span>👋 Hola '+escH(SESSION.nombre)+' — arranquemos el día</span><span class="dr-hint">📅 Revisá tu Vista de calendario</span></div>'
     +'<div class="dr-cols">'
     +'<div class="dr-col"><div class="dr-lbl">Ayer finalizaste <b class="n-fin">'+fin.length+'</b> <span class="dr-dt">'+_dowLabel(ayer)+' '+fmtDate(ayer)+'</span></div>'+_temasGrid(fin)+'</div>'
