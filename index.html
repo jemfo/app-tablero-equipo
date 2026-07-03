@@ -633,6 +633,11 @@ async function finalizarTarea(t){
   const _uCfg=USERS.find(u=>u.user===SESSION.user);
   if(_uCfg&&_uCfg.canFinalize===false){showToast('La finalización de tareas la realizan los operadores','err');renderEquipo();return;}
   if(!isAdmin()&&t.operador!==SESSION.user){showToast('Solo podés finalizar tareas asignadas a vos','err');renderEquipo();return;}
+  // Regla: la misma tarea/serie (mismo tema+operador) no se puede finalizar dos veces el mismo día
+  if(t.frecuencia&&t.frecuencia!=='Unica'){
+    const _yaHoy=DATA.some(x=>x.id!==t.id&&x.tema===t.tema&&x.operador===t.operador&&x.estado==='Finalizado'&&x.fecha_estado===todayISO());
+    if(_yaHoy){showToast('Ya finalizaste esta tarea hoy','err');renderEquipo();return;}
+  }
   const esEtapas=t.frecuencia==='Por Etapas';
   const esPersonalizada=frecBase(t.frecuencia)==='Personalizada';
   const esMensual=frecBase(t.frecuencia)==='Mensual';
@@ -652,7 +657,7 @@ async function finalizarTarea(t){
     if(!logged&&!confirm('No se pudo registrar en el historial. ¿Finalizar de todos modos?'))return;
     let extra='';
     if(esEtapas){
-      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
+      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
       const nextNum=await getNextNumero();
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
@@ -660,14 +665,14 @@ async function finalizarTarea(t){
       extra=' · nueva etapa creada';
     }else if(esPersonalizada||esMensual){
       const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
-      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
+      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
       const nextNum=await getNextNumero();
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
       extra=' · próxima: '+fmtDate(next);
     }else{
-      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();
+      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
     }
     renderCurrent();
