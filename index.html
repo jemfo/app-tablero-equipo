@@ -196,7 +196,6 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #dailyResumen{margin:8px 0 4px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;background:var(--bg2);padding:12px 16px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.10)}
 #dailyResumen .dr-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1}
 #dailyResumen .dr-hi{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;font-weight:700;margin:0 0 8px;padding-right:28px;color:var(--txt)}
-#dailyResumen .dr-hint{font-weight:400;color:var(--muted);font-size:12px}
 #dailyResumen .dr-cols{display:flex;gap:32px;flex-wrap:wrap}
 #dailyResumen .dr-col{flex:1 1 320px;min-width:240px}
 #dailyResumen .dr-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin-bottom:5px}
@@ -204,8 +203,8 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #dailyResumen .dr-lbl b.n-venc{color:var(--blue);font-size:13px}
 #dailyResumen .dr-lbl b.n-atr{color:#d97706;font-size:13px}
 #dailyResumen .dr-dt{font-weight:400;color:var(--muted);font-size:10px;letter-spacing:0;text-transform:none}
-/* Lista de tareas: columna única (no desborda el ancho de dr-col); alto fijo ~5 filas, con scroll si hay más */
-#dailyResumen .dr-grid{display:flex;flex-direction:column;gap:1px;max-height:96px;overflow-y:auto}
+/* Lista de tareas: columna única (no desborda el ancho de dr-col); se corta a un límite fijo, sin scroll (ver _temasGrid) */
+#dailyResumen .dr-grid{display:flex;flex-direction:column;gap:1px}
 #dailyResumen .dr-it{font-size:12px;line-height:1.55;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
 #dailyResumen .dr-it::before{content:'•';color:var(--muted);margin-right:6px}
 #dailyResumen .dr-more{color:var(--muted);font-style:italic}
@@ -555,6 +554,7 @@ async function getNextNumero(){
 // Inserta una tarea NUEVA con numero. Si choca con el índice único trabajos_numero_unico (race entre dos altas
 // simultáneas, error 23505), vuelve a pedir un número libre y reintenta. Para UPDATES usar upsertTask normal.
 async function insertConNumero(task){
+  if(SESSION&&SESSION.demo){showToast('Guardado ✓');return true;}// modo demo: no persiste (sandbox en memoria)
   for(let intento=0;intento<5;intento++){
     setSyncSt('Guardando…');
     const{error}=await _SB.from('trabajos').upsert(task);
@@ -579,6 +579,7 @@ async function loadData(){
   DATA=data||[]; updateEnvBadge(); renderCurrent();
 }
 async function upsertTask(task){
+  if(SESSION&&SESSION.demo){showToast('Guardado ✓');return true;}// modo demo: no persiste (sandbox en memoria)
   setSyncSt('Guardando…');
   const{error}=await _SB.from('trabajos').upsert(task);
   setSyncSt('');
@@ -586,6 +587,7 @@ async function upsertTask(task){
   showToast('Guardado ✓'); return true;
 }
 async function removeTask(id){
+  if(SESSION&&SESSION.demo){showToast('Eliminado ✓');return true;}// modo demo: no persiste (sandbox en memoria)
   setSyncSt('Eliminando…');
   const{error}=await _SB.from('trabajos').delete().eq('id',id);
   setSyncSt('');
@@ -621,6 +623,7 @@ function rolling7ISO(){const d=new Date();d.setDate(d.getDate()-6);return d.getF
 
 // ── Registro de realizaciones (histórico para reportes) ───────
 async function logRealizacion(t,tipo='finalizado'){
+  if(SESSION&&SESSION.demo)return true;// modo demo: no registra en realizaciones (no contamina reportes)
   const row={trabajo_id:String(t.id),numero:t.numero||null,tema:t.tema||'',operador:t.operador||'',completado_por:SESSION?SESSION.user:'',area:t.area||'',prioridad:t.prioridad||'',frecuencia:t.frecuencia||'',finalizacion:t.finalizacion||'',tipo};
   const{error}=await _SB.from('realizaciones').insert(row);
   if(error){showToast('Cerrada, pero NO se registró: '+error.message,'err');return false;}
@@ -659,7 +662,7 @@ async function finalizarTarea(t){
     if(esEtapas){
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
-      const nextNum=await getNextNumero();
+      const nextNum=SESSION.demo?null:await getNextNumero();
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
       extra=' · nueva etapa creada';
@@ -667,7 +670,7 @@ async function finalizarTarea(t){
       const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
-      const nextNum=await getNextNumero();
+      const nextNum=SESSION.demo?null:await getNextNumero();
       const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
       const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
       extra=' · próxima: '+fmtDate(next);
@@ -739,9 +742,79 @@ function enterApp(found){
   // leyenda operadores
   renderOpToggles();
   applyRole();
-  loadData().then(()=>{startRealtime();showResumenInicio();});
+  if(found.demo){
+    // Modo demo (Invitado): tablero sembrado en memoria, sin tocar Supabase ni realtime. Se reinicia en cada recarga.
+    seedDemoData();updateEnvBadge();renderCurrent();showResumenInicio();
+  }else{
+    loadData().then(()=>{startRealtime();showResumenInicio();});
+  }
   showPage('equipo');
   startCierreWatcher();
+}
+// ── Datos de demostración para el usuario Invitado (solo memoria) ──
+// Tablero de ejemplo repartido por columnas para que el invitado pruebe arrastrar/finalizar/crear sin persistir nada.
+function _demoDate(n){const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+// Igual que _demoDate pero contando días HÁBILES (salta sáb/dom), para alinear el calendario con la lógica de "ayer hábil" del tablero.
+function _demoBiz(n){let iso=todayISO();for(let i=0;i<Math.abs(n);i++)iso=_addBusiness(iso,n<0?-1:1);return iso;}
+function _demoCard(o){
+  const hoy=todayISO();
+  const op=o.operador||'invitado';
+  return Object.assign({
+    id:o.id,operador:op,creado_por:o.creado_por||op,
+    ingreso:o.ingreso||hoy,actualizado:nowStamp(),fecha_estado:o.fecha_estado||hoy,
+    tema:o.tema,tareas:o.tareas||'Tarea de demostración: arrastrala entre columnas para ver cómo cambia de estado, o soltala en Finalizado para cerrarla.',
+    area:o.area||'COM',prioridad:o.prioridad||'Media',frecuencia:o.frecuencia||'Unica',
+    estado:o.estado||'Pendiente',finalizacion:('finalizacion'in o)?o.finalizacion:hoy,
+    link1:'',link2:'',link3:'',imagenes:[],privado:false,reaccion:o.reaccion||'',fijado:false,
+    numero:null,comentario:o.comentario||null,comentario_por:o.comentario_por||null,comentario_ok:o.comentario_ok||false,checklist:o.checklist||null,desarrollo:false
+  });
+}
+function seedDemoData(){
+  const ayer=_addBusiness(todayISO(),-1);
+  // Reinicia el resaltado (12 h) para que la demo no arranque con tarjetas ya marcadas de una sesión previa
+  try{localStorage.removeItem(_markKey('v'));localStorage.removeItem(_markKey('a'));}catch(e){}
+  DATA=[
+    _demoCard({id:'demo-1',estado:'Programado',tema:'Campaña en redes — próxima edición',frecuencia:'Personalizada:7',finalizacion:_demoDate(7),area:'MKT',prioridad:'Media'}),
+    _demoCard({id:'demo-2',estado:'Programado',tema:'Revisión mensual de lista de precios',frecuencia:'Mensual:10',finalizacion:_demoDate(12),area:'A.Com',prioridad:'Baja'}),
+    _demoCard({id:'demo-3',estado:'Pendiente',tema:'Preparar presupuesto Cliente Norte',finalizacion:_demoDate(2),area:'COM',prioridad:'Alta',checklist:[{texto:'Reunir datos del cliente',ok:true},{texto:'Armar borrador',ok:false},{texto:'Enviar para aprobación',ok:false}]}),
+    _demoCard({id:'demo-4',estado:'Pendiente',tema:'Actualizar catálogo de productos',finalizacion:todayISO(),area:'COM',prioridad:'Media'}),
+    _demoCard({id:'demo-5',estado:'Pendiente',tema:'Enviar remitos pendientes',finalizacion:_demoDate(-3),ingreso:_demoDate(-10),area:'ARM',prioridad:'Alta'}),
+    _demoCard({id:'demo-6',estado:'En curso',tema:'Informe de ventas semanal',finalizacion:todayISO(),area:'A.Com',prioridad:'Urgente',comentario:'Avisame cuando comiences y lo vemos juntos, tengo algo para comentarte.',comentario_por:'juan'}),
+    _demoCard({id:'demo-7',estado:'Pendiente',tema:'Coordinar logística de entrega',finalizacion:_demoDate(1),area:'PROD',prioridad:'Media'}),
+    _demoCard({id:'demo-8',estado:'Para ver juntos',tema:'Análisis de resultados con Gerencia',finalizacion:_demoDate(1),area:'GER',prioridad:'Alta',reaccion:'👍'}),
+    _demoCard({id:'demo-9',estado:'Finalizado',tema:'Cierre de facturación del mes',fecha_estado:ayer,finalizacion:ayer,ingreso:_demoDate(-6),area:'A.Com',prioridad:'Media'}),
+    _demoCard({id:'demo-10',estado:'Finalizado',tema:'Reporte Power BI actualizado',fecha_estado:ayer,finalizacion:ayer,ingreso:_demoDate(-5),area:'MKT',prioridad:'Baja'}),
+    // Tarjetas de otros operadores (2 c/u: Diego, Maxi, Juan) en columnas de equipo (En curso, Para ver juntos, Finalizado)
+    // para que el Workflow muestre la colaboración del equipo con distintos colores.
+    _demoCard({id:'demo-11',operador:'diego',estado:'En curso',tema:'Seguimiento de pedido mayorista',finalizacion:_demoDate(1),area:'COM',prioridad:'Media'}),
+    _demoCard({id:'demo-12',operador:'maxi',estado:'Para ver juntos',tema:'Propuesta de nuevo proveedor',finalizacion:_demoDate(2),area:'A.Com',prioridad:'Alta',reaccion:'❤️'}),
+    _demoCard({id:'demo-13',operador:'diego',estado:'Finalizado',tema:'Actualización de base de clientes',fecha_estado:ayer,finalizacion:ayer,ingreso:_demoDate(-4),area:'COM',prioridad:'Media'}),
+    _demoCard({id:'demo-14',operador:'maxi',estado:'Finalizado',tema:'Control de inventario mensual',fecha_estado:_demoDate(-2),finalizacion:_demoDate(-2),ingreso:_demoDate(-7),area:'ARM',prioridad:'Baja'}),
+    _demoCard({id:'demo-15',operador:'juan',estado:'En curso',tema:'Análisis de ventas',finalizacion:_demoDate(1),area:'A.Com',prioridad:'Alta'}),
+    _demoCard({id:'demo-16',operador:'juan',estado:'Finalizado',tema:'Mejoras en Power BI',fecha_estado:ayer,finalizacion:ayer,ingreso:_demoDate(-5),area:'MKT',prioridad:'Media'}),
+    // Tarjetas solicitadas por Rubén (creado_por='ruben', ejecutor distinto) → muestran el doble chip (Rubén rosa + ejecutor)
+    _demoCard({id:'demo-17',operador:'diego',creado_por:'ruben',estado:'En curso',tema:'Relevamiento de precios de competencia',finalizacion:_demoDate(1),area:'COM',prioridad:'Media'}),
+    _demoCard({id:'demo-18',operador:'maxi',creado_por:'ruben',estado:'Para ver juntos',tema:'Informe de rentabilidad por línea',finalizacion:_demoDate(2),area:'COM',prioridad:'Alta'})
+  ];
+}
+// Filas de calendario (histórico de finalizadas) para la demo: días recientes del Invitado + lo que finalice en la sesión.
+// Shape compatible con realizaciones (completado_en, tema, operador, numero, tipo). Hora fija 12:00 local para no correr de día.
+function _demoCalendarRows(){
+  const mk=(iso,tema)=>({completado_en:iso+'T12:00:00',tema,operador:'invitado',completado_por:'invitado',numero:null,tipo:'finalizado'});
+  const hist=[
+    mk(_demoBiz(-1),'Reunión de seguimiento comercial'),
+    mk(_demoBiz(-2),'Envío de propuesta a Cliente Sur'),
+    mk(_demoBiz(-3),'Actualización de precios lista A'),
+    mk(_demoBiz(-4),'Cierre de pedido mayorista'),
+    mk(_demoBiz(-5),'Informe semanal de gestión'),
+    mk(_demoBiz(-6),'Capacitación de nuevo sistema'),
+    mk(_demoBiz(-7),'Revisión de márgenes por línea'),
+    mk(_demoBiz(-9),'Control de stock de depósito')
+  ];
+  // Lo finalizado por el Invitado durante la sesión (incluye las 2 finalizadas sembradas y cualquier cierre nuevo)
+  const sesion=DATA.filter(t=>t.estado==='Finalizado'&&t.operador==='invitado')
+    .map(t=>mk(t.fecha_estado||t.finalizacion||todayISO(),t.tema));
+  return hist.concat(sesion);
 }
 // Si hay una sesión de Supabase guardada, entra solo al recargar la página
 async function restoreSession(){
@@ -759,8 +832,9 @@ async function restoreSession(){
   });
 }
 function logout(){
-  // Al salir, si todavía no vio el balance del día, mostrarlo con botón "Cerrar sesión"
-  if(SESSION&&!_esWatcher()&&!_resumenSeen('cierre')){showResumenCierre(true);return;}
+  // Al salir, si todavía no vio el balance del día, mostrarlo con botón "Cerrar sesión".
+  // Demo (Invitado): lo muestra SIEMPRE (la demo se reinicia en cada sesión; no depende del "ya visto" de localStorage).
+  if(SESSION&&!_esWatcher()&&(SESSION.demo||!_resumenSeen('cierre'))){showResumenCierre(true);return;}
   doLogout();
 }
 async function doLogout(){
@@ -1799,7 +1873,7 @@ async function cerrarProyecto(){
   if(!confirm('¿Confirmás que el proyecto está completamente terminado?\n\nSe finaliza sin generar una nueva etapa. No se puede revertir.'))return;
   const logged=await logRealizacion(t);
   if(!logged&&!confirm('No se pudo registrar en el historial. ¿Cerrar de todos modos?'))return;
-  const upd=Object.assign({},t,{estado:'Finalizado',fecha_estado:todayISO(),actualizado:nowStamp()});
+  const upd=Object.assign({},t,{estado:'Finalizado',fecha_estado:todayISO(),actualizado:nowStamp(),finalizacion:todayISO()});
   const ok=await upsertTask(upd);
   if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;}
   closeTaskForm();renderCurrent();
@@ -2027,6 +2101,7 @@ function clearReg(){['regDesde','regHasta','regQuien','regArea','regTxt'].forEac
 let CAL_Y, CAL_M, REAL_CAL=[], CAL_LOADED=false, _lastView=null;
 const CAL_MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 async function loadRealCalendar(force){
+  if(SESSION&&SESSION.demo){REAL_CAL=_demoCalendarRows();CAL_LOADED=true;return;}// demo: calendario sembrado en memoria
   if(CAL_LOADED&&!force)return;
   setSyncSt('Cargando finalizadas…');
   const{data,error}=await _SB.from('realizaciones').select('tema,operador,completado_por,completado_en,tipo,numero').order('completado_en',{ascending:false});
@@ -2046,8 +2121,20 @@ const _esWatcher=()=>USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
 const _esFinde=()=>{const d=new Date().getDay();return d===0||d===6;};
 const _resumenSeen=kind=>localStorage.getItem('resumen_'+kind+'_'+SESSION.user+'_'+todayISO())==='1';
 const _markResumen=kind=>localStorage.setItem('resumen_'+kind+'_'+SESSION.user+'_'+todayISO(),'1');
-// Finalizadas propias en una fecha (de realizaciones)
-const _finPropias=iso=>REAL_CAL.filter(r=>(r.operador||r.completado_por)===SESSION.user&&_locISO(r.completado_en)===iso);
+// Tarjeta de inicio: "ya la vi hoy" se guarda en Supabase (además de localStorage) para que sincronice entre navegadores/dispositivos
+async function _resumenVistoServer(kind){
+  if(!SESSION)return false;
+  try{const{data}=await _SB.from('resumen_visto').select('kind').eq('user_id',SESSION.user).eq('kind',kind).eq('fecha',todayISO()).maybeSingle();return !!data;}
+  catch(e){return false;}
+}
+async function _marcarResumenServer(kind){
+  if(!SESSION||SESSION.demo)return;// demo: no persiste (siempre ve las tarjetas)
+  try{await _SB.from('resumen_visto').upsert({user_id:SESSION.user,kind,fecha:todayISO()},{onConflict:'user_id,kind,fecha'});}catch(e){}
+}
+// Finalizadas propias en una fecha (de realizaciones). En modo demo lee de DATA (no hay realizaciones: es sandbox).
+const _finPropias=iso=>(SESSION&&SESSION.demo)
+  ? DATA.filter(t=>t.operador===SESSION.user&&t.estado==='Finalizado'&&(t.fecha_estado||t.finalizacion)===iso)
+  : REAL_CAL.filter(r=>(r.operador||r.completado_por)===SESSION.user&&_locISO(r.completado_en)===iso);
 // Trabajos propios activos que vencen en una fecha
 const _vencenEn=iso=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&(t.finalizacion||'')===iso);
 // "Vencen hoy" del aviso de inicio: excluye lo que ya está en "En curso" (decisión 30/06: si ya lo arrancaste, no lo recuerda)
@@ -2096,10 +2183,12 @@ async function moverEnCurso(grupo){
   showToast(arr.length+' tarea(s) movida(s) a En curso','ok');
   _paintResumenInicio();renderCurrent();
 }
-// Lista de temas en columna única con scroll (~5 filas de alto vía CSS .dr-grid). El header (n-fin/n-venc/n-atr) siempre muestra el total real.
-const _temasGrid=arr=>{
+// Lista de temas en columna única, cortada a un límite fijo (sin scroll). El header (n-fin/n-venc/n-atr) siempre muestra el total real.
+const _temasGrid=(arr,limit=5)=>{
   if(!arr.length)return '<div class="dr-empty">Nada por acá</div>';
-  return '<div class="dr-grid">'+arr.map(t=>'<div class="dr-it" title="'+escH(t.tema||'')+'">'+escH(t.tema||'(sin título)')+'</div>').join('')+'</div>';
+  const visibles=arr.slice(0,limit);
+  const resto=arr.length-visibles.length;
+  return '<div class="dr-grid">'+visibles.map(t=>'<div class="dr-it" title="'+escH(t.tema||'')+'">'+escH(t.tema||'(sin título)')+'</div>').join('')+(resto>0?'<div class="dr-it dr-more">+'+resto+' más</div>':'')+'</div>';
 };
 function dismissResumen(){const b=document.getElementById('dailyResumen');if(b)b.classList.add('hidden');}
 // Cierre con confirmación (solo tarjeta de inicio): 1er click en la X muestra el botón "Cerrar" (no cierra solo);
@@ -2115,12 +2204,18 @@ function askDismissResumen(){
 
 // Tarjeta de INICIO: ayer finalizadas + lo que vence hoy
 async function showResumenInicio(){
-  if(!SESSION||_esWatcher()||(!SESSION.demo&&(_esFinde()||_resumenSeen('inicio'))))return;
+  if(!SESSION||_esWatcher())return;
+  if(!SESSION.demo){
+    if(_esFinde())return;
+    // "Ya vista hoy": localStorage (rápido, por navegador) O servidor (sincroniza entre navegadores). Si local ya la marcó, ni consulta el servidor.
+    if(_resumenSeen('inicio')||await _resumenVistoServer('inicio'))return;
+  }
   const box=document.getElementById('dailyResumen');if(!box)return;
   await loadRealCalendar();
   _paintResumenInicio();
   box.classList.remove('hidden');
-  _markResumen('inicio');
+  if(!SESSION.demo)_markResumen('inicio');// marca local (fallback si el servidor no está disponible)
+  await _marcarResumenServer('inicio');
 }
 // Pinta el contenido de la tarjeta de inicio (reutilizable: los botones la repintan sin volver a evaluar los guards)
 function _paintResumenInicio(){
@@ -2138,9 +2233,9 @@ function _paintResumenInicio(){
   };
   box.innerHTML=
     '<button class="dr-close" onclick="askDismissResumen()" title="Cerrar">✕</button>'
-    +'<div class="dr-hi"><span>👋 Hola '+escH(SESSION.nombre)+' — arranquemos el día</span><span class="dr-hint">📅 Revisá tu Vista de calendario</span></div>'
+    +'<div class="dr-hi"><span>👋 Hola '+escH(SESSION.nombre)+' — arranquemos el día</span></div>'
     +'<div class="dr-cols">'
-    +'<div class="dr-col"><div class="dr-lbl">Ayer finalizaste <b class="n-fin">'+fin.length+'</b> <span class="dr-dt">'+_dowLabel(ayer)+' '+fmtDate(ayer)+'</span></div>'+_temasGrid(fin)+'</div>'
+    +'<div class="dr-col"><div class="dr-lbl">Ayer finalizaste <b class="n-fin">'+fin.length+'</b> <span class="dr-dt">'+_dowLabel(ayer)+' '+fmtDate(ayer)+'</span></div>'+_temasGrid(fin)+'<div class="dr-acts"><button class="dr-btn" onclick="setViewMode(\'calendario\')">📅 Ver tareas finalizadas</button></div></div>'
     +'<div class="dr-col"><div class="dr-lbl">Vencen hoy <b class="n-venc">'+venc.length+'</b> <span class="dr-dt">'+fmtDate(hoy)+'</span></div>'+_temasGrid(venc)+_accionesGrupo(venc,'venc','v','🟢')+'</div>'
     +'<div class="dr-col"><div class="dr-lbl">Atrasadas <b class="n-atr">'+atras.length+'</b> <span class="dr-dt">las más viejas</span></div>'+_temasGrid(atras)+_accionesGrupo(atras,'atras','a','🟡')+'</div>'
     +'</div>';
