@@ -119,6 +119,12 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .cattach-pop span.cattach-item b{font-weight:400;display:inline-flex;align-items:center;gap:6px}
 .cattach-pop .cattach-url{font-size:9px;color:#9ca3af;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cattach-pop span.cattach-bad .cattach-url{color:#f87171}
+/* Popover clickeable de notificaciones (buzón ✉) — reemplaza tooltips nativos de los globos verde/amarillo */
+.notif-pop{display:none;flex-direction:column;background:#000;border:1px solid #444;border-radius:8px;padding:5px;gap:2px;max-height:280px;overflow-y:auto;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.notif-item{cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 8px;border-radius:5px;color:#fff}
+.notif-item:hover{background:#333}
+.notif-item b{font-weight:600;font-size:11.5px}
+.notif-item .notif-sub{font-size:9.5px;color:#9ca3af;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card .cthumb{cursor:pointer;display:inline-flex;color:var(--muted);transition:color .12s}
 .card .cthumb:hover{color:var(--txt)}
 .card .cenv{cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:4px;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;transition:all .12s}
@@ -267,7 +273,10 @@ table.grid tr:nth-child(even){background:var(--bg2)}
   <div class="eq-header">
     <h1>Análisis Comercial</h1>
     <span class="userbox">Sesión: <b id="curUser"></b></span>
-    <button id="btnEnvNot" onclick="toggleEnvButton()" title="Notificaciones pendientes" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="derivBadge" style="position:absolute;bottom:-5px;left:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <span style="position:relative;display:inline-flex">
+    <button id="btnEnvNot" onclick="toggleEnvButton()" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" onclick="event.stopPropagation();toggleNotifPop('coment',this)" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="derivBadge" onclick="event.stopPropagation();toggleNotifPop('derivada',this)" style="position:absolute;bottom:-5px;left:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <span id="notifPop" onclick="event.stopPropagation()" class="notif-pop"></span>
+    </span>
     <button id="btnDevFilter" onclick="toggleDevButton()" style="margin-left:6px;width:32px;height:32px;padding:0;display:none;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></button>
     <span class="date" id="todayLabel"></span>
     <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
@@ -375,8 +384,11 @@ table.grid tr:nth-child(even){background:var(--bg2)}
           <div class="rt-emojis" id="f_emojis"></div>
         </div>
       </div>
-      <div id="wrapOperador"><label>Operador</label><select id="f_operador"></select>
-        <label id="derivWrap" style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);margin-top:5px;cursor:pointer" title="Marca la tarea para que el globo amarillo del buzón la muestre a vos y al operador hasta que se Finalice"><input type="checkbox" id="f_derivado"> Derivar a tercero (con seguimiento)</label>
+      <div id="wrapOperador"><label>Operador</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="f_operador" style="flex:1;min-width:0"></select>
+          <label id="derivWrap" class="dev-chk" title="Marca la tarea para que el globo amarillo del buzón la muestre a vos y al operador hasta que se Finalice" style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--muted)"><input type="checkbox" id="f_derivado"> 🔀 Derivar a tercero</label>
+        </div>
       </div>
       <div id="wrapArea"><label>Área que lo solicita</label>
         <div style="display:flex;gap:8px;align-items:center">
@@ -659,6 +671,12 @@ async function finalizarTarea(t){
       ?'¿Confirmás que esta tarea se realizó?\n\nQueda registrada y se genera una nueva tarjeta con la próxima fecha.'
       :'¿Confirmás que esta tarea está finalizada?\n\nQueda registrada y no se puede revertir.';
   if(!confirm(msg))return;
+  // Derivada a tercero: comentario de cierre obligatorio para avisar a quien la derivó (ver globo verde)
+  if(t.derivado_tercero){
+    const _c=prompt('Esta tarea fue derivada por '+nombreOp(t.creado_por)+'. Dejá un comentario de cierre para avisarle que la terminaste:','');
+    if(_c===null||!_c.trim()){showToast('Necesitás dejar un comentario de cierre para finalizar esta tarea','err');return;}
+    t.comentario=_c.trim();t.comentario_por=SESSION.user;t.comentario_ok=false;
+  }
   // Guard anti doble-disparo: evita que un doble drop genere dos regeneraciones
   if(window._finalizing)return;
   window._finalizing=true;
@@ -1060,7 +1078,8 @@ function rtInsertEmoji(em){
 document.addEventListener('click',()=>{const b=document.getElementById('f_emojis');if(b)b.classList.remove('open');});
 function updateEnvBadge(){
   if(!SESSION)return;
-  const count=DATA.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user).length;
+  const cTasks=DATA.filter(t=>t.comentario&&!t.comentario_ok&&(t.operador===SESSION.user||t.creado_por===SESSION.user));
+  const count=cTasks.length;
   const badge=document.getElementById('envBadge');
   const btn=document.getElementById('btnEnvNot');
   if(!badge||!btn)return;
@@ -1075,13 +1094,50 @@ function updateEnvBadge(){
   // Badge amarillo: tareas derivadas a un tercero (manual), sigue activo hasta que la tarea se Finalice
   const db=document.getElementById('derivBadge');
   if(db){
-    const dc=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user)).length;
+    const dTasks=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user));
+    const dc=dTasks.length;
     if(dc>0){db.textContent=dc;db.style.display='inline-flex';}
     else{db.style.display='none';if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();}}
   }
   _syncEnvBtn();
   _syncDevBtn();
 }
+// Tareas detrás de cada globo (usado por el popover clickeable y por el conteo de badges)
+function _notifItems(kind){
+  if(!SESSION)return[];
+  if(kind==='coment')return DATA.filter(t=>t.comentario&&!t.comentario_ok&&(t.operador===SESSION.user||t.creado_por===SESSION.user));
+  if(kind==='derivada')return DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user));
+  return[];
+}
+// Click en el globo verde/amarillo: abre un popover con el listado (reemplaza el tooltip nativo del navegador)
+function toggleNotifPop(kind,el){
+  const pop=document.getElementById('notifPop');if(!pop)return;
+  const wasOpen=pop.dataset.kind===kind&&pop.style.display==='flex';
+  pop.style.display='none';pop.dataset.kind='';
+  if(wasOpen)return;
+  const items=_notifItems(kind);
+  if(!items.length)return;
+  pop.innerHTML=items.map(t=>{
+    const sub=kind==='coment'
+      ?'"'+escH(t.comentario)+'" — '+escH(nombreOp(t.comentario_por))
+      :(t.estado==='Finalizado'?'Finalizada — esperando que leas el comentario de cierre':'Derivada a '+escH(nombreOp(t.operador))+' · '+escH(t.estado));
+    return `<span class="notif-item" onclick="event.stopPropagation();document.getElementById('notifPop').style.display='none';openTaskForm('${t.id}')"><b>${escH(t.tema)}</b><span class="notif-sub">${sub}</span></span>`;
+  }).join('');
+  pop.dataset.kind=kind;
+  pop.style.display='flex';
+  pop.style.position='fixed';pop.style.zIndex='1000';
+  const r=el.getBoundingClientRect();
+  const pw=240;
+  let left=r.right-pw;if(left<6)left=6;
+  pop.style.left=left+'px';pop.style.width=pw+'px';
+  if(r.bottom+6+200<=window.innerHeight-8){pop.style.top=(r.bottom+6)+'px';pop.style.bottom='auto';}
+  else{pop.style.bottom=(window.innerHeight-r.top+6)+'px';pop.style.top='auto';}
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#notifPop')&&!e.target.closest('#envBadge')&&!e.target.closest('#derivBadge')){
+    const pop=document.getElementById('notifPop');if(pop){pop.style.display='none';pop.dataset.kind='';}
+  }
+});
 function _syncEnvBtn(){
   const btn=document.getElementById('btnEnvNot');if(!btn)return;
   if(filtroRuben){btn.style.background='#e91e8c';btn.style.borderColor='#e91e8c';btn.style.color='#fff';}
@@ -1114,12 +1170,16 @@ function _syncDevBtn(){
 }
 function toggleEnvButton(){
   const rc=isAdmin()?DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length:0;
-  if(filtroRuben){filtroRuben=false;_syncEnvBtn();setViewMode('workflow');return;}
+  // "Por equipo" no scopea por operador (a diferencia de Workflow/Por operador) — necesario para que tanto quien derivó/comentó
+  // como el operador puedan ver la misma tarjeta al filtrar, sin importar en qué vista estaban parados.
+  const _home=()=>setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow');
+  if(filtroRuben){filtroRuben=false;_syncEnvBtn();_home();return;}
   if(rc>0){filtroRuben=true;filtroComentario=false;filtroDerivada=false;_syncEnvBtn();setViewMode('estado');return;}
-  if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();renderCurrent();return;}
+  if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();_home();return;}
   const dc=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user)).length;
-  if(dc>0){filtroDerivada=true;filtroComentario=false;_syncEnvBtn();renderCurrent();return;}
-  filtroComentario=!filtroComentario;_syncEnvBtn();renderCurrent();
+  if(dc>0){filtroDerivada=true;filtroComentario=false;_syncEnvBtn();setViewMode('estado');return;}
+  if(filtroComentario){filtroComentario=false;_syncEnvBtn();_home();return;}
+  filtroComentario=true;_syncEnvBtn();setViewMode('estado');
 }
 function renderEquipo(){
   fillFilterOp();fillFiltros();
@@ -1182,7 +1242,7 @@ function renderEquipo(){
     }
   }
   // Vista "Por equipo": todos ven todos los trabajos (sin filtro por usuario)
-  if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user);
+  if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&(t.operador===SESSION.user||t.creado_por===SESSION.user));
   if(filtroRuben)list=list.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false);
   if(filtroDerivada)list=list.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user));
   if(!isAdmin())list=list.filter(t=>t.frecuencia!=='Nota');
@@ -1948,6 +2008,10 @@ async function saveTask(){
   const _ejSel=document.getElementById('f_ejecutor_sel');
   if(!_notaMode&&_ejSel){if(!_ejSel.value){alert('Seleccioná el operador que va a realizar la tarea.');_ejSel.focus();return;}vals.operador=_ejSel.value;}
   if(!_notaMode&&vals.privado)vals.operador=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
+  if(!_notaMode&&vals.derivado_tercero){
+    const _creadorEf=editingId?(DATA.find(x=>x.id===editingId)||{}).creado_por:(_dupCreadoPor||SESSION.user);
+    if(vals.operador===_creadorEf){alert('No podés derivar una tarea a vos mismo. Elegí otro operador o destildá "Derivar a tercero".');return;}
+  }
   if(!_notaMode){
     const _te=editingId?DATA.find(x=>x.id===editingId):null;
     const _canC=editingId&&SESSION.user!==(_te&&_te.creado_por);
