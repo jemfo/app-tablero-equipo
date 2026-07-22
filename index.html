@@ -114,6 +114,11 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .cattach-wrap.open .cattach-pop{display:flex}
 .cattach-pop span{cursor:pointer;font-size:11px;display:inline-flex;align-items:center;gap:6px;padding:4px 7px;border-radius:5px;white-space:nowrap;color:#fff}
 .cattach-pop span:hover{background:#333}
+.cattach-pop span.cattach-bad{color:#f87171}
+.cattach-pop span.cattach-item{flex-direction:column;align-items:flex-start;gap:1px}
+.cattach-pop span.cattach-item b{font-weight:400;display:inline-flex;align-items:center;gap:6px}
+.cattach-pop .cattach-url{font-size:9px;color:#9ca3af;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cattach-pop span.cattach-bad .cattach-url{color:#f87171}
 .card .cthumb{cursor:pointer;display:inline-flex;color:var(--muted);transition:color .12s}
 .card .cthumb:hover{color:var(--txt)}
 .card .cenv{cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:4px;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;transition:all .12s}
@@ -262,7 +267,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
   <div class="eq-header">
     <h1>Análisis Comercial</h1>
     <span class="userbox">Sesión: <b id="curUser"></b></span>
-    <button id="btnEnvNot" onclick="toggleEnvButton()" title="Notificaciones pendientes" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <button id="btnEnvNot" onclick="toggleEnvButton()" title="Notificaciones pendientes" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="derivBadge" style="position:absolute;bottom:-5px;left:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <button id="btnDevFilter" onclick="toggleDevButton()" style="margin-left:6px;width:32px;height:32px;padding:0;display:none;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></button>
     <span class="date" id="todayLabel"></span>
     <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
@@ -370,7 +375,9 @@ table.grid tr:nth-child(even){background:var(--bg2)}
           <div class="rt-emojis" id="f_emojis"></div>
         </div>
       </div>
-      <div id="wrapOperador"><label>Operador</label><select id="f_operador"></select></div>
+      <div id="wrapOperador"><label>Operador</label><select id="f_operador"></select>
+        <label id="derivWrap" style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);margin-top:5px;cursor:pointer" title="Marca la tarea para que el globo amarillo del buzón la muestre a vos y al operador hasta que se Finalice"><input type="checkbox" id="f_derivado"> Derivar a tercero (con seguimiento)</label>
+      </div>
       <div id="wrapArea"><label>Área que lo solicita</label>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="f_area" style="flex:1;min-width:0"></select>
@@ -523,7 +530,7 @@ const EST_COLOR={
   'Para ver juntos':'#fb923c','Programado':'#38bdf8','Finalizado':'#4ade80'
 };
 
-let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDev='todos', VIEW_MODE='estado';
+let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDerivada=false, filtroDev='todos', VIEW_MODE='estado';
 
 // ── Utilidades ────────────────────────────────────────────────
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1020,9 +1027,9 @@ function clearFilters(){
   // En Calendario, Limpiar solo resetea los filtros y mantiene la vista
   if(document.getElementById('viewMode').value!=='calendario')
     setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow',false);
-  if(filtroComentario||filtroRuben){
+  if(filtroComentario||filtroRuben||filtroDerivada){
     const _wasRuben=filtroRuben;
-    filtroComentario=false;filtroRuben=false;
+    filtroComentario=false;filtroRuben=false;filtroDerivada=false;
     _syncEnvBtn();
     if(_wasRuben){setViewMode('workflow',false);}
   }
@@ -1065,12 +1072,20 @@ function updateEnvBadge(){
     if(rc>0){rb.textContent=rc;rb.style.display='inline-flex';}
     else{rb.style.display='none';if(filtroRuben){filtroRuben=false;_syncEnvBtn();}}
   }
+  // Badge amarillo: tareas derivadas a un tercero (manual), sigue activo hasta que la tarea se Finalice
+  const db=document.getElementById('derivBadge');
+  if(db){
+    const dc=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user)).length;
+    if(dc>0){db.textContent=dc;db.style.display='inline-flex';}
+    else{db.style.display='none';if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();}}
+  }
   _syncEnvBtn();
   _syncDevBtn();
 }
 function _syncEnvBtn(){
   const btn=document.getElementById('btnEnvNot');if(!btn)return;
   if(filtroRuben){btn.style.background='#e91e8c';btn.style.borderColor='#e91e8c';btn.style.color='#fff';}
+  else if(filtroDerivada){btn.style.background='#eab308';btn.style.borderColor='#eab308';btn.style.color='#1f2430';}
   else if(filtroComentario){btn.style.background='#dc2626';btn.style.borderColor='#dc2626';btn.style.color='#fff';}
   else{btn.style.background='';btn.style.borderColor='';btn.style.color='';}
 }
@@ -1100,7 +1115,10 @@ function _syncDevBtn(){
 function toggleEnvButton(){
   const rc=isAdmin()?DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length:0;
   if(filtroRuben){filtroRuben=false;_syncEnvBtn();setViewMode('workflow');return;}
-  if(rc>0){filtroRuben=true;filtroComentario=false;_syncEnvBtn();setViewMode('estado');return;}
+  if(rc>0){filtroRuben=true;filtroComentario=false;filtroDerivada=false;_syncEnvBtn();setViewMode('estado');return;}
+  if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();renderCurrent();return;}
+  const dc=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user)).length;
+  if(dc>0){filtroDerivada=true;filtroComentario=false;_syncEnvBtn();renderCurrent();return;}
   filtroComentario=!filtroComentario;_syncEnvBtn();renderCurrent();
 }
 function renderEquipo(){
@@ -1166,6 +1184,7 @@ function renderEquipo(){
   // Vista "Por equipo": todos ven todos los trabajos (sin filtro por usuario)
   if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&t.operador===SESSION.user);
   if(filtroRuben)list=list.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false);
+  if(filtroDerivada)list=list.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user));
   if(!isAdmin())list=list.filter(t=>t.frecuencia!=='Nota');
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
   document.getElementById('equipoBody').innerHTML=mode==='workflow'?workflowHTML(list):((mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list));
@@ -1229,7 +1248,13 @@ function cardHTML(t){
   const _attImgs=(_showAttach&&t.imagenes&&t.imagenes.length)?t.imagenes.length:0;
   const _nAtt=_attLinks.length+_attImgs;
   const attachIcon=_nAtt?`<span class="cattach-wrap"><span class="cattach-chip" onclick="event.stopPropagation();toggleAttachPicker(this)">${ICO.link}<b>${_nAtt}</b></span><span class="cattach-pop">${
-      _attLinks.map((u,i)=>`<span title="${escH(u)}" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')">${ICO.link} Link ${i+1}</span>`).join('')
+      _attLinks.map((u,i)=>{
+        const _bad=/^file:|^[a-zA-Z]:\\|^\\\\/.test(u);
+        const _prev=u.length>42?u.slice(0,42)+'…':u;
+        return _bad
+          ?`<span class="cattach-item cattach-bad" onclick="event.stopPropagation();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} Link ${i+1} ⚠</b><span class="cattach-url">${escH(_prev)}</span></span>`
+          :`<span class="cattach-item" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} Link ${i+1}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
+      }).join('')
       +(_attImgs?`<span onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img} Imagen${_attImgs>1?'es ('+_attImgs+')':''}</span>`:'')
     }</span></span>`:'';
   // Fijar: solo el operador dueño de la tarea (o el admin). Los demás ven el pin como referencia.
@@ -1698,6 +1723,7 @@ function openTaskForm(id){
     _fin.readOnly=_blq;_fin.style.background=_blq?'var(--border)':'';
     document.getElementById('f_link1').value=t.link1||'';document.getElementById('f_link2').value=t.link2||'';
     document.getElementById('f_link3').value=t.link3||'';
+    const _fder=document.getElementById('f_derivado');if(_fder)_fder.checked=!!t.derivado_tercero;
     curImgs=Array.isArray(t.imagenes)?t.imagenes.slice():[];
     curChecklist=Array.isArray(t.checklist)?t.checklist.map(x=>({...x})):[];
     const _canDel=isAdmin()||(t.operador===SESSION.user);
@@ -1720,6 +1746,7 @@ function openTaskForm(id){
   }else{
     document.getElementById('modalTitle').textContent='Nueva tarea';
     ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
+    const _fder0=document.getElementById('f_derivado');if(_fder0)_fder0.checked=false;
     document.getElementById('f_operador').value=SESSION.user;document.getElementById('f_area').value='A.Com';
     document.getElementById('f_prioridad').value='Baja';document.getElementById('f_frecuencia').value='Unica';
     curImgs=[];curChecklist=[];document.getElementById('btnDelete').style.display='none';
@@ -1911,8 +1938,13 @@ async function saveTask(){
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Personalizada'){const _fd=parseInt(document.getElementById('f_frec_dias').value||'0',10);if(!_fd||_fd<1){alert('Ingresá la cantidad de días para la frecuencia personalizada.');document.getElementById('f_frec_dias').focus();return;}}
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Mensual'){const _fd=parseInt(document.getElementById('f_frec_dia').value||'0',10);if(!_fd||_fd<1||_fd>28){alert('Ingresá el día del mes (1-28) para la frecuencia mensual.');document.getElementById('f_frec_dia').focus();return;}}
   const vals=_notaMode
-    ?{tema,tareas:'',operador:SESSION.user,area:'A.Com',prioridad:'Baja',frecuencia:'Nota',finalizacion:'',link1:'',link2:'',link3:'',imagenes:[],privado:true,desarrollo:false,checklist:curChecklist.length?curChecklist.slice():null,comentario:null,comentario_por:null,comentario_ok:false}
-    :{tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,desarrollo:document.getElementById('f_desarrollo').checked,checklist:curChecklist.length?curChecklist.slice():null};
+    ?{tema,tareas:'',operador:SESSION.user,area:'A.Com',prioridad:'Baja',frecuencia:'Nota',finalizacion:'',link1:'',link2:'',link3:'',imagenes:[],privado:true,desarrollo:false,derivado_tercero:false,checklist:curChecklist.length?curChecklist.slice():null,comentario:null,comentario_por:null,comentario_ok:false}
+    :{tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,desarrollo:document.getElementById('f_desarrollo').checked,derivado_tercero:document.getElementById('f_derivado').checked,checklist:curChecklist.length?curChecklist.slice():null};
+  if(!_notaMode){
+    const _linkPat=/^file:|^[a-zA-Z]:\\|^\\\\/i;
+    const _badLink=[vals.link1,vals.link2,vals.link3].find(u=>u&&_linkPat.test(u));
+    if(_badLink){alert('El link "'+_badLink+'" es una ruta local de tu PC (no un link para compartir) y no va a funcionar para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. "Copiar vínculo" en OneDrive/SharePoint).');return;}
+  }
   const _ejSel=document.getElementById('f_ejecutor_sel');
   if(!_notaMode&&_ejSel){if(!_ejSel.value){alert('Seleccioná el operador que va a realizar la tarea.');_ejSel.focus();return;}vals.operador=_ejSel.value;}
   if(!_notaMode&&vals.privado)vals.operador=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
