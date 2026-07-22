@@ -1315,7 +1315,7 @@ function cardHTML(t){
           ?`<span class="cattach-item cattach-bad" onclick="event.stopPropagation();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} Link ${i+1} ⚠</b><span class="cattach-url">${escH(_prev)}</span></span>`
           :`<span class="cattach-item" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} Link ${i+1}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
       }).join('')
-      +(_attImgs?`<span onclick="event.stopPropagation();openTaskImg('${t.id}')">${ICO.img} Imagen${_attImgs>1?'es ('+_attImgs+')':''}</span>`:'')
+      +(_showAttach?(t.imagenes||[]).map((_,i)=>`<span onclick="event.stopPropagation();openTaskImgAt('${t.id}',${i})">${ICO.img} Imagen ${i+1}</span>`).join(''):'')
     }</span></span>`:'';
   // Fijar: solo el operador dueño de la tarea (o el admin). Los demás ven el pin como referencia.
   const _canPin=!isFinal&&(isAdmin()||t.operador===SESSION.user);
@@ -1478,6 +1478,7 @@ document.addEventListener('click',e=>{
   }
 });
 function openTaskImg(id){const t=DATA.find(x=>x.id===id);if(t&&t.imagenes&&t.imagenes.length){document.getElementById('imgLightboxImg').src=t.imagenes[0];document.getElementById('imgLightbox').classList.remove('hidden');}}
+function openTaskImgAt(id,idx){const t=DATA.find(x=>x.id===id);if(t&&t.imagenes&&t.imagenes[idx]){document.getElementById('imgLightboxImg').src=t.imagenes[idx];document.getElementById('imgLightbox').classList.remove('hidden');}}
 function openTaskLink(id){const t=DATA.find(x=>x.id===id);if(!t)return;const url=t.link1||t.link2||t.link3;if(url)window.open(url,'_blank','noopener');}
 async function aprobarSolicitud(id){
   const t=DATA.find(x=>x.id===id);
