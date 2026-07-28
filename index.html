@@ -90,6 +90,8 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card .cic{display:inline-flex}
 .card .cpin{cursor:pointer;display:inline-flex;color:var(--muted);opacity:.55;transition:color .12s,opacity .12s}
 .card .cpin.on{opacity:1;color:var(--accent)}
+.card .creloj{cursor:pointer;display:inline-flex;vertical-align:middle;color:#dc2626;opacity:.8;transition:opacity .12s}
+.card .creloj.on{opacity:1}
 .col-sort-btn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:var(--bg3);user-select:none;flex-shrink:0;transition:border-color .15s,background .15s}
 .col-sort-btn:hover{background:var(--bg2);border-color:var(--muted)}
 .col-sort-btn.active{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--bg3))}
@@ -228,6 +230,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #dailyResumen .dr-btn:hover{border-color:var(--accent)}
 .card.marked{background:rgba(34,197,94,.18)!important}
 .card.marked-y{background:rgba(250,204,21,.22)!important}
+.card.marked-r{background:rgba(220,38,38,.16)!important}
 .cal-month{font-size:14px;font-weight:700;text-transform:capitalize;min-width:120px;text-align:center;color:var(--txt)}
 .cal-nav{background:var(--bg3);border:1px solid var(--line);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:15px;color:var(--txt)}
 .cal-today{background:var(--bg3);border:1px solid var(--line);border-radius:6px;height:30px;padding:0 12px;cursor:pointer;font-size:12px;color:var(--txt)}
@@ -274,9 +277,10 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <h1>Análisis Comercial</h1>
     <span class="userbox">Sesión: <b id="curUser"></b></span>
     <span style="position:relative;display:inline-flex">
-    <button id="btnEnvNot" onclick="toggleEnvButton()" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" onclick="event.stopPropagation();toggleNotifPop('coment',this)" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="derivBadge" onclick="event.stopPropagation();toggleNotifPop('derivada',this)" style="position:absolute;bottom:-5px;left:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <button id="btnEnvNot" onclick="toggleEnvButton()" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#0ea5e9;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" onclick="event.stopPropagation();toggleNotifPop('coment',this)" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="derivBadge" onclick="event.stopPropagation();toggleNotifPop('derivada',this)" style="position:absolute;bottom:-5px;left:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="rubenIncBadge" onclick="event.stopPropagation();toggleIncRubenFilter()" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border:2px solid #000;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <span id="notifPop" onclick="event.stopPropagation()" class="notif-pop"></span>
     </span>
+    <button id="btnAtrasadasFilter" onclick="toggleAtrasadasFilter()" title="Tareas atrasadas" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px">⏰<span id="atrasBadge" style="position:absolute;top:-5px;right:-5px;background:#000;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <button id="btnDevFilter" onclick="toggleDevButton()" style="margin-left:6px;width:32px;height:32px;padding:0;display:none;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></button>
     <span class="date" id="todayLabel"></span>
     <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
@@ -385,9 +389,12 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
       </div>
       <div id="wrapOperador"><label>Operador</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <select id="f_operador" style="flex:1;min-width:0"></select>
-          <label id="derivWrap" class="dev-chk" title="Marca la tarea para que el globo amarillo del buzón la muestre a vos y al operador hasta que se Finalice" style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--muted)"><input type="checkbox" id="f_derivado"> 🔀 Derivar a tercero</label>
+        <div style="display:flex;align-items:flex-start;gap:8px">
+          <select id="f_operador" style="width:40%"></select>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <label id="derivWrap" title="Avisa al buzón hasta Finalizar" style="font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;margin-top:-10px"><input type="checkbox" id="f_derivado" style="width:14px;height:14px;vertical-align:middle;margin:0 2px 0 0"> 🔀 Derivar 3ros</label>
+            <label id="rubenWrap" title="Suma a Rubén para revisar juntos" style="font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap"><input type="checkbox" id="f_incluir_ruben" style="width:14px;height:14px;vertical-align:middle;margin:0 2px 0 0"> 🤝 Ver Ruben</label>
+          </div>
         </div>
       </div>
       <div id="wrapArea"><label>Área que lo solicita</label>
@@ -542,7 +549,7 @@ const EST_COLOR={
   'Para ver juntos':'#fb923c','Programado':'#38bdf8','Finalizado':'#4ade80'
 };
 
-let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDerivada=false, filtroDev='todos', VIEW_MODE='estado';
+let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDerivada=false, filtroAtrasadas=false, filtroIncRuben=false, filtroDev='todos', VIEW_MODE='estado';
 
 // ── Utilidades ────────────────────────────────────────────────
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -677,29 +684,38 @@ async function finalizarTarea(t){
     if(_c===null||!_c.trim()){showToast('Necesitás dejar un comentario de cierre para finalizar esta tarea','err');return;}
     t.comentario=_c.trim();t.comentario_por=SESSION.user;t.comentario_ok=false;
   }
-  // Guard anti doble-disparo: evita que un doble drop genere dos regeneraciones
-  if(window._finalizing)return;
-  window._finalizing=true;
+  // Guard anti doble-disparo: evita que un doble drop de la MISMA tarea genere dos regeneraciones
+  if(!window._finalizingIds)window._finalizingIds=new Set();
+  if(window._finalizingIds.has(t.id))return;
+  window._finalizingIds.add(t.id);
   let logged=false;
   try{
     logged=await logRealizacion(t);
     if(!logged&&!confirm('No se pudo registrar en el historial. ¿Finalizar de todos modos?'))return;
     let extra='';
+    // Anti-duplicado: si ya existe una "próxima tarjeta" viva de esta misma serie generada hoy, no crear otra
+    const _yaTieneProxima=t=>DATA.some(x=>x.id!==t.id&&x.tema===t.tema&&x.operador===t.operador&&x.estado==='Programado'&&x.fecha_estado===todayISO());
     if(esEtapas){
+      const eraFijado=t.fijado;
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
-      const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
-      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
-      const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
-      extra=' · nueva etapa creada';
+      if(!_yaTieneProxima(t)){
+        const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
+        const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
+        const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
+        extra=' · nueva etapa creada';
+      }
     }else if(esPersonalizada||esMensual){
       const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
+      const eraFijado=t.fijado;
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
-      const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
-      const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
-      const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
-      extra=' · próxima: '+fmtDate(next);
+      if(!_yaTieneProxima(t)){
+        const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
+        const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
+        const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
+        extra=' · próxima: '+fmtDate(next);
+      }
     }else{
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
@@ -707,7 +723,7 @@ async function finalizarTarea(t){
     renderCurrent();
     if(logged)showToast((esEtapas?'Etapa registrada ✓':esRec?'Registrada ✓':'Finalizada ✓')+extra);
   }finally{
-    window._finalizing=false;
+    window._finalizingIds.delete(t.id);
   }
 }
 
@@ -1045,10 +1061,10 @@ function clearFilters(){
   // En Calendario, Limpiar solo resetea los filtros y mantiene la vista
   if(document.getElementById('viewMode').value!=='calendario')
     setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow',false);
-  if(filtroComentario||filtroRuben||filtroDerivada){
+  if(filtroComentario||filtroRuben||filtroDerivada||filtroAtrasadas||filtroIncRuben){
     const _wasRuben=filtroRuben;
-    filtroComentario=false;filtroRuben=false;filtroDerivada=false;
-    _syncEnvBtn();
+    filtroComentario=false;filtroRuben=false;filtroDerivada=false;filtroAtrasadas=false;filtroIncRuben=false;
+    _syncEnvBtn();_syncAtrasBtn();_syncIncRubenBtn();
     if(_wasRuben){setViewMode('workflow',false);}
   }
   if(filtroDev!=='todos'){filtroDev='todos';_syncDevBtn();}
@@ -1091,22 +1107,51 @@ function updateEnvBadge(){
     if(rc>0){rb.textContent=rc;rb.style.display='inline-flex';}
     else{rb.style.display='none';if(filtroRuben){filtroRuben=false;_syncEnvBtn();}}
   }
-  // Badge amarillo: tareas derivadas a un tercero (manual), sigue activo hasta que la tarea se Finalice
+  // Badge amarillo: tareas derivadas a un tercero (manual), sigue activo hasta que la tarea se Finalice. No aplica a Rubén (no ejecuta tareas).
   const db=document.getElementById('derivBadge');
-  if(db){
+  if(db&&!_esWatcher()){
     const dTasks=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user));
     const dc=dTasks.length;
     if(dc>0){db.textContent=dc;db.style.display='inline-flex';}
     else{db.style.display='none';if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();}}
+  }else if(db){db.style.display='none';if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();}}
+  // Ícono/badge de atrasadas: no aplica a Rubén (solo solicita, no ejecuta — le genera ruido de más)
+  const atrasBtn=document.getElementById('btnAtrasadasFilter');
+  if(atrasBtn)atrasBtn.style.display=_esWatcher()?'none':'';
+  const ab=document.getElementById('atrasBadge');
+  if(ab&&!_esWatcher()){
+    const ac=_atrasadasTodas().length;
+    if(ac>0){ab.textContent=ac;ab.style.display='inline-flex';}
+    else{ab.style.display='none';if(filtroAtrasadas){filtroAtrasadas=false;_syncAtrasBtn();}}
   }
+  // Badge rosa: tareas donde un operador incluyó a Rubén, pendientes de que él las vea (solo a Rubén)
+  const rib=document.getElementById('rubenIncBadge');
+  if(rib&&_esWatcher()){
+    const ric=DATA.filter(t=>t.incluir_ruben&&!t.incluir_ruben_visto&&t.estado!=='Finalizado').length;
+    if(ric>0){rib.textContent=ric;rib.style.display='inline-flex';}
+    else{rib.style.display='none';}
+  }else if(rib){rib.style.display='none';}
   _syncEnvBtn();
+  _syncAtrasBtn();
   _syncDevBtn();
+}
+function _syncAtrasBtn(){
+  const btn=document.getElementById('btnAtrasadasFilter');if(!btn)return;
+  if(filtroAtrasadas){btn.style.background='#dc2626';btn.style.borderColor='#dc2626';btn.style.color='#fff';}
+  else{btn.style.background='';btn.style.borderColor='';btn.style.color='';}
+}
+// Click en el ícono de atrasadas: toggle del filtro (persistente, no se "cierra" como el resumen de inicio)
+function toggleAtrasadasFilter(){
+  if(filtroAtrasadas){filtroAtrasadas=false;_syncAtrasBtn();goHomeView();return;}
+  filtroAtrasadas=true;filtroComentario=false;filtroRuben=false;filtroDerivada=false;_syncEnvBtn();_syncAtrasBtn();
+  setViewMode('workflow');
 }
 // Tareas detrás de cada globo (usado por el popover clickeable y por el conteo de badges)
 function _notifItems(kind){
   if(!SESSION)return[];
   if(kind==='coment')return DATA.filter(t=>t.comentario&&!t.comentario_ok&&(t.operador===SESSION.user||t.creado_por===SESSION.user));
   if(kind==='derivada')return DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user));
+  if(kind==='incruben')return DATA.filter(t=>t.incluir_ruben&&!t.incluir_ruben_visto&&t.estado!=='Finalizado');
   return[];
 }
 // Click en el globo verde/amarillo: abre un popover con el listado (reemplaza el tooltip nativo del navegador)
@@ -1120,6 +1165,8 @@ function toggleNotifPop(kind,el){
   pop.innerHTML=items.map(t=>{
     const sub=kind==='coment'
       ?'"'+escH(t.comentario)+'" — '+escH(nombreOp(t.comentario_por))
+      :kind==='incruben'
+      ?'Contactá a '+escH(nombreOp(t.operador))+' para revisarla juntos'
       :(t.estado==='Finalizado'?'Finalizada — esperando que leas el comentario de cierre':'Derivada a '+escH(nombreOp(t.operador))+' · '+escH(t.estado));
     return `<span class="notif-item" onclick="event.stopPropagation();document.getElementById('notifPop').style.display='none';openTaskForm('${t.id}')"><b>${escH(t.tema)}</b><span class="notif-sub">${sub}</span></span>`;
   }).join('');
@@ -1134,16 +1181,23 @@ function toggleNotifPop(kind,el){
   else{pop.style.bottom=(window.innerHeight-r.top+6)+'px';pop.style.top='auto';}
 }
 document.addEventListener('click',e=>{
-  if(!e.target.closest('#notifPop')&&!e.target.closest('#envBadge')&&!e.target.closest('#derivBadge')){
+  if(!e.target.closest('#notifPop')&&!e.target.closest('#envBadge')&&!e.target.closest('#derivBadge')&&!e.target.closest('#rubenIncBadge')){
     const pop=document.getElementById('notifPop');if(pop){pop.style.display='none';pop.dataset.kind='';}
   }
 });
 function _syncEnvBtn(){
   const btn=document.getElementById('btnEnvNot');if(!btn)return;
-  if(filtroRuben){btn.style.background='#e91e8c';btn.style.borderColor='#e91e8c';btn.style.color='#fff';}
+  if(filtroRuben){btn.style.background='#0ea5e9';btn.style.borderColor='#0ea5e9';btn.style.color='#fff';}
+  else if(filtroIncRuben){btn.style.background='#e91e8c';btn.style.borderColor='#e91e8c';btn.style.color='#fff';}
   else if(filtroDerivada){btn.style.background='#eab308';btn.style.borderColor='#eab308';btn.style.color='#1f2430';}
   else if(filtroComentario){btn.style.background='#dc2626';btn.style.borderColor='#dc2626';btn.style.color='#fff';}
   else{btn.style.background='';btn.style.borderColor='';btn.style.color='';}
+}
+function _syncIncRubenBtn(){_syncEnvBtn();}
+// Click en el globo de Rubén: filtra el tablero a las tareas donde lo incluyeron (en vez de solo listar en un popover)
+function toggleIncRubenFilter(){
+  if(filtroIncRuben){filtroIncRuben=false;_syncEnvBtn();goHomeView();return;}
+  filtroIncRuben=true;filtroComentario=false;filtroRuben=false;filtroDerivada=false;filtroAtrasadas=false;_syncEnvBtn();_syncAtrasBtn();setViewMode('estado');
 }
 function toggleFiltroComentario(){
   filtroComentario=!filtroComentario;
@@ -1245,6 +1299,8 @@ function renderEquipo(){
   if(filtroComentario)list=list.filter(t=>t.comentario&&!t.comentario_ok&&(t.operador===SESSION.user||t.creado_por===SESSION.user));
   if(filtroRuben)list=list.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false);
   if(filtroDerivada)list=list.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user));
+  if(filtroAtrasadas)list=list.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&t.estado!=='En curso'&&(t.finalizacion||'')&&(t.finalizacion||'')<todayISO());
+  if(filtroIncRuben)list=list.filter(t=>t.incluir_ruben&&t.estado!=='Finalizado');
   if(!isAdmin())list=list.filter(t=>t.frecuencia!=='Nota');
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
   document.getElementById('equipoBody').innerHTML=mode==='workflow'?workflowHTML(list):((mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list));
@@ -1281,11 +1337,12 @@ const ICO={
   link:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 1 0-5.7-5.7L12 6"/><path d="M13.5 10.5a4 4 0 0 0-5.7 0L5 13.3a4 4 0 1 0 5.7 5.7L12 18"/></svg>',
   pin:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6l-1 5.5 3 3v2H7v-2l3-3-1-5.5z"/><path d="M12 17v3.5"/></svg>',
   smile:'<svg class="cic" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 14a4 4 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg>',
-  mail:'<svg class="cic" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>'
+  mail:'<svg class="cic" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>',
+  reloj:'<svg class="cic" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'
 };
 // ── CARD con color por operador ───────────────────────────────
 function cardHTML(t){
-  const venc=t.estado!=='Finalizado'&&t.frecuencia!=='Por Etapas'&&diasPara(t.finalizacion)<0;
+  const venc=t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0;
   const isFinal=t.estado==='Finalizado';
   const _creator=USERS.find(u=>u.user===t.creado_por);
   const oc=(_creator&&_creator.canFinalize===false)?opColor(t.creado_por):opColor(t.operador);
@@ -1318,14 +1375,15 @@ function cardHTML(t){
       +(_showAttach?(t.imagenes||[]).map((_,i)=>`<span onclick="event.stopPropagation();openTaskImgAt('${t.id}',${i})">${ICO.img} Imagen ${i+1}</span>`).join(''):'')
     }</span></span>`:'';
   // Fijar: solo el operador dueño de la tarea (o el admin). Los demás ven el pin como referencia.
-  const _canPin=!isFinal&&(isAdmin()||t.operador===SESSION.user);
+  const _canPin=!isFinal&&(isAdmin()||t.operador===SESSION.user||t.creado_por===SESSION.user);
   const pinIcon=isFinal?'':(_canPin
     ?`<span class="cpin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`
     :(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:''));
+  const relojIcon=(venc&&!_esWatcher())?`<span class="creloj${_isAtrasadaRoja(t.id)?' on':''}" style="margin-right:4px" title="Marcar/desmarcar en rojo" onclick="event.stopPropagation();toggleAtrasadaRoja('${t.id}')">${ICO.reloj}</span>`:'';
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
   const clIcon=cl?`<span class="cpill clchip" onclick="event.stopPropagation();toggleChkTip(this,'${t.id}')" style="cursor:pointer;background:${cl.every(x=>x.ok)?'#4ade8033;color:#16a34a':'var(--bg2)'};border-color:${cl.every(x=>x.ok)?'#4ade80':'var(--border)'}">☑ ${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'';
-  const _canDrag=!isFinal&&!(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false);
+  const _canDrag=!isFinal&&(!(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)||t.creado_por===SESSION.user);
   const _isRecurring=frecBase(t.frecuencia)!=='Unica';
   const _frecSvg='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';
   // Marca del tipo de recurrencia: E=Por Etapas, M=Mensual, N=cada N días (Personalizada)
@@ -1353,17 +1411,18 @@ function cardHTML(t){
       ${_pendHtml}
     </div>`;
   }
-  return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}${_mc==='verde'?' marked':''}${_mc==='amarillo'?' marked-y':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
+  return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}${_mc==='verde'?' marked':''}${_mc==='amarillo'?' marked-y':''}${venc&&_isAtrasadaRoja(t.id)?' marked-r':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
     ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
     ${_editClick}
     style="${_cardStyle}">
-    ${venc?`<span class="cvenc">${Math.abs(dias)}d</span>`:''}
+    ${(venc&&!_esWatcher())?`<span class="cvenc">${Math.abs(dias)}d</span>`:''}
     ${_frecIcon}
-    <div class="ct" title="${t.tareas?escH(t.tareas):escH(t.tema)}">${escH((t.tema||'').length>30?(t.tema||'').slice(0,30)+'…':t.tema||'')}</div>
+    <div class="ct" title="${t.tareas?escH(t.tareas):escH(t.tema)}">${relojIcon}${escH((t.tema||'').length>30?(t.tema||'').slice(0,30)+'…':t.tema||'')}</div>
     <div class="cmeta">
       ${t.numero?`<span class="cnum">ID ${t.numero}</span>`:''}
       ${(()=>{const _cr=USERS.find(u=>u.user===t.creado_por);return(_cr&&_cr.canFinalize===false&&t.creado_por!==t.operador)?`<span class="cop" style="background:${opColor(t.creado_por)}22;color:${opColor(t.creado_por)};border:1px solid ${opColor(t.creado_por)}66">${_cr.nombre}</span>`:'';})()}
       <span class="cop" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${ocOp}22;color:${ocOp};border:1px solid ${ocOp}66;cursor:pointer">${nombreOp(t.operador)}</span>
+      ${t.incluir_ruben?(()=>{const _rb=USERS.find(u=>u.canFinalize===false);if(!_rb)return'';const _tip=(SESSION.user===_rb.user)?(_rb.nombre+', cuando puedas, '+(nombreOp(t.operador)||t.operador)+' quiere revisar contigo esta tarea. Si podés, contactalo. Gracias.'):('Esta tarea se revisa en conjunto con '+_rb.nombre+'.');return `<span class="cop" title="${escH(_tip)}" style="background:${opColor(_rb.user)}22;color:${opColor(_rb.user)};border:1px solid ${opColor(_rb.user)}66">${escH(_rb.nombre)}</span>`;})():''}
       <span class="cpill">${t.area}</span>
       ${prioHtml}
       ${envIcon}
@@ -1496,7 +1555,18 @@ async function aprobarSolicitud(id){
     renderCurrent();
   }
 }
-async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;if(!isAdmin()&&t.operador!==SESSION.user)return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
+async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;if(!isAdmin()&&t.operador!==SESSION.user&&t.creado_por!==SESSION.user)return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
+// Resaltado rojo manual por tarjeta atrasada (persistente, por usuario, en localStorage — no expira solo)
+function _atrasadaRojaKey(){return 'atrasadas_rojas_'+SESSION.user;}
+function _getAtrasadasRojas(){try{return JSON.parse(localStorage.getItem(_atrasadaRojaKey())||'[]');}catch(e){return[];}}
+function _isAtrasadaRoja(id){return _getAtrasadasRojas().includes(id);}
+function toggleAtrasadaRoja(id){
+  const arr=_getAtrasadasRojas();
+  const i=arr.indexOf(id);
+  if(i>=0)arr.splice(i,1);else arr.push(id);
+  localStorage.setItem(_atrasadaRojaKey(),JSON.stringify(arr));
+  renderCurrent();
+}
 // Orden de cada columna: fijadas primero, luego por finalizacion asc (excepto Finalizado que va por fecha_estado desc)
 let COL_SORT={};
 function toggleColSort(est){COL_SORT[est]=(COL_SORT[est]||'asc')==='asc'?'desc':'asc';renderCurrent();}
@@ -1634,7 +1704,7 @@ async function drop(e){
   const t=DATA.find(x=>x.id===dragId);
   if(!t||t.estado===est)return;
   // Workflow: solo el operador dueño de la tarea puede moverla de estado (aplica también al admin en esta vista)
-  if(VIEW_MODE==='workflow'&&t.operador!==SESSION.user){
+  if(VIEW_MODE==='workflow'&&t.operador!==SESSION.user&&t.creado_por!==SESSION.user){
     showToast('Solo el operador de la tarea puede moverla de estado','err');
     renderEquipo();
     return;
@@ -1742,10 +1812,16 @@ function setupOperadorField(isNew){
   fop.style.display='';
   const farea=document.getElementById('f_area');
   if(farea)farea.disabled=false;
+  const _dwrap0=document.getElementById('derivWrap');
+  if(_dwrap0)_dwrap0.style.display=isRequester?'none':'';
+  const _rwrap0=document.getElementById('rubenWrap');
+  if(_rwrap0)_rwrap0.style.display=isRequester?'none':'';
   if(!isRequester||!isNew)return;
   const oc=opColor(SESSION.user);const nom=nombreOp(SESSION.user);
   if(wrapLbl)wrapLbl.style.display='none';
   fop.style.display='none';
+  if(_dwrap0)_dwrap0.style.display='none';
+  if(_rwrap0)_rwrap0.style.display='none';
   document.getElementById('wrapOperador').insertAdjacentHTML('beforeend',
     `<div id="ejecutorWrap" style="display:flex;gap:8px;align-items:flex-end">` +
     `<span style="padding:5px 10px;border-radius:14px;background:${oc}22;color:${oc};border:1px solid ${oc}66;font-size:13px;white-space:nowrap;margin-bottom:2px">${nom}</span>` +
@@ -1754,10 +1830,6 @@ function setupOperadorField(isNew){
   const executors=USERS.filter(u=>!u.hidden&&u.canFinalize!==false);
   document.getElementById('f_ejecutor_sel').innerHTML=`<option value="">— Seleccioná operador —</option>`+executors.map(u=>`<option value="${u.user}">${u.nombre}</option>`).join('');
   if(farea){farea.value='COM';farea.disabled=true;}
-  const _fpr=document.getElementById('f_prioridad');
-  if(_fpr)_fpr.value='Media';
-  const _ffin=document.getElementById('f_finalizacion');
-  if(_ffin){const _dt=new Date();_dt.setDate(_dt.getDate()+2);_ffin.value=_dt.getFullYear()+'-'+String(_dt.getMonth()+1).padStart(2,'0')+'-'+String(_dt.getDate()).padStart(2,'0');}
 }
 function openTaskForm(id){
   document.getElementById('btnGuardarTarea').style.display='';
@@ -1769,6 +1841,11 @@ function openTaskForm(id){
   document.getElementById('f_operador').innerHTML=USERS.filter(u=>!u.hidden||u.user===SESSION.user).map(u=>`<option value="${u.user}">${u.nombre}</option>`).join('');
   if(id){
     const t=DATA.find(x=>x.id===id);if(!t)return;
+    // Rubén abrió una tarea donde lo incluyeron: se marca como vista (apaga el globo rosa) sin bloquear el render del form
+    if(_esWatcher()&&t.incluir_ruben&&!t.incluir_ruben_visto){
+      const _updV=Object.assign({},t,{incluir_ruben_visto:true});
+      upsertTask(_updV).then(ok=>{if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=_updV;updateEnvBadge();}});
+    }
     document.getElementById('modalTitle').textContent='Editar tarea';
     document.getElementById('f_tema').value=t.tema||'';document.getElementById('f_tareas').value=t.tareas||'';
     const _fop=document.getElementById('f_operador');
@@ -1785,6 +1862,7 @@ function openTaskForm(id){
     document.getElementById('f_link1').value=t.link1||'';document.getElementById('f_link2').value=t.link2||'';
     document.getElementById('f_link3').value=t.link3||'';
     const _fder=document.getElementById('f_derivado');if(_fder)_fder.checked=!!t.derivado_tercero;
+    const _fruben=document.getElementById('f_incluir_ruben');if(_fruben)_fruben.checked=!!t.incluir_ruben;
     curImgs=Array.isArray(t.imagenes)?t.imagenes.slice():[];
     curChecklist=Array.isArray(t.checklist)?t.checklist.map(x=>({...x})):[];
     const _canDel=isAdmin()||(t.operador===SESSION.user);
@@ -1808,6 +1886,7 @@ function openTaskForm(id){
     document.getElementById('modalTitle').textContent='Nueva tarea';
     ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
     const _fder0=document.getElementById('f_derivado');if(_fder0)_fder0.checked=false;
+    const _fruben0=document.getElementById('f_incluir_ruben');if(_fruben0)_fruben0.checked=false;
     document.getElementById('f_operador').value=SESSION.user;document.getElementById('f_area').value='A.Com';
     document.getElementById('f_prioridad').value='Baja';document.getElementById('f_frecuencia').value='Unica';
     curImgs=[];curChecklist=[];document.getElementById('btnDelete').style.display='none';
@@ -1820,11 +1899,8 @@ function openTaskForm(id){
   {const _ffinEl=document.getElementById('f_finalizacion');if(editingId)_ffinEl.removeAttribute('min');else _ffinEl.min=todayISO();}
   setupOperadorField(!id);
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
-  document.getElementById('f_prioridad').disabled=_isWatcher;
   document.getElementById('f_frecuencia').disabled=_isWatcher;
-  document.getElementById('f_finalizacion').disabled=_isWatcher;
   document.getElementById('f_area').disabled=_isWatcher;
-  if(_isWatcher&&!id){document.getElementById('f_prioridad').value='Media';const _d=new Date();_d.setDate(_d.getDate()+2);document.getElementById('f_finalizacion').value=_d.toISOString().slice(0,10);}
   document.getElementById('f_copias').value=0;toggleCopias();renderThumbs();renderChecklist();
   collapseExtra();
   const _t=id?DATA.find(x=>x.id===id):null;
@@ -1999,8 +2075,13 @@ async function saveTask(){
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Personalizada'){const _fd=parseInt(document.getElementById('f_frec_dias').value||'0',10);if(!_fd||_fd<1){alert('Ingresá la cantidad de días para la frecuencia personalizada.');document.getElementById('f_frec_dias').focus();return;}}
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Mensual'){const _fd=parseInt(document.getElementById('f_frec_dia').value||'0',10);if(!_fd||_fd<1||_fd>28){alert('Ingresá el día del mes (1-28) para la frecuencia mensual.');document.getElementById('f_frec_dia').focus();return;}}
   const vals=_notaMode
-    ?{tema,tareas:'',operador:SESSION.user,area:'A.Com',prioridad:'Baja',frecuencia:'Nota',finalizacion:'',link1:'',link2:'',link3:'',imagenes:[],privado:true,desarrollo:false,derivado_tercero:false,checklist:curChecklist.length?curChecklist.slice():null,comentario:null,comentario_por:null,comentario_ok:false}
-    :{tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,desarrollo:document.getElementById('f_desarrollo').checked,derivado_tercero:document.getElementById('f_derivado').checked,checklist:curChecklist.length?curChecklist.slice():null};
+    ?{tema,tareas:'',operador:SESSION.user,area:'A.Com',prioridad:'Baja',frecuencia:'Nota',finalizacion:'',link1:'',link2:'',link3:'',imagenes:[],privado:true,desarrollo:false,derivado_tercero:false,incluir_ruben:false,checklist:curChecklist.length?curChecklist.slice():null,comentario:null,comentario_por:null,comentario_ok:false}
+    :{tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,desarrollo:document.getElementById('f_desarrollo').checked,derivado_tercero:document.getElementById('f_derivado').checked,incluir_ruben:document.getElementById('f_incluir_ruben').checked,checklist:curChecklist.length?curChecklist.slice():null};
+  {
+    // "Incluir a Rubén": si se tilda de nuevo (o es tarea nueva), vuelve a avisarle; si ya estaba tildado y sigue tildado, no lo vuelve a molestar.
+    const _tePrev=editingId?DATA.find(x=>x.id===editingId):null;
+    vals.incluir_ruben_visto=(vals.incluir_ruben&&_tePrev&&_tePrev.incluir_ruben)?!!_tePrev.incluir_ruben_visto:false;
+  }
   if(!_notaMode){
     const _linkPat=/^file:|^[a-zA-Z]:\\|^\\\\/i;
     const _badLink=[vals.link1,vals.link2,vals.link3].find(u=>u&&_linkPat.test(u));
@@ -2034,7 +2115,6 @@ async function saveTask(){
       vals.comentario_por='para:'+vals.operador;
       vals.comentario=null;
       vals.comentario_ok=false;
-      vals.operador=_admin.user;
       vals.fijado=true;
     }
   }
@@ -2256,14 +2336,20 @@ const _finPropias=iso=>(SESSION&&SESSION.demo)
   : REAL_CAL.filter(r=>(r.operador||r.completado_por)===SESSION.user&&_locISO(r.completado_en)===iso);
 // Trabajos propios activos que vencen en una fecha
 const _vencenEn=iso=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&(t.finalizacion||'')===iso);
-// "Vencen hoy" del aviso de inicio: excluye lo que ya está en "En curso" (decisión 30/06: si ya lo arrancaste, no lo recuerda)
-const _vencenHoy=()=>_vencenEn(todayISO()).filter(t=>t.estado!=='En curso');
-// Las 3 tareas propias más atrasadas (vencimiento anterior a hoy), de más vieja a más nueva. Excluye Notas y Por Etapas.
-// Excluye "En curso" (igual que _vencenHoy): si ya la arrancaste, se limpia de la lista al moverla. Límite intencional
-// a 3 para no alterar de golpe la dinámica del día.
-const _atrasadas=()=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&t.estado!=='En curso'&&t.frecuencia!=='Nota'&&t.frecuencia!=='Por Etapas'&&(t.finalizacion||'')&&(t.finalizacion||'')<todayISO())
+// "Por vencer" del aviso de inicio: hoy + los 2 días siguientes. Excluye lo que ya está en "En curso" (decisión 30/06: si ya lo arrancaste, no lo recuerda)
+const _vencenHoy=()=>{
+  const hoy=todayISO();
+  const _d=new Date();_d.setDate(_d.getDate()+2);
+  const lim=_d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
+  return DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&t.estado!=='En curso'&&(t.finalizacion||'')&&(t.finalizacion||'')>=hoy&&(t.finalizacion||'')<=lim);
+};
+// Todas las tareas propias atrasadas (vencimiento anterior a hoy), sin límite.
+// Excluye "En curso" (igual que _vencenHoy): si ya la arrancaste, se limpia de la lista al moverla.
+const _atrasadasTodas=()=>DATA.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&t.estado!=='En curso'&&(t.finalizacion||'')&&(t.finalizacion||'')<todayISO());
+// Las 5 más atrasadas, de más vieja a más nueva (para el resumen de inicio)
+const _atrasadas=()=>_atrasadasTodas()
   .sort((a,b)=>(a.finalizacion||'').localeCompare(b.finalizacion||''))
-  .slice(0,3);
+  .slice(0,5);
 // Devuelve la lista propia de un grupo: 'venc' (vencen hoy) o 'atras' (atrasadas)
 const _grupoLista=g=>g==='atras'?_atrasadas():_vencenHoy();
 // ── Resaltado personal de tickets (12 h, por usuario, en localStorage). Dos colores independientes: 'v'=verde (vence hoy), 'a'=amarillo (atrasadas) ──
@@ -2306,7 +2392,9 @@ async function moverEnCurso(grupo){
 // Lista de temas en columna única, cortada a un límite fijo (sin scroll). El header (n-fin/n-venc/n-atr) siempre muestra el total real.
 const _temasGrid=(arr,limit=5)=>{
   if(!arr.length)return '<div class="dr-empty">Nada por acá</div>';
-  const visibles=arr.slice(0,limit);
+  // Si hace falta la línea "+N más", cuenta como una fila: el total de líneas nunca supera "limit".
+  const necesitaMas=arr.length>limit;
+  const visibles=arr.slice(0,necesitaMas?limit-1:limit);
   const resto=arr.length-visibles.length;
   return '<div class="dr-grid">'+visibles.map(t=>'<div class="dr-it" title="'+escH(t.tema||'')+'">'+escH(t.tema||'(sin título)')+'</div>').join('')+(resto>0?'<div class="dr-it dr-more">+'+resto+' más</div>':'')+'</div>';
 };
@@ -2356,7 +2444,7 @@ function _paintResumenInicio(){
     +'<div class="dr-hi"><span>👋 Hola '+escH(SESSION.nombre)+' — arranquemos el día</span></div>'
     +'<div class="dr-cols">'
     +'<div class="dr-col"><div class="dr-lbl">Ayer finalizaste <b class="n-fin">'+fin.length+'</b> <span class="dr-dt">'+_dowLabel(ayer)+' '+fmtDate(ayer)+'</span></div>'+_temasGrid(fin)+'<div class="dr-acts"><button class="dr-btn" onclick="setViewMode(\'calendario\')">📅 Ver tareas finalizadas</button></div></div>'
-    +'<div class="dr-col"><div class="dr-lbl">Vencen hoy <b class="n-venc">'+venc.length+'</b> <span class="dr-dt">'+fmtDate(hoy)+'</span></div>'+_temasGrid(venc)+_accionesGrupo(venc,'venc','v','🟢')+'</div>'
+    +'<div class="dr-col"><div class="dr-lbl">Por vencer <b class="n-venc">'+venc.length+'</b> <span class="dr-dt">'+fmtDate(hoy)+'</span></div>'+_temasGrid(venc)+_accionesGrupo(venc,'venc','v','🟢')+'</div>'
     +'<div class="dr-col"><div class="dr-lbl">Atrasadas <b class="n-atr">'+atras.length+'</b> <span class="dr-dt">las más viejas</span></div>'+_temasGrid(atras)+_accionesGrupo(atras,'atras','a','🟡')+'</div>'
     +'</div>';
 }
