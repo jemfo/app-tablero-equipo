@@ -93,12 +93,16 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card .creloj{cursor:pointer;display:inline-flex;vertical-align:middle;color:#dc2626;opacity:.8;transition:opacity .12s}
 .card .creloj.on{opacity:1}
 .col-sort-btn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:var(--bg3);user-select:none;flex-shrink:0;transition:border-color .15s,background .15s}
-.col-sort-btn:hover{background:var(--bg2);border-color:var(--muted)}
-.col-sort-btn.active{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--bg3))}
+.col-sort-btn:hover{background:var(--bg2)}
 .col-sort-btn::after{content:'';display:block;width:6px;height:6px;border-right:1.8px solid var(--muted);border-bottom:1.8px solid var(--muted);transform:rotate(45deg);margin-top:-3px;transition:transform .18s,border-color .15s}
-.col-sort-btn:hover::after{border-color:var(--txt)}
-.col-sort-btn.active::after{border-color:var(--accent)}
-.col-sort-btn.desc::after{transform:rotate(225deg);margin-top:3px}
+.col-sort-btn.asc{border-color:#22c55e;background:color-mix(in srgb,#22c55e 12%,var(--bg3))}
+.col-sort-btn.asc::after{border-color:#22c55e}
+.col-sort-btn.desc{border-color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,var(--bg3))}
+.col-sort-btn.desc::after{border-color:var(--muted);transform:rotate(225deg);margin-top:3px}
+.col-sort-btn.manual{border-color:#0080ff;background:color-mix(in srgb,#0080ff 12%,var(--bg3))}
+.col-sort-btn.manual::after{content:'';display:block;width:8px;height:1.6px;background:#0080ff;border:none;transform:none;margin-top:0;box-shadow:0 4px 0 #0080ff,0 -4px 0 #0080ff}
+.card.drop-target-above{box-shadow:inset 0 2px 0 var(--accent)}
+.card.drop-target-below{box-shadow:inset 0 -2px 0 var(--accent)}
 .creact-wrap{position:relative;display:inline-flex}
 .creact-face{cursor:pointer;display:inline-flex;align-items:center;color:var(--muted);opacity:.6;line-height:1;transition:color .12s,opacity .12s}
 .creact-face.has{opacity:1;font-size:13px}
@@ -1403,6 +1407,7 @@ function cardHTML(t){
     </div>`).join('');
     return `<div class="card card-nota" draggable="true" data-id="${t.id}"
       ondragstart="dragStart(event)" ondragend="dragEnd(event)"
+      ondragover="cardDragOver(event)" ondrop="cardDrop(event)"
       onclick="openTaskForm('${t.id}')" style="cursor:default;padding:6px 8px;min-height:74px;max-height:74px;overflow:hidden">
       <div style="display:flex;align-items:center;gap:6px;min-width:0">
         <span class="ct" style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600">${escH((t.tema||'').length>35?(t.tema||'').slice(0,35)+'…':t.tema||'(sin título)')}</span>
@@ -1413,6 +1418,7 @@ function cardHTML(t){
   }
   return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}${_mc==='verde'?' marked':''}${_mc==='amarillo'?' marked-y':''}${venc&&_isAtrasadaRoja(t.id)?' marked-r':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
     ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
+    ondragover="cardDragOver(event)" ondrop="cardDrop(event)"
     ${_editClick}
     style="${_cardStyle}">
     ${(venc&&!_esWatcher())?`<span class="cvenc">${Math.abs(dias)}d</span>`:''}
@@ -1569,7 +1575,11 @@ function toggleAtrasadaRoja(id){
 }
 // Orden de cada columna: fijadas primero, luego por finalizacion asc (excepto Finalizado que va por fecha_estado desc)
 let COL_SORT={};
-function toggleColSort(est){COL_SORT[est]=(COL_SORT[est]||'asc')==='asc'?'desc':'asc';renderCurrent();}
+function toggleColSort(est){
+  const cur=COL_SORT[est]||'asc';
+  COL_SORT[est]=cur==='asc'?'desc':cur==='desc'?'manual':'asc';
+  renderCurrent();
+}
 
 let HIDDEN_OPS=new Set();
 function toggleOpVis(user){
@@ -1595,6 +1605,7 @@ function renderOpToggles(){
 }
 const sortCards=(arr,dir='asc',byEstado=false)=>arr.slice().sort((a,b)=>{
   if(!byEstado&&(b.fijado?1:0)!==(a.fijado?1:0))return(b.fijado?1:0)-(a.fijado?1:0);
+  if(dir==='manual')return(a.orden||0)-(b.orden||0);
   if(byEstado)return(dir==='asc'?1:-1)*((b.fecha_estado||'').localeCompare(a.fecha_estado||''));
   const fd=(dir==='asc'?1:-1)*((a.finalizacion||'').localeCompare(b.finalizacion||''));
   if(fd!==0)return fd;
@@ -1605,8 +1616,8 @@ const sortCards=(arr,dir='asc',byEstado=false)=>arr.slice().sort((a,b)=>{
 
 function colSortHTML(est){
   const d=COL_SORT[est]||'asc';
-  const active=d==='desc'?'active desc':'';
-  return `<span class="col-sort-btn ${active}" onclick="event.stopPropagation();toggleColSort('${est}')" title="Orden ${d==='asc'?'ascendente (click para invertir)':'descendente (click para invertir)'}"></span>`;
+  const title=d==='asc'?'Orden ascendente por fecha, más viejo primero (click: descendente)':d==='desc'?'Orden descendente por fecha, más nuevo primero (click: manual)':'Orden manual (arrastrá las tarjetas — click: ascendente)';
+  return `<span class="col-sort-btn ${d}" onclick="event.stopPropagation();toggleColSort('${est}')" title="${title}"></span>`;
 }
 function kanbanHTML(list){
   return '<div class="kanban fit5">'+ESTADOS.map(est=>{
@@ -1712,6 +1723,55 @@ async function drop(e){
   if(t.frecuencia==='Nota'&&est==='Finalizado'){showToast('Las notas no se pueden finalizar','err');renderEquipo();return;}
   if(est==='Finalizado'){await finalizarTarea(t);return;}
   t.estado=est;t.actualizado=nowStamp();t.fecha_estado=todayISO();upsertTask(t);renderEquipo();
+}
+
+// Reordenamiento manual dentro de una columna (modo "manual" del botón de orden).
+// Si la columna no está en modo manual, no hace nada y deja que el evento burbujee
+// al dragOver/drop de la columna (comportamiento de cambio de estado sin tocar).
+function _clearDropTargets(){document.querySelectorAll('.card.drop-target-above,.card.drop-target-below').forEach(c=>c.classList.remove('drop-target-above','drop-target-below'));}
+function cardDragOver(e){
+  const col=e.currentTarget.closest('.col');
+  if(!col||(COL_SORT[col.dataset.estado]||'asc')!=='manual')return;
+  e.preventDefault();e.stopPropagation();
+  col.classList.add('drop-hover');
+  const rect=e.currentTarget.getBoundingClientRect();
+  const before=(e.clientY-rect.top)<rect.height/2;
+  _clearDropTargets();
+  e.currentTarget.classList.add(before?'drop-target-above':'drop-target-below');
+}
+async function cardDrop(e){
+  const col=e.currentTarget.closest('.col');
+  if(!col||(COL_SORT[col.dataset.estado]||'asc')!=='manual')return;
+  e.preventDefault();e.stopPropagation();
+  col.classList.remove('drop-hover');
+  _clearDropTargets();
+  const est=col.dataset.estado;
+  const targetId=e.currentTarget.dataset.id;
+  const dragged=DATA.find(x=>x.id===dragId);
+  const target=DATA.find(x=>x.id===targetId);
+  if(!dragged||!target||dragged.id===target.id)return;
+  if(dragged.estado!==est){
+    if(VIEW_MODE==='workflow'&&dragged.operador!==SESSION.user&&dragged.creado_por!==SESSION.user){
+      showToast('Solo el operador de la tarea puede moverla de estado','err');
+      renderEquipo();
+      return;
+    }
+    if(dragged.frecuencia==='Nota'&&est==='Finalizado'){showToast('Las notas no se pueden finalizar','err');renderEquipo();return;}
+    if(est==='Finalizado'){await finalizarTarea(dragged);return;}
+    dragged.estado=est;dragged.actualizado=nowStamp();dragged.fecha_estado=todayISO();
+  }
+  const rect=e.currentTarget.getBoundingClientRect();
+  const before=(e.clientY-rect.top)<rect.height/2;
+  const list=sortCards(DATA.filter(x=>x.estado===est&&x.id!==dragged.id),'manual',false);
+  const idx=list.findIndex(x=>x.id===target.id);
+  const insertIdx=before?idx:idx+1;
+  const prev=list[insertIdx-1];
+  const next=list[insertIdx];
+  const prevOrden=prev?(prev.orden||0):(next?(next.orden||0)-1:0);
+  const nextOrden=next?(next.orden||0):(prevOrden+1);
+  dragged.orden=(prevOrden+nextOrden)/2;
+  upsertTask(dragged);
+  renderEquipo();
 }
 
 // ── Formulario tarea equipo ───────────────────────────────────
