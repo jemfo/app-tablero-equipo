@@ -79,9 +79,14 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .cfrec-mk{font-size:10px;font-weight:700;line-height:1;color:#000}
 .card .cop{font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.3px}
 .card .cpill{font-size:9px;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:transparent;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-.card .cpill.med{color:#16a34a;border-color:#16a34a88}
-.card .cpill.alt{color:#dc2626;border-color:#dc262688}
-.card .cpill.urg{background:#dc2626;color:#fff;border-color:#dc2626;font-weight:700}
+.card .cpill.med,.card .cpill-sel.med{color:#16a34a;border-color:#16a34a88}
+.card .cpill.alt,.card .cpill-sel.alt{color:#dc2626;border-color:#dc262688}
+.card .cpill.urg,.card .cpill-sel.urg{background:#dc2626;color:#fff;border-color:#dc2626;font-weight:700}
+.card .cpill-sel{-webkit-appearance:none;appearance:none;font:inherit;font-size:9px;letter-spacing:.3px;text-transform:uppercase;padding:2px 3px;border-radius:4px;background:var(--bg3);border:1px solid var(--line);color:var(--muted);cursor:pointer;text-align:center;text-align-last:center;text-overflow:ellipsis;overflow:hidden;flex-shrink:0}
+.card .cpill-sel:hover{border-color:var(--muted)}
+.card .cpill-sel.csel-area{width:42px}
+.card .cpill-sel.csel-prio{width:50px}
+.card .cpill-sel option{text-transform:none;background:var(--bg2);color:var(--txt);font-size:12px;padding:4px 8px;text-align:left}
 .card .cfoot{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;margin-top:2px;padding-top:2px;border-top:1px solid var(--line)}
 .card .cdate{font-size:10px;color:var(--txt);display:inline-flex;align-items:center;gap:4px}
 .card .cdate.ovd{color:var(--urg)}
@@ -1429,8 +1434,8 @@ function cardHTML(t){
       ${(()=>{const _cr=USERS.find(u=>u.user===t.creado_por);return(_cr&&_cr.canFinalize===false&&t.creado_por!==t.operador)?`<span class="cop" style="background:${opColor(t.creado_por)}22;color:${opColor(t.creado_por)};border:1px solid ${opColor(t.creado_por)}66">${_cr.nombre}</span>`:'';})()}
       <span class="cop" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${ocOp}22;color:${ocOp};border:1px solid ${ocOp}66;cursor:pointer">${nombreOp(t.operador)}</span>
       ${t.incluir_ruben?(()=>{const _rb=USERS.find(u=>u.canFinalize===false);if(!_rb)return'';const _tip=(SESSION.user===_rb.user)?(_rb.nombre+', cuando puedas, '+(nombreOp(t.operador)||t.operador)+' quiere revisar contigo esta tarea. Si podés, contactalo. Gracias.'):('Esta tarea se revisa en conjunto con '+_rb.nombre+'.');return `<span class="cop" title="${escH(_tip)}" style="background:${opColor(_rb.user)}22;color:${opColor(_rb.user)};border:1px solid ${opColor(_rb.user)}66">${escH(_rb.nombre)}</span>`;})():''}
-      <span class="cpill">${t.area}</span>
-      ${prioHtml}
+      ${_canPin?`<select class="cpill-sel csel-area" onclick="event.stopPropagation()" onchange="event.stopPropagation();quickUpdateField('${t.id}','area',this.value)" title="Cambiar área">${AREAS.map(a=>`<option value="${a}" ${a===t.area?'selected':''}>${a}</option>`).join('')}</select>`:`<span class="cpill">${t.area}</span>`}
+      ${_canPin?`<select class="cpill-sel csel-prio${t.prioridad==='Urgente'?' urg':t.prioridad==='Alta'?' alt':t.prioridad==='Media'?' med':''}" onclick="event.stopPropagation()" onchange="event.stopPropagation();quickUpdateField('${t.id}','prioridad',this.value)" title="Cambiar prioridad">${PRIORIDADES.map(p=>`<option value="${p}" ${p===t.prioridad?'selected':''}>${p}</option>`).join('')}</select>`:prioHtml}
       ${envIcon}
     </div>
     <div class="cfoot">
@@ -1562,6 +1567,16 @@ async function aprobarSolicitud(id){
   }
 }
 async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;if(!isAdmin()&&t.operador!==SESSION.user&&t.creado_por!==SESSION.user)return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
+// Cambio rápido de Área/Prioridad desde la tarjeta (sin abrir el formulario). Mismo permiso que la chincheta:
+// admin cambia cualquiera; el resto solo si es operador o creador de la tarea, y no si ya está Finalizado.
+async function quickUpdateField(id,field,value){
+  const t=DATA.find(x=>x.id===id);if(!t)return;
+  if(t.estado==='Finalizado'&&!isAdmin())return;
+  if(!isAdmin()&&t.operador!==SESSION.user&&t.creado_por!==SESSION.user)return;
+  const upd=Object.assign({},t,{[field]:value,actualizado:nowStamp()});
+  const ok=await upsertTask(upd);
+  if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}
+}
 // Resaltado rojo manual por tarjeta atrasada (persistente, por usuario, en localStorage — no expira solo)
 function _atrasadaRojaKey(){return 'atrasadas_rojas_'+SESSION.user;}
 function _getAtrasadasRojas(){try{return JSON.parse(localStorage.getItem(_atrasadaRojaKey())||'[]');}catch(e){return[];}}
