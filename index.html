@@ -1942,7 +1942,10 @@ function openTaskForm(id){
     curChecklist=Array.isArray(t.checklist)?t.checklist.map(x=>({...x})):[];
     const _canDel=isAdmin()||(t.operador===SESSION.user);
     document.getElementById('btnDelete').style.display=_canDel?'inline-block':'none';
-    document.getElementById('btnCerrarProyecto').style.display=(t.frecuencia==='Por Etapas'&&isAdmin())?'inline-block':'none';
+    // Cerrar proyecto (Por Etapas): el admin en cualquiera, y el creador en las suyas.
+    // Excluye al watcher/gerente (canFinalize:false): cerrar el proyecto finaliza la tarea, y esa acción es de los operadores.
+    const _canCerrarProy=t.frecuencia==='Por Etapas'&&(isAdmin()||(t.creado_por===SESSION.user&&!_esWatcher()));
+    document.getElementById('btnCerrarProyecto').style.display=_canCerrarProy?'inline-block':'none';
     document.getElementById('btnFinalizarPersonalizada').style.display=((frecBase(t.frecuencia)==='Personalizada'||frecBase(t.frecuencia)==='Mensual')&&isAdmin())?'inline-block':'none';
     document.getElementById('btnDuplicar').style.display=(isAdmin()&&t.estado==='Finalizado'&&t.frecuencia!=='Nota')?'inline-block':'none';
     const _isRuta=isAdmin()&&(t.comentario_por||'').startsWith('para:')&&!t.comentario&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false;
@@ -2131,6 +2134,9 @@ async function finalizarPersonalizada(){
 async function cerrarProyecto(){
   if(!editingId)return;
   const t=DATA.find(x=>x.id===editingId);if(!t)return;
+  // Mismo criterio que la visibilidad del botón en openTaskForm: admin en cualquiera, creador en las suyas, nunca el watcher.
+  if(_esWatcher()){showToast('La finalización de tareas la realizan los operadores','err');return;}
+  if(!isAdmin()&&t.creado_por!==SESSION.user){showToast('Solo quien creó el proyecto puede cerrarlo','err');return;}
   if(!confirm('¿Confirmás que el proyecto está completamente terminado?\n\nSe finaliza sin generar una nueva etapa. No se puede revertir.'))return;
   const logged=await logRealizacion(t);
   if(!logged&&!confirm('No se pudo registrar en el historial. ¿Cerrar de todos modos?'))return;
