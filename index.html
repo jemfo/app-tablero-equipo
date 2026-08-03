@@ -286,11 +286,12 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <h1>Análisis Comercial</h1>
     <span class="userbox">Sesión: <b id="curUser"></b></span>
     <span style="position:relative;display:inline-flex">
-    <button id="btnEnvNot" onclick="toggleEnvButton()" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#0ea5e9;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" onclick="event.stopPropagation();toggleNotifPop('coment',this)" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="derivBadge" onclick="event.stopPropagation();toggleNotifPop('derivada',this)" style="position:absolute;bottom:-5px;left:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="rubenIncBadge" onclick="event.stopPropagation();toggleIncRubenFilter()" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border:2px solid #000;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <button id="btnEnvNot" onclick="toggleEnvButton()" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#0ea5e9;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" onclick="event.stopPropagation();toggleNotifPop('coment',this)" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="derivBadge" onclick="event.stopPropagation();toggleNotifPop('derivada',this)" style="position:absolute;bottom:-5px;left:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="rubenIncBadge" onclick="event.stopPropagation();toggleIncRubenFilter()" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border:2px solid #000;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <span id="notifPop" onclick="event.stopPropagation()" class="notif-pop"></span>
     </span>
-    <button id="btnAtrasadasFilter" onclick="toggleAtrasadasFilter()" title="Tareas atrasadas" style="position:relative;height:32px;padding:0 10px;display:inline-flex;align-items:center;font-size:16px;margin-left:4px">⏰<span id="atrasBadge" style="position:absolute;top:-5px;right:-5px;background:#000;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
-    <button id="btnDevFilter" onclick="toggleDevButton()" style="margin-left:6px;width:32px;height:32px;padding:0;display:none;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></button>
+    <button id="btnAtrasadasFilter" onclick="toggleAtrasadasFilter()" title="Tareas atrasadas" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px">⏰<span id="atrasBadge" style="position:absolute;top:-5px;right:-5px;background:#000;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <button id="btnDevFilter" onclick="toggleDevButton()" style="margin-left:4px;width:38px;height:32px;padding:0;display:none;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></button>
+    <span id="devFilterLbl" onclick="toggleDevButton()" style="display:none;align-items:center;height:22px;padding:0 10px;margin-left:6px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;user-select:none">Todo</span>
     <span class="date" id="todayLabel"></span>
     <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
     <button id="themeBtn" onclick="toggleTheme()" title="Cambiar tema" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg id="themeIco" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
@@ -558,7 +559,7 @@ const EST_COLOR={
   'Para ver juntos':'#fb923c','Programado':'#38bdf8','Finalizado':'#4ade80'
 };
 
-let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDerivada=false, filtroAtrasadas=false, filtroIncRuben=false, filtroDev='todos', VIEW_MODE='estado';
+let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDerivada=false, filtroAtrasadas=false, filtroIncRuben=false, filtroDev='comercial', VIEW_MODE='estado';
 
 // ── Utilidades ────────────────────────────────────────────────
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1214,22 +1215,27 @@ function toggleFiltroComentario(){
   _syncEnvBtn();
   renderCurrent();
 }
-// Botón 🔧: cicla Todos → Comercial → Desarrollos → Todos. Solo admin.
+// Botón embudo: cicla Comercial → Desarrollos → Todos → Comercial. Solo admin. Arranca en 'comercial'.
 function toggleDevButton(){
-  filtroDev = filtroDev==='todos' ? 'comercial' : (filtroDev==='comercial' ? 'desarrollos' : 'todos');
+  filtroDev = filtroDev==='comercial' ? 'desarrollos' : (filtroDev==='desarrollos' ? 'todos' : 'comercial');
   _syncDevBtn();
   renderCurrent();
 }
 function _syncDevBtn(){
   const btn=document.getElementById('btnDevFilter');if(!btn)return;
+  const lbl=document.getElementById('devFilterLbl');
   btn.style.display=isAdmin()?'inline-flex':'none';
+  if(lbl)lbl.style.display=isAdmin()?'inline-flex':'none';
+  let bg,fg,txt;
   if(filtroDev==='comercial'){
-    btn.style.background='#22c55e';btn.style.borderColor='#22c55e';btn.style.color='#fff';
+    bg='#22c55e';fg='#fff';txt='Comercial';
   }else if(filtroDev==='desarrollos'){
-    btn.style.background='#fbbf24';btn.style.borderColor='#fbbf24';btn.style.color='#1f2430';
+    bg='#fbbf24';fg='#1f2430';txt='Desarrollo';
   }else{
-    btn.style.background='#9ca3af';btn.style.borderColor='#9ca3af';btn.style.color='#fff';
+    bg='#9ca3af';fg='#fff';txt='Todo';
   }
+  btn.style.background=bg;btn.style.borderColor=bg;btn.style.color=fg;
+  if(lbl){lbl.style.background=bg;lbl.style.color=fg;lbl.textContent=txt;}
 }
 function toggleEnvButton(){
   const rc=isAdmin()?DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length:0;
@@ -1273,9 +1279,12 @@ function renderEquipo(){
   let list=DATA.slice();
   if(fop)list=list.filter(t=>t.operador===fop);
   if(far)list=list.filter(t=> far==='DES' ? (t.area==='DES'||t.desarrollo) : t.area===far);
-  // Toggle Comercial/Desarrollos (botón 🔧, solo admin): 'comercial' oculta desarrollos, 'desarrollos' deja solo desarrollos.
-  if(filtroDev==='comercial')list=list.filter(t=>!(t.desarrollo||t.area==='DES'));
-  else if(filtroDev==='desarrollos')list=list.filter(t=>t.desarrollo||t.area==='DES');
+  // Toggle Comercial/Desarrollos (botón embudo, solo admin): 'comercial' oculta desarrollos, 'desarrollos' deja solo desarrollos.
+  // El isAdmin() es obligatorio: el default pasó a 'comercial' y el botón no lo ve el resto, que quedaría filtrado sin poder desactivarlo.
+  if(isAdmin()){
+    if(filtroDev==='comercial')list=list.filter(t=>!(t.desarrollo||t.area==='DES'));
+    else if(filtroDev==='desarrollos')list=list.filter(t=>t.desarrollo||t.area==='DES');
+  }
   if(fpr)list=list.filter(t=>t.prioridad===fpr);
   if(fid)list=list.filter(t=>String(t.numero||'')===fid);
   if(ftx)list=list.filter(t=>((t.tema||'')+' '+(t.tareas||'')).toLowerCase().includes(ftx));
