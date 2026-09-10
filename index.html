@@ -679,9 +679,15 @@ async function finalizarTarea(t){
   if(_uCfg&&_uCfg.canFinalize===false){showToast('La finalización de tareas la realizan los operadores','err');renderEquipo();return;}
   if(!isAdmin()&&t.operador!==SESSION.user){showToast('Solo podés finalizar tareas asignadas a vos','err');renderEquipo();return;}
   // Regla: la misma tarea/serie (mismo tema+operador) no se puede finalizar dos veces el mismo día
+  // Excepción: si la tarea tiene lista y se tildó al menos un ítem que no estaba tildado en ninguna finalización
+  // de hoy, se permite registrar ese nuevo avance (ej. otra subtarea de un proyecto Por Etapas).
   if(t.frecuencia&&t.frecuencia!=='Unica'){
-    const _yaHoy=DATA.some(x=>x.id!==t.id&&x.tema===t.tema&&x.operador===t.operador&&x.estado==='Finalizado'&&x.fecha_estado===todayISO());
-    if(_yaHoy){showToast('Ya finalizaste esta tarea hoy','err');renderEquipo();return;}
+    const _hoyFin=DATA.filter(x=>x.id!==t.id&&x.tema===t.tema&&x.operador===t.operador&&x.estado==='Finalizado'&&x.fecha_estado===todayISO());
+    if(_hoyFin.length){
+      const _okHoy=new Set(_hoyFin.flatMap(x=>(x.checklist||[]).filter(i=>i.ok).map(i=>i.texto)));
+      const _itemNuevo=(t.checklist||[]).some(i=>i.ok&&!_okHoy.has(i.texto));
+      if(!_itemNuevo){showToast('Ya finalizaste esta tarea hoy'+((t.checklist||[]).length?' — tildá un ítem nuevo de la lista para registrar otro avance':''),'err');renderEquipo();return;}
+    }
   }
   const esEtapas=t.frecuencia==='Por Etapas';
   const esPersonalizada=frecBase(t.frecuencia)==='Personalizada';
@@ -708,15 +714,21 @@ async function finalizarTarea(t){
     logged=await logRealizacion(t);
     if(!logged&&!confirm('No se pudo registrar en el historial. ¿Finalizar de todos modos?'))return;
     let extra='';
+    let cerroProy=false;
     // Anti-duplicado: si ya existe una "próxima tarjeta" viva de esta misma serie generada hoy, no crear otra
     const _yaTieneProxima=t=>DATA.some(x=>x.id!==t.id&&x.tema===t.tema&&x.operador===t.operador&&x.estado==='Programado'&&x.fecha_estado===todayISO());
     if(esEtapas){
       const eraFijado=t.fijado;
+      // Lista completa: se ofrece cerrar el proyecto en vez de abrir otra etapa. Mismo permiso que el botón
+      // "Cerrar proyecto" (admin o creador; el watcher ya quedó afuera al inicio de esta función).
+      const _clCompleta=Array.isArray(t.checklist)&&t.checklist.length>0&&t.checklist.every(x=>x.ok);
+      cerroProy=_clCompleta&&(isAdmin()||t.creado_por===SESSION.user)&&confirm('La lista de comprobación está completa.\n\n¿Cerrás el proyecto?\n\nAceptar = se finaliza sin crear otra etapa.\nCancelar = se crea la etapa siguiente.');
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
-      if(!_yaTieneProxima(t)){
+      if(!cerroProy&&!_yaTieneProxima(t)){
         const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
-        const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
+        // Por Etapas: la lista es el avance del proyecto, así que la etapa nueva conserva lo tildado
+        const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x})):t.checklist});
         const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
         extra=' · nueva etapa creada';
       }
@@ -736,7 +748,7 @@ async function finalizarTarea(t){
       await upsertTask(t);
     }
     renderCurrent();
-    if(logged)showToast((esEtapas?'Etapa registrada ✓':esRec?'Registrada ✓':'Finalizada ✓')+extra);
+    if(logged)showToast((cerroProy?'Proyecto cerrado ✓':esEtapas?'Etapa registrada ✓':esRec?'Registrada ✓':'Finalizada ✓')+extra);
   }finally{
     window._finalizingIds.delete(t.id);
   }
