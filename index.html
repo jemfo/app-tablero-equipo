@@ -280,11 +280,15 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 <div id="loginView">
   <div class="login">
     <h1 class="brand">Análisis Comercial</h1>
+    <!-- <form> real + autocomplete username/current-password: así el gestor de contraseñas del navegador reconoce el login
+         y ofrece guardarlo. Enter y el botón hacen submit (reemplaza los onkeydown/onclick que llamaban a doLogin directo). -->
+    <form id="loginForm" onsubmit="event.preventDefault();doLogin()">
     <label>Usuario</label>
-    <input type="text" id="loginUser" placeholder="usuario" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" name="oe_user" onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="text" id="loginUser" name="username" placeholder="usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
     <label>Contraseña</label>
-    <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="primary" onclick="doLogin()">Ingresar</button>
+    <input type="password" id="loginPass" name="password" placeholder="••••••••" autocomplete="current-password">
+    <button type="submit" class="primary">Ingresar</button>
+    </form>
     <div class="hint">Acceso restringido al equipo de Análisis Comercial.</div>
     <div class="err" id="loginErr"></div>
     <div style="text-align:center;margin-top:6px"><a href="#" onclick="openRecoveryModal();return false" style="font-size:12px;color:#fb2118;text-decoration:none">¿Olvidaste tu contraseña?</a></div>
@@ -799,6 +803,9 @@ async function doLogin(){
   if(btn){btn.disabled=false;btn.textContent='Ingresar';}
   if(error){errEl.textContent='Usuario o contraseña incorrectos.';return;}
   try{localStorage.setItem('lastUser',raw);}catch(e){}
+  // Le pide al navegador que ofrezca guardar usuario/contraseña (Chrome/Edge). Firefox lo toma del submit del <form>.
+  // Va antes de enterApp porque enterApp vacía los campos.
+  if(window.PasswordCredential&&navigator.credentials){try{navigator.credentials.store(new PasswordCredential({id:raw,password:p,name:meta.nombre}));}catch(e){}}
   enterApp(meta);
 }
 // Precarga el último usuario que entró (solo el nombre, nunca la contraseña). Sirve para el input de PROD y el select de TEST.
