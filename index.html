@@ -1738,7 +1738,16 @@ function workflowHTML(list){
     if(_team&&est!=='Finalizado'){
       const _base=['diego','maxi','juan','ruben'];
       const _ord=[SESSION.user,..._base.filter(u=>u!==SESSION.user)];
-      items=_ord.flatMap(uid=>sortCards(_filtered.filter(t=>t.operador===uid),dir,false));
+      // En curso = lista del día del admin: los operadores (no el admin, no el watcher) ven solo sus 2 primeras.
+      // "Primeras" con orden fijo (fijadas, luego vencimiento más próximo), igual para todos sin importar la
+      // flecha de orden de cada uno. El contador de la columna cuenta solo lo visible (no se nota lo oculto).
+      const _adm=(USERS.find(u=>u.rol==='admin')||{}).user;
+      const _limAdm=est==='En curso'&&!isAdmin()&&!_esWatcher();
+      items=_ord.flatMap(uid=>{
+        let arr=_filtered.filter(t=>t.operador===uid);
+        if(_limAdm&&uid===_adm){const _top=new Set(sortCards(arr,'asc',false).slice(0,2).map(t=>t.id));arr=arr.filter(t=>_top.has(t.id));}
+        return sortCards(arr,dir,false);
+      });
     }else{
       items=sortCards(_filtered,dir,est==='Finalizado');
     }
