@@ -1383,10 +1383,10 @@ function cardHTML(t){
         const _bad=/^file:|^[a-zA-Z]:\\|^\\\\/.test(u);
         const _prev=u.length>42?u.slice(0,42)+'…':u;
         return _bad
-          ?`<span class="cattach-item cattach-bad" onclick="event.stopPropagation();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} Link ${i+1} ⚠</b><span class="cattach-url">${escH(_prev)}</span></span>`
-          :`<span class="cattach-item" onclick="event.stopPropagation();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} Link ${i+1}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
+          ?`<span class="cattach-item cattach-bad" onclick="event.stopPropagation();_closeAttachPops();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} Link ${i+1} ⚠</b><span class="cattach-url">${escH(_prev)}</span></span>`
+          :`<span class="cattach-item" onclick="event.stopPropagation();_closeAttachPops();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} Link ${i+1}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
       }).join('')
-      +(_showAttach?(t.imagenes||[]).map((_,i)=>`<span onclick="event.stopPropagation();openTaskImgAt('${t.id}',${i})">${ICO.img} Imagen ${i+1}</span>`).join(''):'')
+      +(_showAttach?(t.imagenes||[]).map((_,i)=>`<span onclick="event.stopPropagation();_closeAttachPops();openTaskImgAt('${t.id}',${i})">${ICO.img} Imagen ${i+1}</span>`).join(''):'')
     }</span></span>`:'';
   // Fijar: solo el operador dueño de la tarea (o el admin). Los demás ven el pin como referencia.
   const _canPin=!isFinal&&(isAdmin()||t.operador===SESSION.user||t.creado_por===SESSION.user);
@@ -1486,7 +1486,10 @@ function toggleAttachPicker(el){
     }
   }
 }
-document.addEventListener('click',e=>{if(!e.target.closest('.cattach-wrap')){document.querySelectorAll('.cattach-wrap.open').forEach(x=>x.classList.remove('open'));_resetAttachPops();}});
+// Cierra el popover de adjuntos. Se llama también al elegir una opción (imagen/link): como el popover es
+// position:fixed con z-index alto, si queda abierto flota encima del visor de imagen o de la pantalla.
+function _closeAttachPops(){document.querySelectorAll('.cattach-wrap.open').forEach(x=>x.classList.remove('open'));_resetAttachPops();}
+document.addEventListener('click',e=>{if(!e.target.closest('.cattach-wrap'))_closeAttachPops();});
 async function setReaccion(id,emoji){
   const t=DATA.find(x=>x.id===id);if(!t)return;
   if(t.estado==='Finalizado'&&!isAdmin())return;
