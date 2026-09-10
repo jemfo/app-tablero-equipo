@@ -54,7 +54,7 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .err{color:var(--urg);font-size:12px;margin-top:10px;min-height:14px}
 
 /* ── KANBAN ─────────────────────────────────────── */
-.kanban{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
+.kanban{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px}
 .kanban.fit5{overflow-x:visible}.kanban.fit5 .col{flex:1 1 0;min-width:0}
 .col{background:var(--bg2);border:1px solid var(--line);border-radius:10px;min-width:155px;flex:1;display:flex;flex-direction:column;overflow:visible}
 .col-hdr{padding:8px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
@@ -65,10 +65,10 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 #equipoBody .col-hdr{position:sticky;z-index:40;background:var(--bg2);border-radius:9px 9px 0 0}
 .col-hdr .col-title{font-size:12px;font-weight:bold}
 .col-hdr .col-count{font-size:11px;font-weight:bold;background:var(--bg3);border-radius:10px;padding:1px 7px}
-.col .cards{padding:7px;display:flex;flex-direction:column;gap:7px;min-height:40px}
+.col .cards{padding:6px;display:flex;flex-direction:column;gap:6px;min-height:40px}
 
 /* ── CARD ───────────────────────────────────────── */
-.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:3px 12px 5px;cursor:default;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s;min-height:74px;display:flex;flex-direction:column}
+.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:4px 8px 5px;cursor:default;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s;min-height:74px;display:flex;flex-direction:column}
 .card:hover{box-shadow:0 3px 10px rgba(0,0,0,.14)}
 .card.drag{opacity:.35;transform:scale(.97)}
 .card .ct{font-weight:600;font-size:12.5px;line-height:1.3;margin-bottom:3px;letter-spacing:-.1px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -77,13 +77,21 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card .ctog:hover{background:var(--bg2);color:var(--txt)}
 .card .ctog::after{content:'';width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;transition:transform .15s}
 .card .ctog.open::after{transform:rotate(180deg)}
+/* ⟳ de recurrencia abajo a la izquierda, antes de las fechas */
+.card .cfoot .cfrec{position:static;flex-shrink:0}
+/* Fila del título: título (se corta con …) + ▾ pegada al título (siempre visible, fuera del corte) + globo "Xd"
+   a la derecha. Todo en el flujo, sin posición absoluta: nada se encima. El ⟳ de recurrencia va en el pie. */
+.card .chead{display:flex;align-items:center;gap:4px;min-width:0;margin-bottom:3px}
+.card .chead .ct{flex:0 1 auto;min-width:0;margin-bottom:0}
+.card .chead .ctog{margin-left:0;flex-shrink:0}
+.card .chead .cvenc{position:static;flex-shrink:0;margin-left:auto}
 .card .ctareas{font-size:11px;line-height:1.4;font-weight:400;color:var(--txt);white-space:pre-wrap;word-break:break-word;background:var(--bg2);border:1px solid var(--line);border-radius:4px;padding:4px 6px;margin:0 0 4px;max-height:140px;overflow-y:auto;cursor:text;user-select:text}
 .card .csub{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card .cmeta{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;margin-top:auto;margin-bottom:2px;overflow:hidden;min-width:0}
+.card .cmeta{display:flex;flex-wrap:nowrap;gap:4px;align-items:center;margin-top:auto;margin-bottom:2px;overflow:hidden;min-width:0}
 .card .cnum{font-size:10px;font-weight:700;color:var(--txt);letter-spacing:.3px;white-space:nowrap;flex-shrink:0}
 .cfrec{position:absolute;right:8px;color:#000;line-height:0;display:inline-flex;align-items:center;gap:2px}
 .cfrec-mk{font-size:10px;font-weight:700;line-height:1;color:#000}
-.card .cop{font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.3px}
+.card .cop{font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:.3px}
 .card .cpill{font-size:9px;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:transparent;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .card .cpill.med,.card .cpill-sel.med{color:#16a34a;border-color:#16a34a88}
 .card .cpill.alt,.card .cpill-sel.alt{color:#dc2626;border-color:#dc262688}
@@ -1444,7 +1452,7 @@ function cardHTML(t){
   const _frecSvg='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';
   // Marca del tipo de recurrencia: E=Por Etapas, M=Mensual, N=cada N días (Personalizada)
   const _frecMark=(()=>{const f=t.frecuencia||'';if(f==='Por Etapas')return 'E';if(frecBase(f)==='Mensual')return 'M';if(f.startsWith('Personalizada:'))return f.split(':')[1];if(frecBase(f)==='Personalizada')return 'P';return '';})();
-  const _frecIcon=_isRecurring?`<span class="cfrec" style="top:${venc?30:8}px">${_frecSvg}${_frecMark?`<b class="cfrec-mk">${escH(_frecMark)}</b>`:''}</span>`:'';
+  const _frecIcon=_isRecurring?`<span class="cfrec">${_frecSvg}${_frecMark?`<b class="cfrec-mk">${escH(_frecMark)}</b>`:''}</span>`:'';
   const _desIcon=t.desarrollo?`<span title="Tarea con Desarrollo" style="font-size:12px;filter:grayscale(1) brightness(0.45);flex-shrink:0;line-height:1">🔧</span>`:'';
   const _isNota=t.frecuencia==='Nota';
   const _editClick=(isFinal||_isNota)?'onclick="openTaskForm(\''+t.id+'\')"':'';
@@ -1471,9 +1479,10 @@ function cardHTML(t){
     ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
     ${_editClick}
     style="${_cardStyle}">
-    ${(venc&&!_esWatcher())?`<span class="cvenc">${Math.abs(dias)}d</span>`:''}
-    ${_frecIcon}
-    <div class="ct"${!t.tareas&&(t.tema||'').length>30?` title="${escH(t.tema)}"`:''}>${relojIcon}${escH((t.tema||'').length>30?(t.tema||'').slice(0,30)+'…':t.tema||'')}${t.tareas?`<span class="ctog${_tareasAbiertas.has(t.id)?' open':''}" onclick="event.stopPropagation();toggleCardTareas('${t.id}')"></span>`:''}</div>
+    <div class="chead">
+      <div class="ct"${!t.tareas&&(t.tema||'').length>30?` title="${escH(t.tema)}"`:''}>${relojIcon}${escH((t.tema||'').length>30?(t.tema||'').slice(0,30)+'…':t.tema||'')}</div>
+      ${t.tareas?`<span class="ctog${_tareasAbiertas.has(t.id)?' open':''}" onclick="event.stopPropagation();toggleCardTareas('${t.id}')"></span>`:''}${(venc&&!_esWatcher())?`<span class="cvenc">${Math.abs(dias)}d</span>`:''}
+    </div>
     ${t.tareas&&_tareasAbiertas.has(t.id)?`<div class="ctareas" onclick="event.stopPropagation()">${(t.tema||'').length>30?`<b>${escH(t.tema)}</b>\n`:''}${escH(t.tareas)}</div>`:''}
     <div class="cmeta">
       ${t.numero?`<span class="cnum">ID ${t.numero}</span>`:''}
@@ -1482,11 +1491,10 @@ function cardHTML(t){
       ${t.incluir_ruben?(()=>{const _rb=USERS.find(u=>u.canFinalize===false);if(!_rb)return'';const _tip=(SESSION.user===_rb.user)?(_rb.nombre+', cuando puedas, '+(nombreOp(t.operador)||t.operador)+' quiere revisar contigo esta tarea. Si podés, contactalo. Gracias.'):('Esta tarea se revisa en conjunto con '+_rb.nombre+'.');return `<span class="cop" title="${escH(_tip)}" style="background:${opColor(_rb.user)}22;color:${opColor(_rb.user)};border:1px solid ${opColor(_rb.user)}66">${escH(_rb.nombre)}</span>`;})():''}
       ${_canPin?`<select class="cpill-sel csel-area" onclick="event.stopPropagation()" onchange="event.stopPropagation();quickUpdateField('${t.id}','area',this.value)">${AREAS.map(a=>`<option value="${a}" ${a===t.area?'selected':''}>${a}</option>`).join('')}</select>`:`<span class="cpill">${t.area}</span>`}
       ${_canPin?`<select class="cpill-sel csel-prio${t.prioridad==='Urgente'?' urg':t.prioridad==='Alta'?' alt':t.prioridad==='Media'?' med':''}" onclick="event.stopPropagation()" onchange="event.stopPropagation();quickUpdateField('${t.id}','prioridad',this.value)">${PRIORIDADES.map(p=>`<option value="${p}" ${p===t.prioridad?'selected':''}>${p}</option>`).join('')}</select>`:prioHtml}
-      ${envIcon}
     </div>
     <div class="cfoot">
-      <span style="display:inline-flex;gap:6px;align-items:center"><span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span>${_fechaHtml}${_desIcon}</span>
-      <span class="cfoot-icons">${clIcon}${reacc}${attachIcon}${pinIcon}</span>
+      <span style="display:inline-flex;gap:6px;align-items:center">${_frecIcon}<span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span>${_fechaHtml}${_desIcon}</span>
+      <span class="cfoot-icons">${envIcon}${clIcon}${reacc}${attachIcon}${pinIcon}</span>
     </div>
   </div>`;
 }
