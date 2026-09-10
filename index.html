@@ -1529,7 +1529,7 @@ async function setReaccion(id,emoji){
 let _cpTimer;
 function _renderChkTip(tip,taskId,cl,canToggle){
   tip.innerHTML=cl.map((x,i)=>canToggle
-    ?`<div onclick="toggleCheckFromTip('${taskId}',${i})" onmouseenter="this.style.background='#1a1a1a'" onmouseleave="this.style.background=''" style="display:flex;gap:7px;align-items:baseline;padding:3px 0;cursor:pointer;border-radius:3px"><span style="color:${x.ok?'#4ade80':'#888'};flex-shrink:0;font-size:11px">${x.ok?'✓':'○'}</span><span>${escH(x.texto)}</span></div>`
+    ?`<div data-tchk="${i}" draggable="true" ondragstart="tipChkDragStart(event,${i})" ondragover="tipChkDragOver(event)" ondragleave="this.style.boxShadow=''" ondrop="tipChkDrop(event,'${taskId}',${i})" ondragend="tipChkDragEnd(event)" onclick="toggleCheckFromTip('${taskId}',${i})" onmouseenter="this.style.background='#1a1a1a'" onmouseleave="this.style.background=''" style="display:flex;gap:7px;align-items:center;padding:3px 0;cursor:pointer;border-radius:3px;user-select:none"><span title="Arrastrá para reordenar" style="display:inline-block;width:6px;height:10px;flex-shrink:0;cursor:grab;background-image:radial-gradient(#777 1px,transparent 1.2px);background-size:3px 3px"></span><span style="color:${x.ok?'#4ade80':'#888'};flex-shrink:0;font-size:11px">${x.ok?'✓':'○'}</span><span>${escH(x.texto)}</span></div>`
     :`<div style="display:flex;gap:7px;align-items:baseline;padding:3px 0"><span style="color:${x.ok?'#4ade80':'#888'};flex-shrink:0;font-size:11px">${x.ok?'✓':'○'}</span><span>${escH(x.texto)}</span></div>`
   ).join('');
 }
@@ -1559,6 +1559,33 @@ async function toggleCheckFromTip(id,idx){
   renderCurrent();
 }
 function hideCardPreview(){_cpTimer=setTimeout(()=>{document.getElementById('cardPreviewTip').style.display='none';},150);}
+// Reordenar los ítems de la lista arrastrando dentro del popover del chip ☑ (mismo permiso que tildar).
+// Nombres propios (tipChk*) para no pisar chkDragStart/chkDrop, que son los del formulario.
+let _tipChkIdx=null;
+function tipChkDragStart(ev,i){_tipChkIdx=i;ev.stopPropagation();ev.dataTransfer.effectAllowed='move';try{ev.dataTransfer.setData('text/plain','')}catch(e){}ev.currentTarget.style.opacity='.4';}
+function tipChkDragOver(ev){
+  if(_tipChkIdx===null)return;
+  ev.preventDefault();ev.dataTransfer.dropEffect='move';
+  const r=ev.currentTarget.getBoundingClientRect();
+  ev.currentTarget.style.boxShadow=(ev.clientY-r.top)<r.height/2?'inset 0 2px 0 #4ade80':'inset 0 -2px 0 #4ade80';
+}
+async function tipChkDrop(ev,taskId,i){
+  ev.preventDefault();ev.stopPropagation();
+  const r=ev.currentTarget.getBoundingClientRect();const before=(ev.clientY-r.top)<r.height/2;
+  ev.currentTarget.style.boxShadow='';
+  const from=_tipChkIdx;_tipChkIdx=null;
+  if(from===null)return;
+  const t=DATA.find(x=>x.id===taskId);if(!t||!Array.isArray(t.checklist))return;
+  let to=before?i:i+1;if(from<to)to--;if(to===from)return;
+  const newCl=t.checklist.map(x=>({...x}));const[it]=newCl.splice(from,1);newCl.splice(to,0,it);
+  const upd=Object.assign({},t,{checklist:newCl,actualizado:nowStamp()});
+  const di=DATA.findIndex(x=>x.id===taskId);if(di>=0)DATA[di]=upd;
+  const tip=document.getElementById('cardPreviewTip');
+  if(tip&&tip.style.display!=='none')_renderChkTip(tip,taskId,newCl,true);
+  await upsertTask(upd);
+  renderCurrent();
+}
+function tipChkDragEnd(ev){if(ev&&ev.currentTarget)ev.currentTarget.style.opacity='';_tipChkIdx=null;document.querySelectorAll('#cardPreviewTip [data-tchk]').forEach(r=>r.style.boxShadow='');}
 // Lista de comprobación: se abre/cierra SOLO al hacer clic en el chip ☑ (no al pasar el mouse)
 let _chkTipId=null;
 function toggleChkTip(el,id){
