@@ -90,6 +90,11 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
    el shorthand "background" de .urg borraría la imagen; en urgente (fondo rojo) la flecha va en blanco. */
 .card .cpill-sel{padding-right:10px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='4'%3E%3Cpath d='M0 0h6L3 4z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 3px center;background-size:6px 4px}
 .card .cpill-sel.urg{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='4'%3E%3Cpath d='M0 0h6L3 4z' fill='%23fff'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 3px center;background-size:6px 4px}
+/* Fecha de vencimiento editable desde la tarjeta: un input date invisible encima del texto abre el calendario */
+.card .cdate-wrap{position:relative;display:inline-flex;cursor:pointer}
+.card .cdate-wrap:hover .cdate{opacity:.75}
+.card .cdate-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+.card .cdate-car{display:inline-block;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid currentColor;margin-left:3px;vertical-align:middle;opacity:.7}
 .card .cpill-sel option{text-transform:none;background:var(--bg2);color:var(--txt);font-size:12px;padding:4px 8px;text-align:left}
 .card .cfoot{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;margin-top:2px;padding-top:2px;border-top:1px solid var(--line)}
 .card .cdate{font-size:10px;color:var(--txt);display:inline-flex;align-items:center;gap:4px}
@@ -1394,6 +1399,14 @@ function cardHTML(t){
     }</span></span>`:'';
   // Fijar: solo el operador dueño de la tarea (o el admin). Los demás ven el pin como referencia.
   const _canPin=!isFinal&&(isAdmin()||t.operador===SESSION.user||t.creado_por===SESSION.user);
+  // Fecha de vencimiento editable desde la tarjeta: mismo permiso que Área/Prioridad. Mensual no, porque su
+  // fecha se calcula del día del mes (en el formulario también queda bloqueada).
+  const _canFecha=_canPin&&frecBase(t.frecuencia)!=='Mensual';
+  const _fStyle=!isFinal&&!venc&&t.frecuencia!=='Por Etapas'&&t.finalizacion===todayISO()?'background:#4ade80;color:#14532d;font-weight:700;border-radius:4px;padding:1px 5px':'';
+  const _fTxt=t.finalizacion?fmtDate(t.finalizacion):'—';
+  const _fechaHtml=_canFecha
+    ?`<span class="cdate-wrap"><span class="cdate${venc?' ovd':''}" style="${_fStyle}">${_fTxt}<i class="cdate-car"></i></span><input type="date" class="cdate-inp" value="${t.finalizacion||''}" onclick="event.stopPropagation();try{this.showPicker()}catch(e){}" onchange="if(this.value)quickUpdateField('${t.id}','finalizacion',this.value)"></span>`
+    :`<span class="cdate${venc?' ovd':''}" style="${_fStyle}">${_fTxt}</span>`;
   const pinIcon=isFinal?'':(_canPin
     ?`<span class="cpin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`
     :(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:''));
@@ -1446,7 +1459,7 @@ function cardHTML(t){
       ${envIcon}
     </div>
     <div class="cfoot">
-      <span style="display:inline-flex;gap:6px;align-items:center"><span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span><span class="cdate${venc?' ovd':''}" style="${!isFinal&&!venc&&t.frecuencia!=='Por Etapas'&&t.finalizacion===todayISO()?'background:#4ade80;color:#14532d;font-weight:700;border-radius:4px;padding:1px 5px':''}">${t.finalizacion?fmtDate(t.finalizacion):'—'}</span>${_desIcon}</span>
+      <span style="display:inline-flex;gap:6px;align-items:center"><span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span>${_fechaHtml}${_desIcon}</span>
       <span class="cfoot-icons">${clIcon}${reacc}${attachIcon}${pinIcon}</span>
     </div>
   </div>`;
@@ -1583,6 +1596,7 @@ async function quickUpdateField(id,field,value){
   const t=DATA.find(x=>x.id===id);if(!t)return;
   if(t.estado==='Finalizado'&&!isAdmin())return;
   if(!isAdmin()&&t.operador!==SESSION.user&&t.creado_por!==SESSION.user)return;
+  if(field==='finalizacion'&&(!value||frecBase(t.frecuencia)==='Mensual'))return;
   const upd=Object.assign({},t,{[field]:value,actualizado:nowStamp()});
   const ok=await upsertTask(upd);
   if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}
