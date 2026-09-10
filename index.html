@@ -72,6 +72,12 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card:hover{box-shadow:0 3px 10px rgba(0,0,0,.14)}
 .card.drag{opacity:.35;transform:scale(.97)}
 .card .ct{font-weight:600;font-size:12.5px;line-height:1.3;margin-bottom:3px;letter-spacing:-.1px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ▾ al final del título: despliega "Tareas a realizar" dentro de la tarjeta (reemplaza el cartel nativo del título) */
+.card .ctog{display:inline-flex;align-items:center;justify-content:center;width:16px;height:14px;margin-left:4px;vertical-align:middle;cursor:pointer;border-radius:3px;color:var(--muted)}
+.card .ctog:hover{background:var(--bg2);color:var(--txt)}
+.card .ctog::after{content:'';width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;transition:transform .15s}
+.card .ctog.open::after{transform:rotate(180deg)}
+.card .ctareas{font-size:11px;line-height:1.4;font-weight:400;color:var(--txt);white-space:pre-wrap;word-break:break-word;background:var(--bg2);border:1px solid var(--line);border-radius:4px;padding:4px 6px;margin:0 0 4px;max-height:140px;overflow-y:auto;cursor:text;user-select:text}
 .card .csub{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .cmeta{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;margin-top:auto;margin-bottom:2px;overflow:hidden;min-width:0}
 .card .cnum{font-size:10px;font-weight:700;color:var(--txt);letter-spacing:.3px;white-space:nowrap;flex-shrink:0}
@@ -1460,7 +1466,8 @@ function cardHTML(t){
     style="${_cardStyle}">
     ${(venc&&!_esWatcher())?`<span class="cvenc">${Math.abs(dias)}d</span>`:''}
     ${_frecIcon}
-    <div class="ct" title="${t.tareas?escH(t.tareas):escH(t.tema)}">${relojIcon}${escH((t.tema||'').length>30?(t.tema||'').slice(0,30)+'…':t.tema||'')}</div>
+    <div class="ct"${!t.tareas&&(t.tema||'').length>30?` title="${escH(t.tema)}"`:''}>${relojIcon}${escH((t.tema||'').length>30?(t.tema||'').slice(0,30)+'…':t.tema||'')}${t.tareas?`<span class="ctog${_tareasAbiertas.has(t.id)?' open':''}" onclick="event.stopPropagation();toggleCardTareas('${t.id}')"></span>`:''}</div>
+    ${t.tareas&&_tareasAbiertas.has(t.id)?`<div class="ctareas" onclick="event.stopPropagation()">${(t.tema||'').length>30?`<b>${escH(t.tema)}</b>\n`:''}${escH(t.tareas)}</div>`:''}
     <div class="cmeta">
       ${t.numero?`<span class="cnum">ID ${t.numero}</span>`:''}
       ${(()=>{const _cr=USERS.find(u=>u.user===t.creado_por);return(_cr&&_cr.canFinalize===false&&t.creado_por!==t.operador)?`<span class="cop" style="background:${opColor(t.creado_por)}22;color:${opColor(t.creado_por)};border:1px solid ${opColor(t.creado_por)}66">${_cr.nombre}</span>`:'';})()}
@@ -1476,6 +1483,9 @@ function cardHTML(t){
     </div>
   </div>`;
 }
+// "Tareas a realizar" desplegadas dentro de la tarjeta (▾ del título). En memoria: al recargar vuelven cerradas.
+const _tareasAbiertas=new Set();
+function toggleCardTareas(id){if(_tareasAbiertas.has(id))_tareasAbiertas.delete(id);else _tareasAbiertas.add(id);renderCurrent();}
 // ── Reacciones e íconos de tarjeta ────────────────────────────
 function toggleReactPicker(el){
   const w=el.parentElement;const open=w.classList.contains('open');
