@@ -118,6 +118,8 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card .cic{display:inline-flex}
 .card .cpin{cursor:pointer;display:inline-flex;color:var(--muted);opacity:.55;transition:color .12s,opacity .12s}
 .card .cpin.on{opacity:1;color:var(--accent)}
+.card .cvis{cursor:pointer;display:inline-flex;color:var(--muted);opacity:.55;transition:color .12s,opacity .12s}
+.card .cvis.on{opacity:1;color:#fb923c}
 .card .creloj{cursor:pointer;display:inline-flex;vertical-align:middle;color:#dc2626;opacity:.8;transition:opacity .12s}
 .card .creloj.on{opacity:1}
 .col-sort-btn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:var(--bg3);user-select:none;flex-shrink:0;transition:border-color .15s,background .15s}
@@ -699,6 +701,7 @@ async function finalizarTarea(t){
   const _uCfg=USERS.find(u=>u.user===SESSION.user);
   if(_uCfg&&_uCfg.canFinalize===false){showToast('La finalización de tareas la realizan los operadores','err');renderEquipo();return;}
   if(!isAdmin()&&t.operador!==SESSION.user){showToast('Solo podés finalizar tareas asignadas a vos','err');renderEquipo();return;}
+  if(_ocultaAlEquipo(t)){showToast(_MSG_OCULTA,'err');renderEquipo();return;}
   // Regla: la misma tarea/serie (mismo tema+operador) no se puede finalizar dos veces el mismo día
   // Excepción: si la tarea tiene lista y se tildó al menos un ítem que no estaba tildado en ninguna finalización
   // de hoy, se permite registrar ese nuevo avance (ej. otra subtarea de un proyecto Por Etapas).
@@ -749,7 +752,7 @@ async function finalizarTarea(t){
       if(!cerroProy&&!_yaTieneProxima(t)){
         const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
         // Por Etapas: la lista es el avance del proyecto, así que la etapa nueva conserva lo tildado
-        const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x})):t.checklist});
+        const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,compartida:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x})):t.checklist});
         const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
         extra=' · nueva etapa creada';
       }
@@ -760,7 +763,7 @@ async function finalizarTarea(t){
       await upsertTask(t);
       if(!_yaTieneProxima(t)){
         const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
-        const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
+        const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,compartida:false,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
         const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
         extra=' · próxima: '+fmtDate(next);
       }
@@ -1361,6 +1364,10 @@ function renderEquipo(){
   if(filtroAtrasadas)list=list.filter(t=>t.operador===SESSION.user&&t.estado!=='Finalizado'&&t.estado!=='En curso'&&(t.finalizacion||'')&&(t.finalizacion||'')<todayISO());
   if(filtroIncRuben)list=list.filter(t=>t.incluir_ruben&&t.estado!=='Finalizado');
   if(!isAdmin())list=list.filter(t=>t.frecuencia!=='Nota');
+  // En curso / Para ver juntos del admin: el resto (operadores y Rubén) solo ve las que él compartió con el ojo,
+  // salvo quien creó la tarjeta, que la sigue viendo siempre.
+  // Filtro a nivel lista → cubre Workflow, Por equipo y la búsqueda. Solo ocultamiento en pantalla (RLS permisiva).
+  if(!isAdmin())list=list.filter(t=>!(_ocultaAlEquipo(t)&&t.creado_por!==SESSION.user));
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
   document.getElementById('equipoBody').innerHTML=mode==='workflow'?workflowHTML(list):((mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list));
   setupSticky();
@@ -1395,6 +1402,8 @@ const ICO={
   img:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-4.5L5 20"/></svg>',
   link:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 1 0-5.7-5.7L12 6"/><path d="M13.5 10.5a4 4 0 0 0-5.7 0L5 13.3a4 4 0 1 0 5.7 5.7L12 18"/></svg>',
   pin:'<svg class="cic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6l-1 5.5 3 3v2H7v-2l3-3-1-5.5z"/><path d="M12 17v3.5"/></svg>',
+  eye:'<svg class="cic" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff:'<svg class="cic" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>',
   smile:'<svg class="cic" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 14a4 4 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg>',
   mail:'<svg class="cic" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>',
   reloj:'<svg class="cic" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'
@@ -1446,6 +1455,9 @@ function cardHTML(t){
   const pinIcon=isFinal?'':(_canPin
     ?`<span class="cpin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')">${ICO.pin}</span>`
     :(t.fijado?`<span class="cpin on" style="pointer-events:none;opacity:.6">${ICO.pin}</span>`:''));
+  // En curso / Para ver juntos del admin: sus tarjetas ahí solo las ve el resto si él las comparte (ojo). Botón solo para el admin.
+  const visIcon=(isAdmin()&&t.operador===SESSION.user&&COLS_OCULTABLES.includes(t.estado))
+    ?`<span class="cvis${t.compartida?' on':''}" onclick="event.stopPropagation();toggleCompartida('${t.id}')">${t.compartida?ICO.eye:ICO.eyeOff}</span>`:'';
   const relojIcon=(venc&&!_esWatcher())?`<span class="creloj${_isAtrasadaRoja(t.id)?' on':''}" style="margin-right:4px" title="Marcar/desmarcar en rojo" onclick="event.stopPropagation();toggleAtrasadaRoja('${t.id}')">${ICO.reloj}</span>`:'';
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
@@ -1497,7 +1509,7 @@ function cardHTML(t){
     </div>
     <div class="cfoot">
       <span style="display:inline-flex;gap:6px;align-items:center">${_frecIcon}<span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span>${_fechaHtml}${_desIcon}</span>
-      <span class="cfoot-icons">${envIcon}${clIcon}${reacc}${attachIcon}${pinIcon}</span>
+      <span class="cfoot-icons">${envIcon}${clIcon}${reacc}${attachIcon}${visIcon}${pinIcon}</span>
     </div>
   </div>`;
 }
@@ -1657,6 +1669,12 @@ async function aprobarSolicitud(id){
   }
 }
 async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;if(!isAdmin()&&t.operador!==SESSION.user&&t.creado_por!==SESSION.user)return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
+// Ojo de En curso / Para ver juntos: el admin comparte (o vuelve a ocultar) una tarjeta suya con el resto del equipo.
+// Una sola marca por tarjeta: si pasa de una de estas columnas a la otra, sigue compartida u oculta.
+const COLS_OCULTABLES=['En curso','Para ver juntos'];
+function _ocultaAlEquipo(t){const _adm=(USERS.find(u=>u.rol==='admin')||{}).user;return t.operador===_adm&&COLS_OCULTABLES.includes(t.estado)&&!t.compartida;}
+const _MSG_OCULTA='Esta tarjeta está oculta para el equipo: compartila con el ojo antes de finalizarla';
+async function toggleCompartida(id){const t=DATA.find(x=>x.id===id);if(!t||!isAdmin())return;const upd=Object.assign({},t,{compartida:!t.compartida,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
 // Cambio rápido de Área/Prioridad desde la tarjeta (sin abrir el formulario). Mismo permiso que la chincheta:
 // admin cambia cualquiera; el resto solo si es operador o creador de la tarea, y no si ya está Finalizado.
 async function quickUpdateField(id,field,value){
@@ -1749,16 +1767,8 @@ function workflowHTML(list){
     if(_team&&est!=='Finalizado'){
       const _base=['diego','maxi','juan','ruben'];
       const _ord=[SESSION.user,..._base.filter(u=>u!==SESSION.user)];
-      // En curso = lista del día del admin: los operadores (no el admin, no el watcher) ven solo sus 2 primeras.
-      // "Primeras" con orden fijo (fijadas, luego vencimiento más próximo), igual para todos sin importar la
-      // flecha de orden de cada uno. El contador de la columna cuenta solo lo visible (no se nota lo oculto).
-      const _adm=(USERS.find(u=>u.rol==='admin')||{}).user;
-      const _limAdm=est==='En curso'&&!isAdmin()&&!_esWatcher();
-      items=_ord.flatMap(uid=>{
-        let arr=_filtered.filter(t=>t.operador===uid);
-        if(_limAdm&&uid===_adm){const _top=new Set(sortCards(arr,'asc',false).slice(0,2).map(t=>t.id));arr=arr.filter(t=>_top.has(t.id));}
-        return sortCards(arr,dir,false);
-      });
+      // Las tarjetas del admin en En curso / Para ver juntos que no compartió ya vienen filtradas desde renderEquipo.
+      items=_ord.flatMap(uid=>sortCards(_filtered.filter(t=>t.operador===uid),dir,false));
     }else{
       items=sortCards(_filtered,dir,est==='Finalizado');
     }
@@ -2168,6 +2178,7 @@ function duplicarTarea(id){
 async function finalizarPersonalizada(){
   if(!editingId)return;
   const t=DATA.find(x=>x.id===editingId);if(!t)return;
+  if(_ocultaAlEquipo(t)){showToast(_MSG_OCULTA,'err');return;}
   if(!confirm('¿Confirmás que esta tarea ya no se va a repetir?\n\nSe finaliza sin generar una nueva. No se puede revertir.'))return;
   const logged=await logRealizacion(t);
   if(!logged&&!confirm('No se pudo registrar en el historial. ¿Finalizar de todos modos?'))return;
@@ -2183,6 +2194,7 @@ async function cerrarProyecto(){
   // Mismo criterio que la visibilidad del botón en openTaskForm: admin en cualquiera, operador o creador en los suyos, nunca el watcher.
   if(_esWatcher()){showToast('La finalización de tareas la realizan los operadores','err');return;}
   if(!isAdmin()&&t.creado_por!==SESSION.user&&t.operador!==SESSION.user){showToast('Solo quien ejecuta o creó el proyecto puede cerrarlo','err');return;}
+  if(_ocultaAlEquipo(t)){showToast(_MSG_OCULTA,'err');return;}
   if(!confirm('¿Confirmás que el proyecto está completamente terminado?\n\nSe finaliza sin generar una nueva etapa. No se puede revertir.'))return;
   const logged=await logRealizacion(t);
   if(!logged&&!confirm('No se pudo registrar en el historial. ¿Cerrar de todos modos?'))return;
