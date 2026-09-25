@@ -32,6 +32,7 @@ jobs:
           KEY_REF=$(printf '%s' "$P" | base64 -d 2>/dev/null | jq -r '.ref // "?"' 2>/dev/null || echo "?")
           KEY_ROLE=$(printf '%s' "$P" | base64 -d 2>/dev/null | jq -r '.role // "?"' 2>/dev/null || echo "?")
           echo "Proyecto URL: $URL_REF | proyecto key: $KEY_REF | rol key: $KEY_ROLE | largo key: ${#SB_KEY}"
+          echo "Key empieza: $(printf '%s' "$SB_KEY" | cut -c1-14) … termina: $(printf '%s' "$SB_KEY" | tail -c 6) | puntos: $(printf '%s' "$SB_KEY" | tr -cd '.' | wc -c)"
           if [ "$URL_REF" != "$KEY_REF" ]; then echo "La URL y la anon key son de proyectos distintos (o la key está mal copiada)"; exit 1; fi
           TOKEN=$(curl -sS --fail-with-body -X POST "$SB_URL/auth/v1/token?grant_type=password" \
             -H "apikey: $SB_KEY" -H "Content-Type: application/json" \
