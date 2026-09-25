@@ -1,0 +1,30 @@
+# Evita que Supabase TEST (plan free) se pause por inactividad (~7 días).
+# Inicia sesión con un usuario de TEST y lee 1 fila de `trabajos`: es actividad real en la base.
+# No toca PROD ni escribe nada. Datos de conexión en los secrets del repo (TEST_*).
+name: Keep-alive Supabase TEST
+
+on:
+  schedule:
+    - cron: '0 12 * * 1,4'   # lunes y jueves 12:00 UTC (09:00 AR)
+  workflow_dispatch:          # para correrlo a mano desde la pestaña Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Login y lectura en TEST
+        env:
+          SB_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          SB_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+          SB_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          SB_PASS: ${{ secrets.TEST_USER_PASSWORD }}
+        run: |
+          set -eu
+          TOKEN=$(curl -sS --fail-with-body -X POST "$SB_URL/auth/v1/token?grant_type=password" \
+            -H "apikey: $SB_KEY" -H "Content-Type: application/json" \
+            -d "{\"email\":\"$SB_EMAIL\",\"password\":\"$SB_PASS\"}" | jq -r '.access_token')
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then echo "Login fallido en TEST"; exit 1; fi
+          curl -sS --fail-with-body "$SB_URL/rest/v1/trabajos?select=id&limit=1" \
+            -H "apikey: $SB_KEY" -H "Authorization: Bearer $TOKEN" > /dev/null
+          echo "TEST activo: $(date -u)"
