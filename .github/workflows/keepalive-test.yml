@@ -21,6 +21,11 @@ jobs:
           SB_PASS: ${{ secrets.TEST_USER_PASSWORD }}
         run: |
           set -eu
+          # Limpia espacios, saltos de línea, comillas y barra final que se cuelan al pegar los secrets
+          clean() { printf '%s' "$1" | tr -d " \t\r\n'\"\`"; }
+          SB_URL=$(clean "$SB_URL"); SB_URL=${SB_URL%/}
+          SB_KEY=$(clean "$SB_KEY"); SB_EMAIL=$(clean "$SB_EMAIL")
+          case "$SB_URL" in https://*.supabase.co) ;; *) echo "TEST_SUPABASE_URL no tiene el formato https://xxxx.supabase.co"; exit 1;; esac
           TOKEN=$(curl -sS --fail-with-body -X POST "$SB_URL/auth/v1/token?grant_type=password" \
             -H "apikey: $SB_KEY" -H "Content-Type: application/json" \
             -d "{\"email\":\"$SB_EMAIL\",\"password\":\"$SB_PASS\"}" | jq -r '.access_token')
