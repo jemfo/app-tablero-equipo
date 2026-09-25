@@ -1,6 +1,9 @@
 # Evita que Supabase TEST (plan free) se pause por inactividad (~7 días).
 # Inicia sesión con un usuario de TEST y lee 1 fila de `trabajos`: es actividad real en la base.
-# No toca PROD ni escribe nada. Datos de conexión en los secrets del repo (TEST_*).
+# No toca PROD ni escribe nada.
+# URL y anon key van acá a la vista: son públicas por diseño (la anon key no accede a nada sin login, RLS).
+# Usuario y contraseña de TEST van en los secrets del repo TEST_USER_EMAIL / TEST_USER_PASSWORD.
+# Supabase TEST vive en la cuenta laboral juan.olguin.vitolen@gmail.com.
 name: Keep-alive Supabase TEST
 
 on:
@@ -15,29 +18,18 @@ jobs:
     steps:
       - name: Login y lectura en TEST
         env:
-          SB_URL: ${{ secrets.TEST_SUPABASE_URL }}
-          SB_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+          SB_URL: https://gdukaolvwgcykyjywyrx.supabase.co
+          SB_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkdWthb2x2d2djeWt5anl3eXJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0Njg3MTQsImV4cCI6MjA5NzA0NDcxNH0.oGit8s8ySOkowqrgetKlRilw6kI_lbe1NAcMsQbpJK8
           SB_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           SB_PASS: ${{ secrets.TEST_USER_PASSWORD }}
         run: |
           set -eu
-          # Limpia espacios, saltos de línea, comillas y barra final que se cuelan al pegar los secrets
-          clean() { printf '%s' "$1" | tr -d " \t\r\n'\"\`"; }
-          SB_URL=$(clean "$SB_URL"); SB_URL=${SB_URL%/}
-          SB_KEY=$(clean "$SB_KEY"); SB_EMAIL=$(clean "$SB_EMAIL")
-          case "$SB_URL" in https://*.supabase.co) ;; *) echo "TEST_SUPABASE_URL no tiene el formato https://xxxx.supabase.co"; exit 1;; esac
-          # Diagnóstico (datos no sensibles): proyecto de la URL vs proyecto y rol que dice la anon key
-          URL_REF=${SB_URL#https://}; URL_REF=${URL_REF%%.*}
-          P=$(printf '%s' "$SB_KEY" | cut -d. -f2 | tr '_-' '/+'); while [ $(( ${#P} % 4 )) -ne 0 ]; do P="$P="; done
-          KEY_REF=$(printf '%s' "$P" | base64 -d 2>/dev/null | jq -r '.ref // "?"' 2>/dev/null || echo "?")
-          KEY_ROLE=$(printf '%s' "$P" | base64 -d 2>/dev/null | jq -r '.role // "?"' 2>/dev/null || echo "?")
-          echo "Proyecto URL: $URL_REF | proyecto key: $KEY_REF | rol key: $KEY_ROLE | largo key: ${#SB_KEY}"
-          echo "Key empieza: $(printf '%s' "$SB_KEY" | cut -c1-14) … termina: $(printf '%s' "$SB_KEY" | tail -c 6) | puntos: $(printf '%s' "$SB_KEY" | tr -cd '.' | wc -c)"
-          if [ "$URL_REF" != "$KEY_REF" ]; then echo "La URL y la anon key son de proyectos distintos (o la key está mal copiada)"; exit 1; fi
+          # Limpia espacios, saltos de línea y comillas que se cuelan al pegar el mail
+          SB_EMAIL=$(printf '%s' "$SB_EMAIL" | tr -d " \t\r\n'\"\`")
           TOKEN=$(curl -sS --fail-with-body -X POST "$SB_URL/auth/v1/token?grant_type=password" \
             -H "apikey: $SB_KEY" -H "Content-Type: application/json" \
             -d "{\"email\":\"$SB_EMAIL\",\"password\":\"$SB_PASS\"}" | jq -r '.access_token')
-          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then echo "Login fallido en TEST"; exit 1; fi
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then echo "Login fallido en TEST (revisar TEST_USER_EMAIL / TEST_USER_PASSWORD)"; exit 1; fi
           curl -sS --fail-with-body "$SB_URL/rest/v1/trabajos?select=id&limit=1" \
             -H "apikey: $SB_KEY" -H "Authorization: Bearer $TOKEN" > /dev/null
           echo "TEST activo: $(date -u)"
