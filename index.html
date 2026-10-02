@@ -448,14 +448,18 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
       </div>
       <div id="wrapFinalizacion"><label>Finalización *</label><input type="date" id="f_finalizacion"></div>
-      <div id="wrapLink1"><label>Link 1 (fuente principal)</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link1" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link1').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button></div></div>
+      <div id="wrapLink1"><label>Link 1 (fuente principal)</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link1" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link1').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button><button type="button" id="btnAddLink" onclick="addLinkRow()" style="padding:0 6px;font-size:20px;line-height:1;color:#16a34a;border:none;background:none;cursor:pointer;flex-shrink:0;font-weight:700" title="Agregar otro link (máx. 5)">+</button></div></div>
+      <div class="full" id="wrapLinksExtra" style="display:none"><div class="form2">
+<div id="rowLink2" style="display:none"><label>Link 2</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link2" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(2)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
+<div id="rowLink3" style="display:none"><label>Link 3</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link3" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(3)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
+<div id="rowLink4" style="display:none"><label>Link 4</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link4" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(4)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
+<div id="rowLink5" style="display:none"><label>Link 5</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link5" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(5)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
+      </div></div>
       <div class="full" id="extraWrap">
         <div class="collapse-hdr" onclick="toggleExtra()"><span id="extraCaret">▸</span> Mail, links e imágenes
           <label id="privWrap" class="priv-chk" onclick="event.stopPropagation()" title="Reservado: oculta este contenido a los operadores (asigna la tarea al admin)"><input type="checkbox" id="f_privado" onchange="togglePriv()"></label>
         </div>
         <div id="extraFields" class="form2 hidden" style="margin-top:8px">
-          <div><label>Link 2</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link2" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link2').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button></div></div>
-          <div><label>Link 3</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link3" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link3').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button></div></div>
           <div class="full">
             <label id="chkLabel">Lista de comprobación</label>
             <div id="chkList" style="margin-bottom:6px"></div>
@@ -1425,7 +1429,7 @@ function cardHTML(t){
     :(t.reaccion?`<span class="creact-face has" style="pointer-events:none;opacity:.6">${t.reaccion}</span>`:'');
   // Adjuntos agrupados en un solo chip 📎 N (links + imágenes) con popover. Mantiene altura uniforme.
   const _showAttach=isAdmin()||!t.privado;
-  const _attLinks=_showAttach?[t.link1,t.link2,t.link3].filter(Boolean):[];
+  const _attLinks=_showAttach?[t.link1,t.link2,t.link3,t.link4,t.link5].filter(Boolean):[];
   const _attImgs=(_showAttach&&t.imagenes&&t.imagenes.length)?t.imagenes.length:0;
   const _nAtt=_attLinks.length+_attImgs;
   // Reordenar links arrastrando en el popover: mismo permiso que la chincheta (no en Finalizado)
@@ -1558,7 +1562,7 @@ function toggleAttachPicker(el){
 function _closeAttachPops(){document.querySelectorAll('.cattach-wrap.open').forEach(x=>x.classList.remove('open'));_resetAttachPops();}
 document.addEventListener('click',e=>{if(!e.target.closest('.cattach-wrap'))_closeAttachPops();});
 // Reordenar los links de la tarjeta arrastrando dentro del popover 🔗 (como la lista de comprobación).
-// Los links viven en link1..link3: se reordenan los cargados y se reescriben compactados.
+// Los links viven en link1..link5: se reordenan los cargados y se reescriben compactados.
 let _attLnkIdx=null;
 function attLnkDragStart(ev,i){_attLnkIdx=i;ev.stopPropagation();ev.dataTransfer.effectAllowed='move';try{ev.dataTransfer.setData('text/plain','')}catch(e){}ev.currentTarget.style.opacity='.4';}
 function attLnkDragOver(ev){
@@ -1574,10 +1578,11 @@ async function attLnkDrop(ev,id,i){
   const from=_attLnkIdx;_attLnkIdx=null;
   if(from===null)return;
   const t=DATA.find(x=>x.id===id);if(!t)return;
-  const arr=[t.link1,t.link2,t.link3].filter(Boolean);
+  const arr=[t.link1,t.link2,t.link3,t.link4,t.link5].filter(Boolean);
   let to=before?i:i+1;if(from<to)to--;if(to===from)return;
   const[it]=arr.splice(from,1);arr.splice(to,0,it);
   const upd=Object.assign({},t,{link1:arr[0]||'',link2:arr[1]||'',link3:arr[2]||'',actualizado:nowStamp()});
+  if(arr.length>3||('link4' in t)){upd.link4=arr[3]||'';upd.link5=arr[4]||'';}
   const di=DATA.findIndex(x=>x.id===id);if(di>=0)DATA[di]=upd;
   await upsertTask(upd);
   renderCurrent();
@@ -1937,9 +1942,25 @@ function openLightbox(i){document.getElementById('imgLightboxImg').src=curImgs[i
 function toggleExtra(){const ef=document.getElementById('extraFields');ef.classList.toggle('hidden');document.getElementById('extraCaret').textContent=ef.classList.contains('hidden')?'▸':'▾';}
 function expandExtra(){const ef=document.getElementById('extraFields');if(ef&&ef.classList.contains('hidden')){ef.classList.remove('hidden');document.getElementById('extraCaret').textContent='▾';}}
 function collapseExtra(){const ef=document.getElementById('extraFields');if(ef){ef.classList.add('hidden');document.getElementById('extraCaret').textContent='▸';}}
+// Links: Link 1 + hasta 4 más (máx. 5). Al abrir se muestran las filas con link cargado; las vacías aparecen de a una con el +.
+let _linkVis=1;
+function _lv(n){return document.getElementById('f_link'+n);}
+function syncLinkRows(reset){
+  if(reset){let last=1;for(let n=2;n<=5;n++){const e=_lv(n);if(e&&e.value.trim())last=n;}_linkVis=last;}
+  for(let n=2;n<=5;n++){const r=document.getElementById('rowLink'+n);if(r)r.style.display=n<=_linkVis?'':'none';}
+  const w=document.getElementById('wrapLinksExtra');if(w)w.style.display=(_linkVis>1&&!_linkNota)?'':'none';
+  const b=document.getElementById('btnAddLink');
+  if(b){const _pv=!isAdmin()&&document.getElementById('f_privado').checked;b.style.display=_pv?'none':'';b.style.visibility=_linkVis>=5?'hidden':'';}
+}
+let _linkNota=false;
+function setLinkFields(t){for(let n=1;n<=5;n++){const e=_lv(n);if(e)e.value=(t&&t['link'+n])||'';}syncLinkRows(true);}
+function addLinkRow(){if(_linkVis>=5)return;_linkVis++;syncLinkRows(false);const e=_lv(_linkVis);if(e)e.focus();}
+function removeLinkRow(n){for(let k=n;k<5;k++){_lv(k).value=_lv(k+1).value;}_lv(5).value='';_linkVis=Math.max(1,_linkVis-1);syncLinkRows(false);}
+function readLinkVals(){const rest=[2,3,4,5].map(n=>_lv(n).value.trim()).filter(Boolean);return{link1:_lv(1).value.trim(),link2:rest[0]||'',link3:rest[1]||'',link4:rest[2]||'',link5:rest[3]||''};}
 function togglePriv(){
   const on=document.getElementById('f_privado').checked;
   document.getElementById('extraFields').classList.toggle('priv-blur',on);
+  {const _wl=document.getElementById('wrapLinksExtra');if(_wl)_wl.classList.toggle('priv-blur',on);}
   // Si está reservado, el operador debe ser el admin (Juan) y queda bloqueado
   const adminUser=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
   const fop=document.getElementById('f_operador');
@@ -1986,6 +2007,7 @@ function openTaskForm(id){
   document.getElementById('btnGuardarTarea').style.display='';
   // Limpia disabled de una apertura anterior (ej: tarea finalizada → nueva tarea)
   ['f_frec_dias','f_frec_dia','f_copias','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=false;});
+  document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button').forEach(e=>e.disabled=false);
   {const _cn=document.getElementById('f_chkNew');if(_cn)_cn.value='';}
   editingId=id||null;
   {const _ft=document.getElementById('f_tareas');if(_ft){_ft.readOnly=false;_ft.style.color='';_ft.style.height='';}const _em=document.getElementById('f_emojis');if(_em)_em.classList.remove('open');}
@@ -2011,8 +2033,7 @@ function openTaskForm(id){
     _fin.value=t.finalizacion||'';
     const _blq=_fb==='Mensual'||_fb==='Personalizada';
     _fin.readOnly=_blq;_fin.style.background=_blq?'var(--border)':'';
-    document.getElementById('f_link1').value=t.link1||'';document.getElementById('f_link2').value=t.link2||'';
-    document.getElementById('f_link3').value=t.link3||'';
+    setLinkFields(t);
     const _fder=document.getElementById('f_derivado');if(_fder)_fder.checked=!!t.derivado_tercero;
     const _fruben=document.getElementById('f_incluir_ruben');if(_fruben)_fruben.checked=!!t.incluir_ruben;
     curImgs=Array.isArray(t.imagenes)?t.imagenes.slice():[];
@@ -2039,7 +2060,8 @@ function openTaskForm(id){
     }
   }else{
     document.getElementById('modalTitle').textContent='Nueva tarea';
-    ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
+    ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3','f_link4','f_link5'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
+    syncLinkRows(true);
     const _fder0=document.getElementById('f_derivado');if(_fder0)_fder0.checked=false;
     const _fruben0=document.getElementById('f_incluir_ruben');if(_fruben0)_fruben0.checked=false;
     document.getElementById('f_operador').value=SESSION.user;document.getElementById('f_area').value='A.Com';
@@ -2061,11 +2083,11 @@ function openTaskForm(id){
   const _t=id?DATA.find(x=>x.id===id):null;
   // Rubén: solo lectura en tareas ajenas (puede comentar, no editar nada más)
   if(_isWatcher&&id&&_t&&_t.creado_por!==SESSION.user){
-    ['f_tema','f_tareas','f_frec_dias','f_frec_dia','f_link1','f_link2','f_link3'].forEach(x=>{const el=document.getElementById(x);if(el){el.readOnly=true;el.style.background='var(--border)';}});
+    ['f_tema','f_tareas','f_frec_dias','f_frec_dia','f_link1','f_link2','f_link3','f_link4','f_link5'].forEach(x=>{const el=document.getElementById(x);if(el){el.readOnly=true;el.style.background='var(--border)';}});
     ['f_operador','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=true;});
     document.querySelectorAll('.imgdrop button').forEach(e=>e.disabled=true);
     document.querySelectorAll('#extraFields button').forEach(e=>e.disabled=true);
-    document.querySelectorAll('#wrapLink1 button').forEach(e=>e.disabled=true);
+    document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button').forEach(e=>e.disabled=true);
   }
   // Reservado/privado: solo el admin controla el check
   const _priv=!!(_t&&_t.privado);
@@ -2075,11 +2097,12 @@ function openTaskForm(id){
   document.getElementById('devWrap').style.display=isAdmin()?'inline-flex':'none';
   togglePriv();
   document.getElementById('extraWrap').style.display='';
+  syncLinkRows(false);
   if(!isAdmin()&&_priv){
     // el operador NO ve el contenido reservado (mail / Link 2 / Link 3 / imágenes): en blanco. Link 1 SÍ se ve.
-    ['f_link2','f_link3'].forEach(x=>document.getElementById(x).value='');
+    ['f_link2','f_link3','f_link4','f_link5'].forEach(x=>document.getElementById(x).value='');syncLinkRows(true);
     curImgs=[];renderThumbs();
-  }else if(_t&&(_t.medio||_t.link2||_t.link3||(_t.imagenes&&_t.imagenes.length)||(_t.checklist&&_t.checklist.length))){
+  }else if(_t&&(_t.medio||(_t.imagenes&&_t.imagenes.length)||(_t.checklist&&_t.checklist.length))){
     expandExtra();
   }
   // Sección comentario — solo visible al editar
@@ -2120,10 +2143,11 @@ function openTaskForm(id){
   const _tFin=id?DATA.find(x=>x.id===id):null;
   if(_tFin&&_tFin.estado==='Finalizado'&&!isAdmin()){
     _formReadOnly=true;
-    ['f_tema','f_tareas','f_link1','f_link2','f_link3'].forEach(x=>{const e=document.getElementById(x);if(e){e.readOnly=true;e.style.color='var(--muted)';}});
+    ['f_tema','f_tareas','f_link1','f_link2','f_link3','f_link4','f_link5'].forEach(x=>{const e=document.getElementById(x);if(e){e.readOnly=true;e.style.color='var(--muted)';}});
     ['f_area','f_prioridad','f_frecuencia','f_operador','f_finalizacion','f_copias','f_frec_dias','f_frec_dia','f_imgfile','f_chkNew'].forEach(x=>{const e=document.getElementById(x);if(e)e.disabled=true;});
     document.querySelectorAll('.imgdrop button').forEach(e=>e.disabled=true);
     document.querySelectorAll('#extraFields button').forEach(e=>e.disabled=true);
+    document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button').forEach(e=>e.disabled=true);
     ['btnDelete','btnGuardarTarea','btnCerrarProyecto','btnFinalizarPersonalizada','btnAprobar'].forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
     document.getElementById('modalTitle').textContent='Tarea finalizada — Solo lectura';
     renderChecklist();
@@ -2136,6 +2160,7 @@ let _notaMode=false;
 const _NOTA_HIDE=['wrapTareas','wrapOperador','wrapArea','wrapPrioridad','wrapFrecuencia','wrapFinalizacion','wrapLink1','comentWrap'];
 function _notaSetForm(on){
   _NOTA_HIDE.forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=on?'none':'';});
+  _linkNota=on;syncLinkRows(false);
   const ew=document.getElementById('extraWrap');
   const ef=document.getElementById('extraFields');
   const ch=ew&&ew.querySelector('.collapse-hdr');
@@ -2181,9 +2206,7 @@ function duplicarTarea(id){
   document.getElementById('f_frecuencia').value=_fb;
   if(_fb==='Personalizada'){const d=document.getElementById('f_frec_dias');if(d)d.value=(t.frecuencia||'').split(':')[1]||'';}
   if(_fb==='Mensual'){const d=document.getElementById('f_frec_dia');if(d)d.value=(t.frecuencia||'').split(':')[1]||'';}
-  document.getElementById('f_link1').value=t.link1||'';
-  document.getElementById('f_link2').value=t.link2||'';
-  document.getElementById('f_link3').value=t.link3||'';
+  setLinkFields(t);
   curImgs=Array.isArray(t.imagenes)?t.imagenes.slice():[];
   curChecklist=Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):[];// checklist reseteado
   document.getElementById('f_privado').checked=!!t.privado;togglePriv();
@@ -2192,7 +2215,7 @@ function duplicarTarea(id){
   // Fecha VACÍA y editable: obliga a completarla antes de guardar (sin señal falsa en el tablero)
   const _fin=document.getElementById('f_finalizacion');_fin.value='';_fin.readOnly=false;_fin.style.background='';
   renderThumbs();renderChecklist();
-  if(t.link2||t.link3||(t.imagenes&&t.imagenes.length)||(t.checklist&&t.checklist.length))expandExtra();
+  if((t.imagenes&&t.imagenes.length)||(t.checklist&&t.checklist.length))expandExtra();
   _dupCreadoPor=t.creado_por||null;
   document.getElementById('modalTitle').textContent='Duplicar tarea — completá la fecha';
 }
@@ -2234,7 +2257,7 @@ async function saveTask(){
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Mensual'){const _fd=parseInt(document.getElementById('f_frec_dia').value||'0',10);if(!_fd||_fd<1||_fd>28){alert('Ingresá el día del mes (1-28) para la frecuencia mensual.');document.getElementById('f_frec_dia').focus();return;}}
   const vals=_notaMode
     ?{tema,tareas:'',operador:SESSION.user,area:'A.Com',prioridad:'Baja',frecuencia:'Nota',finalizacion:'',link1:'',link2:'',link3:'',imagenes:[],privado:true,desarrollo:false,derivado_tercero:false,incluir_ruben:false,checklist:curChecklist.length?curChecklist.slice():null,comentario:null,comentario_por:null,comentario_ok:false}
-    :{tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,link1:document.getElementById('f_link1').value.trim(),link2:document.getElementById('f_link2').value.trim(),link3:document.getElementById('f_link3').value.trim(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,desarrollo:document.getElementById('f_desarrollo').checked,derivado_tercero:document.getElementById('f_derivado').checked,incluir_ruben:document.getElementById('f_incluir_ruben').checked,checklist:curChecklist.length?curChecklist.slice():null};
+    :{tema,tareas:document.getElementById('f_tareas').value.trim(),operador:document.getElementById('f_operador').value,area:document.getElementById('f_area').value,prioridad:document.getElementById('f_prioridad').value,frecuencia:(()=>{const f=document.getElementById('f_frecuencia').value;if(f==='Personalizada'){const d=parseInt(document.getElementById('f_frec_dias').value||'0',10);return d>0?'Personalizada:'+d:'Personalizada';}if(f==='Mensual'){const d=parseInt(document.getElementById('f_frec_dia').value||'0',10);return d>0?'Mensual:'+d:'Mensual';}return f;})(),finalizacion:document.getElementById('f_finalizacion').value,...readLinkVals(),imagenes:curImgs.slice(),privado:document.getElementById('f_privado').checked,desarrollo:document.getElementById('f_desarrollo').checked,derivado_tercero:document.getElementById('f_derivado').checked,incluir_ruben:document.getElementById('f_incluir_ruben').checked,checklist:curChecklist.length?curChecklist.slice():null};
   {
     // "Incluir a Rubén": si se tilda de nuevo (o es tarea nueva), vuelve a avisarle; si ya estaba tildado y sigue tildado, no lo vuelve a molestar.
     const _tePrev=editingId?DATA.find(x=>x.id===editingId):null;
@@ -2242,9 +2265,11 @@ async function saveTask(){
   }
   if(!_notaMode){
     const _linkPat=/^file:|^[a-zA-Z]:\\|^\\\\/i;
-    const _badLink=[vals.link1,vals.link2,vals.link3].find(u=>u&&_linkPat.test(u));
+    const _badLink=[vals.link1,vals.link2,vals.link3,vals.link4,vals.link5].find(u=>u&&_linkPat.test(u));
     if(_badLink){alert('El link "'+_badLink+'" es una ruta local de tu PC (no un link para compartir) y no va a funcionar para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. "Copiar vínculo" en OneDrive/SharePoint).');return;}
   }
+  // link4/link5 solo se mandan si hay un 4º/5º link o la tarea ya tiene esas columnas (así no falla si la base todavía no las tiene)
+  if(!vals.link4&&!vals.link5){const _tl=editingId?DATA.find(x=>x.id===editingId):null;if(!_tl||!('link4' in _tl)){delete vals.link4;delete vals.link5;}}
   const _ejSel=document.getElementById('f_ejecutor_sel');
   if(!_notaMode&&_ejSel){if(!_ejSel.value){alert('Seleccioná el operador que va a realizar la tarea.');_ejSel.focus();return;}vals.operador=_ejSel.value;}
   if(!_notaMode&&vals.privado)vals.operador=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
@@ -2290,7 +2315,7 @@ async function saveTask(){
     if(editingId){
       const t=DATA.find(x=>x.id===editingId);
       // Si un operador edita una tarea reservada, se conserva el contenido oculto (no lo pisa con los vacíos)
-      if(t&&t.privado&&!isAdmin()){vals.medio=t.medio;vals.link2=t.link2;vals.link3=t.link3;vals.imagenes=t.imagenes;vals.privado=t.privado;}
+      if(t&&t.privado&&!isAdmin()){vals.medio=t.medio;vals.link2=t.link2;vals.link3=t.link3;vals.link4=t.link4;vals.link5=t.link5;vals.imagenes=t.imagenes;vals.privado=t.privado;}
       const upd=Object.assign({},t,vals,{actualizado:nowStamp()});
       const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;}
     }else{
