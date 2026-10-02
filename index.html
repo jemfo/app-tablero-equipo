@@ -185,8 +185,8 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .form2 input,.form2 select,.form2 textarea{width:100%}
 /* Textarea "Tareas a realizar": tamaño fijo, no desborda el formulario */
 .ta-wrap{position:relative}
-#f_tareas{resize:vertical;box-sizing:border-box;max-width:100%;width:100%}
-.lbl-emo{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+#f_tareas{resize:vertical;box-sizing:border-box;max-width:100%;width:100%;display:block}
+.lbl-emo{display:flex;align-items:center;gap:6px;margin-bottom:3px;height:13px}
 .lbl-emo label{margin:0}
 /* Comentario del equipo — campo reservado a terceros (azul) */
 #comentWrap label{color:#3b82f6!important}
@@ -195,7 +195,7 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 /* Tarjeta de nota personal del admin */
 .card-nota{background:#ccfbf1!important;border-left-color:#0d9488!important}
 .card-nota .ct{color:#0f766e!important}
-.emoji-btn{background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;cursor:pointer;line-height:1.3}
+.emoji-btn{background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:0 6px;font-size:11px;cursor:pointer;line-height:14px}
 .emoji-btn:hover{border-color:var(--accent)}
 .rt-emojis{position:absolute;left:6px;top:4px;z-index:30;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:4px;display:none;grid-template-columns:repeat(6,1fr);gap:2px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 .rt-emojis.open{display:grid}
@@ -406,7 +406,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 <!-- MODAL TAREA EQUIPO -->
 <div id="modalBg" class="modal-bg hidden">
   <div class="emodal">
-    <h2 id="modalTitle" style="margin:0 0 8px">Nueva tarea</h2>
+    <h2 id="modalTitle" style="margin:0 0 10px">Nueva tarea</h2>
     <div class="form2">
       <div><label>Tema *</label><input id="f_tema"></div>
       <div id="comentWrap" style="display:none;position:relative">
@@ -417,25 +417,33 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
         <input id="f_comentario" maxlength="300" placeholder="Dejá una nota corta para el equipo…">
       </div>
-      <div id="wrapTareas" class="full"><div class="lbl-emo"><label>Tareas a realizar *</label><button type="button" class="emoji-btn" onclick="rtToggleEmojis(event)" title="Insertar emoji">😊</button></div>
+      <div id="wrapTareas" class="full"><div class="lbl-emo"><label>Tareas a realizar</label><button type="button" class="emoji-btn" onclick="rtToggleEmojis(event)" title="Insertar emoji">😊</button><button type="button" id="btnImgPick" class="emoji-btn" onclick="document.getElementById('f_imgfile').click()" title="Adjuntar imagen (o pegala con Ctrl+V)">📎</button><input type="file" id="f_imgfile" accept="image/*" multiple style="display:none" onchange="addImgsFromFiles(event)"><label id="privWrap" class="priv-chk" onclick="event.stopPropagation()" title="Reservado: oculta este contenido a los operadores (asigna la tarea al admin)" style="margin-left:auto;margin-bottom:0"><input type="checkbox" id="f_privado" onchange="togglePriv()"></label></div>
         <div class="ta-wrap">
-          <textarea id="f_tareas" rows="3" placeholder="Describir el trabajo a realizar (mín. 30 caracteres)"></textarea>
+          <textarea id="f_tareas" rows="3" placeholder="Describir el trabajo (mín. 30 caracteres) — o completá la lista de comprobación"></textarea>
           <div class="rt-emojis" id="f_emojis"></div>
+        </div>
+      </div>
+      <div id="wrapChecklist" class="full">
+        <label id="chkLabel">Lista de comprobación</label>
+        <div id="chkList" style="margin-bottom:4px"></div>
+        <div style="display:flex;gap:6px">
+          <input id="f_chkNew" autocomplete="off" placeholder="Nuevo ítem… (Tab completa la sugerencia)" style="flex:1" oninput="chkNewInput(event)" onkeydown="chkNewKey(event)">
+          <button type="button" onclick="addCheckItem()" style="white-space:nowrap;padding:0 12px">+ Agregar</button>
         </div>
       </div>
       <div id="wrapOperador"><label>Operador</label>
         <div style="display:flex;align-items:flex-start;gap:8px">
           <select id="f_operador" style="width:40%"></select>
           <div style="display:flex;flex-direction:column;gap:2px">
-            <label id="derivWrap" title="Avisa al buzón hasta Finalizar" style="font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;margin-top:-10px"><input type="checkbox" id="f_derivado" style="width:14px;height:14px;vertical-align:middle;margin:0 2px 0 0"> 🔀 Derivar 3ros</label>
-            <label id="rubenWrap" title="Suma a Rubén para revisar juntos" style="font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap"><input type="checkbox" id="f_incluir_ruben" style="width:14px;height:14px;vertical-align:middle;margin:0 2px 0 0"> 🤝 Ver Ruben</label>
+            <label id="derivWrap" title="Avisa al buzón hasta Finalizar" style="font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;margin:-10px 0 0"><input type="checkbox" id="f_derivado" style="width:14px;height:14px;vertical-align:middle;margin:0 2px 0 0"> 🔀 Derivar 3ros</label>
+            <label id="rubenWrap" title="Suma a Rubén para revisar juntos" style="font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;margin-bottom:0"><input type="checkbox" id="f_incluir_ruben" style="width:14px;height:14px;vertical-align:middle;margin:0 2px 0 0"> 🤝 Ver Ruben</label>
           </div>
         </div>
       </div>
       <div id="wrapArea"><label>Área que lo solicita</label>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="f_area" style="flex:1;min-width:0"></select>
-          <label id="devWrap" title="Marca el ticket como Desarrollo (lo ejecuta el admin). Aparece al filtrar por DES sin cambiar el área que lo solicita." style="display:none;align-items:center;gap:4px;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--muted)"><input type="checkbox" id="f_desarrollo"> 🔧 Desarrollo</label>
+          <label id="devWrap" title="Marca el ticket como Desarrollo (lo ejecuta el admin). Aparece al filtrar por DES sin cambiar el área que lo solicita." style="display:none;align-items:center;gap:4px;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--muted);margin-bottom:0"><input type="checkbox" id="f_desarrollo"> 🔧 Desarrollo</label>
         </div>
       </div>
       <div id="wrapPrioridad"><label>Prioridad</label><select id="f_prioridad"></select></div>
@@ -455,30 +463,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 <div id="rowLink4" style="display:none"><label>Link 4</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link4" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(4)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
 <div id="rowLink5" style="display:none"><label>Link 5</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link5" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(5)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
       </div></div>
-      <div class="full" id="extraWrap">
-        <div class="collapse-hdr" onclick="toggleExtra()"><span id="extraCaret">▸</span> Mail, links e imágenes
-          <label id="privWrap" class="priv-chk" onclick="event.stopPropagation()" title="Reservado: oculta este contenido a los operadores (asigna la tarea al admin)"><input type="checkbox" id="f_privado" onchange="togglePriv()"></label>
-        </div>
-        <div id="extraFields" class="form2 hidden" style="margin-top:8px">
-          <div class="full">
-            <label id="chkLabel">Lista de comprobación</label>
-            <div id="chkList" style="margin-bottom:6px"></div>
-            <div style="display:flex;gap:6px">
-              <input id="f_chkNew" placeholder="Nuevo ítem…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addCheckItem();}">
-              <button type="button" onclick="addCheckItem()" style="white-space:nowrap;padding:0 12px">+ Agregar</button>
-            </div>
-          </div>
-          <div class="full">
-            <label>Imágenes / recortes (pegá con Ctrl+V o subí archivos)</label>
-            <div class="imgdrop">
-              <button type="button" onclick="document.getElementById('f_imgfile').click()">+ Agregar imagen</button>
-              <span class="muted" style="font-size:11px">o pegá una captura con Ctrl+V</span>
-              <input type="file" id="f_imgfile" accept="image/*" multiple style="display:none" onchange="addImgsFromFiles(event)">
-              <div class="thumbs" id="imgThumbs"></div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div id="wrapImgs" class="full" style="display:none"><div class="thumbs" id="imgThumbs"></div></div>
     </div>
     <div class="modal-actions">
       <button id="btnDelete" class="danger" onclick="deleteTask()">Eliminar</button>
@@ -1915,6 +1900,35 @@ function chkDrop(ev,i){
   renderChecklist();
 }
 function chkDragEnd(ev){if(ev&&ev.currentTarget)ev.currentTarget.style.opacity='';_chkDragIdx=null;}
+// Autocompletar "Nuevo ítem" con ítems ya usados en listas de comprobación (los más frecuentes primero). Tab acepta la sugerencia.
+// Se excluyen las notas personales y, para no-admin, las tareas reservadas.
+let _chkSugCache=null;
+function _chkSugList(){
+  if(_chkSugCache)return _chkSugCache;
+  const cnt=new Map();
+  DATA.forEach(t=>{
+    if(!Array.isArray(t.checklist)||t.frecuencia==='Nota')return;
+    if(t.privado&&!isAdmin())return;
+    t.checklist.forEach(it=>{const s=(it.texto||'').trim();if(s.length<3)return;const k=s.toLowerCase();const o=cnt.get(k);if(o)o.n++;else cnt.set(k,{s,n:1});});
+  });
+  _chkSugCache=[...cnt.values()].sort((a,b)=>b.n-a.n).map(x=>x.s);
+  return _chkSugCache;
+}
+function chkNewInput(ev){
+  if(_notaMode)return;
+  if(ev.inputType&&ev.inputType.startsWith('delete'))return;
+  const el=ev.target,v=el.value;if(!v||el.selectionStart!==v.length)return;
+  const lv=v.toLowerCase();
+  const cur=new Set(curChecklist.map(x=>(x.texto||'').trim().toLowerCase()));
+  const m=_chkSugList().find(s=>{const l=s.toLowerCase();return l.length>lv.length&&l.startsWith(lv)&&!cur.has(l);});
+  if(m){el.value=v+m.slice(v.length);el.setSelectionRange(v.length,m.length);}
+}
+function chkNewKey(ev){
+  const el=ev.target;
+  const sel=el.selectionEnd>el.selectionStart&&el.selectionEnd===el.value.length;
+  if(ev.key==='Tab'&&sel&&!ev.shiftKey){ev.preventDefault();el.setSelectionRange(el.value.length,el.value.length);return;}
+  if(ev.key==='Enter'){ev.preventDefault();if(sel)el.value=el.value.slice(0,el.selectionStart);addCheckItem();}
+}
 function addCheckItem(){
   const inp=document.getElementById('f_chkNew');const txt=inp.value.trim();if(!txt)return;
   curChecklist.push({texto:txt,ok:false,link:''});inp.value='';renderChecklist();
@@ -1933,15 +1947,12 @@ async function _addImg(file){
   setSyncSt('');
   if(error){showToast('Error al subir imagen: '+error.message,'err');return;}
   const{data}=_SB.storage.from('tareas-img').getPublicUrl(path);
-  curImgs.push(data.publicUrl);renderThumbs();expandExtra();
+  curImgs.push(data.publicUrl);renderThumbs();
 }
 function addImgsFromFiles(ev){[...ev.target.files].forEach(f=>{if(f.type.startsWith('image/'))_addImg(f);});ev.target.value='';}
-function renderThumbs(){const el=document.getElementById('imgThumbs');if(!el)return;el.innerHTML=curImgs.map((src,i)=>`<div class="th"><img src="${src}" onclick="openLightbox(${i})"><span class="x" onclick="event.stopPropagation();rmImg(${i})">×</span></div>`).join('');}
+function renderThumbs(){const el=document.getElementById('imgThumbs');if(!el)return;const _wi=document.getElementById('wrapImgs');if(_wi)_wi.style.display=(curImgs.length&&!_notaMode)?'':'none';el.innerHTML=curImgs.map((src,i)=>`<div class="th"><img src="${src}" onclick="openLightbox(${i})"><span class="x" onclick="event.stopPropagation();rmImg(${i})">×</span></div>`).join('');}
 function rmImg(i){curImgs.splice(i,1);renderThumbs();}
 function openLightbox(i){document.getElementById('imgLightboxImg').src=curImgs[i];document.getElementById('imgLightbox').classList.remove('hidden');}
-function toggleExtra(){const ef=document.getElementById('extraFields');ef.classList.toggle('hidden');document.getElementById('extraCaret').textContent=ef.classList.contains('hidden')?'▸':'▾';}
-function expandExtra(){const ef=document.getElementById('extraFields');if(ef&&ef.classList.contains('hidden')){ef.classList.remove('hidden');document.getElementById('extraCaret').textContent='▾';}}
-function collapseExtra(){const ef=document.getElementById('extraFields');if(ef){ef.classList.add('hidden');document.getElementById('extraCaret').textContent='▸';}}
 // Links: Link 1 + hasta 4 más (máx. 5). Al abrir se muestran las filas con link cargado; las vacías aparecen de a una con el +.
 let _linkVis=1;
 function _lv(n){return document.getElementById('f_link'+n);}
@@ -1959,7 +1970,7 @@ function removeLinkRow(n){for(let k=n;k<5;k++){_lv(k).value=_lv(k+1).value;}_lv(
 function readLinkVals(){const rest=[2,3,4,5].map(n=>_lv(n).value.trim()).filter(Boolean);return{link1:_lv(1).value.trim(),link2:rest[0]||'',link3:rest[1]||'',link4:rest[2]||'',link5:rest[3]||''};}
 function togglePriv(){
   const on=document.getElementById('f_privado').checked;
-  document.getElementById('extraFields').classList.toggle('priv-blur',on);
+  {const _wi=document.getElementById('wrapImgs');if(_wi)_wi.classList.toggle('priv-blur',on);}
   {const _wl=document.getElementById('wrapLinksExtra');if(_wl)_wl.classList.toggle('priv-blur',on);}
   // Si está reservado, el operador debe ser el admin (Juan) y queda bloqueado
   const adminUser=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
@@ -2007,8 +2018,8 @@ function openTaskForm(id){
   document.getElementById('btnGuardarTarea').style.display='';
   // Limpia disabled de una apertura anterior (ej: tarea finalizada → nueva tarea)
   ['f_frec_dias','f_frec_dia','f_copias','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=false;});
-  document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button').forEach(e=>e.disabled=false);
-  {const _cn=document.getElementById('f_chkNew');if(_cn)_cn.value='';}
+  document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button,#btnImgPick,#wrapChecklist button').forEach(e=>e.disabled=false);
+  {const _cn=document.getElementById('f_chkNew');if(_cn)_cn.value='';_chkSugCache=null;}
   editingId=id||null;
   {const _ft=document.getElementById('f_tareas');if(_ft){_ft.readOnly=false;_ft.style.color='';_ft.style.height='';}const _em=document.getElementById('f_emojis');if(_em)_em.classList.remove('open');}
   fillSel('f_area',AREAS);fillSel('f_prioridad',PRIORIDADES);fillSelFrecuencia('f_frecuencia');
@@ -2079,14 +2090,13 @@ function openTaskForm(id){
   document.getElementById('f_frecuencia').disabled=_isWatcher;
   document.getElementById('f_area').disabled=_isWatcher;
   document.getElementById('f_copias').value=0;toggleCopias();renderThumbs();renderChecklist();
-  collapseExtra();
   const _t=id?DATA.find(x=>x.id===id):null;
   // Rubén: solo lectura en tareas ajenas (puede comentar, no editar nada más)
   if(_isWatcher&&id&&_t&&_t.creado_por!==SESSION.user){
     ['f_tema','f_tareas','f_frec_dias','f_frec_dia','f_link1','f_link2','f_link3','f_link4','f_link5'].forEach(x=>{const el=document.getElementById(x);if(el){el.readOnly=true;el.style.background='var(--border)';}});
     ['f_operador','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=true;});
-    document.querySelectorAll('.imgdrop button').forEach(e=>e.disabled=true);
-    document.querySelectorAll('#extraFields button').forEach(e=>e.disabled=true);
+    document.querySelectorAll('#btnImgPick').forEach(e=>e.disabled=true);
+    document.querySelectorAll('#wrapChecklist button').forEach(e=>e.disabled=true);
     document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button').forEach(e=>e.disabled=true);
   }
   // Reservado/privado: solo el admin controla el check
@@ -2096,14 +2106,11 @@ function openTaskForm(id){
   document.getElementById('f_desarrollo').checked=!!(_t&&_t.desarrollo);
   document.getElementById('devWrap').style.display=isAdmin()?'inline-flex':'none';
   togglePriv();
-  document.getElementById('extraWrap').style.display='';
   syncLinkRows(false);
   if(!isAdmin()&&_priv){
     // el operador NO ve el contenido reservado (mail / Link 2 / Link 3 / imágenes): en blanco. Link 1 SÍ se ve.
     ['f_link2','f_link3','f_link4','f_link5'].forEach(x=>document.getElementById(x).value='');syncLinkRows(true);
     curImgs=[];renderThumbs();
-  }else if(_t&&(_t.medio||(_t.imagenes&&_t.imagenes.length)||(_t.checklist&&_t.checklist.length))){
-    expandExtra();
   }
   // Sección comentario — solo visible al editar
   const _cw=document.getElementById('comentWrap');
@@ -2145,8 +2152,8 @@ function openTaskForm(id){
     _formReadOnly=true;
     ['f_tema','f_tareas','f_link1','f_link2','f_link3','f_link4','f_link5'].forEach(x=>{const e=document.getElementById(x);if(e){e.readOnly=true;e.style.color='var(--muted)';}});
     ['f_area','f_prioridad','f_frecuencia','f_operador','f_finalizacion','f_copias','f_frec_dias','f_frec_dia','f_imgfile','f_chkNew'].forEach(x=>{const e=document.getElementById(x);if(e)e.disabled=true;});
-    document.querySelectorAll('.imgdrop button').forEach(e=>e.disabled=true);
-    document.querySelectorAll('#extraFields button').forEach(e=>e.disabled=true);
+    document.querySelectorAll('#btnImgPick').forEach(e=>e.disabled=true);
+    document.querySelectorAll('#wrapChecklist button').forEach(e=>e.disabled=true);
     document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button').forEach(e=>e.disabled=true);
     ['btnDelete','btnGuardarTarea','btnCerrarProyecto','btnFinalizarPersonalizada','btnAprobar'].forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
     document.getElementById('modalTitle').textContent='Tarea finalizada — Solo lectura';
@@ -2161,25 +2168,13 @@ const _NOTA_HIDE=['wrapTareas','wrapOperador','wrapArea','wrapPrioridad','wrapFr
 function _notaSetForm(on){
   _NOTA_HIDE.forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=on?'none':'';});
   _linkNota=on;syncLinkRows(false);
-  const ew=document.getElementById('extraWrap');
-  const ef=document.getElementById('extraFields');
-  const ch=ew&&ew.querySelector('.collapse-hdr');
   const pw=document.getElementById('privWrap');
   const fp=document.getElementById('f_privado');
   if(on){
-    if(ew)ew.style.display='';
-    if(ch)ch.style.display='none';
     if(pw)pw.style.display='none';
     if(fp){fp.checked=false;}
-    if(ef){ef.classList.remove('hidden','priv-blur');}
-    document.querySelectorAll('#extraFields > div:not(.full)').forEach(el=>el.style.display='none');
-    document.querySelectorAll('#extraFields .full').forEach((el,i)=>{if(i>0)el.style.display='none';});
-  }else{
-    if(ch)ch.style.display='';
-    document.querySelectorAll('#extraFields > div:not(.full)').forEach(el=>el.style.display='');
-    document.querySelectorAll('#extraFields .full').forEach(el=>el.style.display='');
-    if(ef)ef.classList.add('hidden');
   }
+  renderThumbs();
 }
 function openNotaForm(){
   if(!isAdmin())return;
@@ -2215,7 +2210,6 @@ function duplicarTarea(id){
   // Fecha VACÍA y editable: obliga a completarla antes de guardar (sin señal falsa en el tablero)
   const _fin=document.getElementById('f_finalizacion');_fin.value='';_fin.readOnly=false;_fin.style.background='';
   renderThumbs();renderChecklist();
-  if((t.imagenes&&t.imagenes.length)||(t.checklist&&t.checklist.length))expandExtra();
   _dupCreadoPor=t.creado_por||null;
   document.getElementById('modalTitle').textContent='Duplicar tarea — completá la fecha';
 }
@@ -2250,7 +2244,8 @@ async function saveTask(){
   const tema=document.getElementById('f_tema').value.trim();
   if(!tema){alert('El tema es obligatorio.');return;}
   const tareas=_notaMode?'':document.getElementById('f_tareas').value.trim();
-  if(!_notaMode&&tareas.length<30){const el=document.getElementById('f_tareas');el.focus();el.style.borderColor='var(--urg)';setTimeout(()=>el.style.borderColor='',2000);alert('Las tareas a realizar deben tener al menos 30 caracteres (escrito: '+tareas.length+').');return;}
+  if(!_notaMode&&tareas.length<30&&!curChecklist.length){const _cn0=document.getElementById('f_chkNew');if(_cn0&&_cn0.value.trim())addCheckItem();}
+  if(!_notaMode&&tareas.length<30&&!curChecklist.length){const el=document.getElementById('f_tareas');el.focus();el.style.borderColor='var(--urg)';setTimeout(()=>el.style.borderColor='',2000);alert('Completá "Tareas a realizar" (mín. 30 caracteres, escrito: '+tareas.length+') o agregá al menos un ítem a la lista de comprobación.');return;}
   if(!_notaMode&&!document.getElementById('f_finalizacion').value){alert('La fecha de finalización es obligatoria.');return;}
   if(!_notaMode&&!editingId){const _fv=document.getElementById('f_finalizacion').value;if(_fv&&_fv<todayISO()&&!confirm('La fecha de vencimiento ('+fmtDate(_fv)+') es anterior a hoy: la tarea nacería vencida. ¿Continuar igual?'))return;}
   if(!_notaMode&&document.getElementById('f_frecuencia').value==='Personalizada'){const _fd=parseInt(document.getElementById('f_frec_dias').value||'0',10);if(!_fd||_fd<1){alert('Ingresá la cantidad de días para la frecuencia personalizada.');document.getElementById('f_frec_dias').focus();return;}}
