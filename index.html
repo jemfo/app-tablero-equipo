@@ -1953,6 +1953,7 @@ function openTaskForm(id){
   document.getElementById('btnGuardarTarea').style.display='';
   // Limpia disabled de una apertura anterior (ej: tarea finalizada → nueva tarea)
   ['f_frec_dias','f_frec_dia','f_copias','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=false;});
+  {const _cn=document.getElementById('f_chkNew');if(_cn)_cn.value='';}
   editingId=id||null;
   {const _ft=document.getElementById('f_tareas');if(_ft){_ft.readOnly=false;_ft.style.color='';_ft.style.height='';}const _em=document.getElementById('f_emojis');if(_em)_em.classList.remove('open');}
   fillSel('f_area',AREAS);fillSel('f_prioridad',PRIORIDADES);fillSelFrecuencia('f_frecuencia');
