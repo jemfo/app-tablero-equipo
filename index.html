@@ -149,6 +149,7 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .cattach-pop span.cattach-item b{font-weight:400;display:inline-flex;align-items:center;gap:6px}
 .cattach-pop .cattach-url{font-size:9px;color:#9ca3af;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cattach-pop span.cattach-bad .cattach-url{color:#f87171}
+.cattach-pop span.cattach-item.drg b::before{content:'';width:6px;height:12px;flex-shrink:0;background:radial-gradient(circle,#9ca3af 1px,transparent 1.4px) 0 0/6px 4px}
 /* Popover clickeable de notificaciones (buzón ✉) — reemplaza tooltips nativos de los globos verde/amarillo */
 .notif-pop{display:none;flex-direction:column;background:#000;border:1px solid #444;border-radius:8px;padding:5px;gap:2px;max-height:280px;overflow-y:auto;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 .notif-item{cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 8px;border-radius:5px;color:#fff}
@@ -1427,13 +1428,17 @@ function cardHTML(t){
   const _attLinks=_showAttach?[t.link1,t.link2,t.link3].filter(Boolean):[];
   const _attImgs=(_showAttach&&t.imagenes&&t.imagenes.length)?t.imagenes.length:0;
   const _nAtt=_attLinks.length+_attImgs;
-  const attachIcon=_nAtt?`<span class="cattach-wrap"><span class="cattach-chip" onclick="event.stopPropagation();toggleAttachPicker(this)">${ICO.link}<b>${_nAtt}</b></span><span class="cattach-pop">${
+  // Reordenar links arrastrando en el popover: mismo permiso que la chincheta (no en Finalizado)
+  const _canOrdLnk=!isFinal&&(isAdmin()||t.operador===SESSION.user||t.creado_por===SESSION.user);
+  const attachIcon=_nAtt?`<span class="cattach-wrap" data-tid="${t.id}"><span class="cattach-chip" onclick="event.stopPropagation();toggleAttachPicker(this)">${ICO.link}<b>${_nAtt}</b></span><span class="cattach-pop">${
       _attLinks.map((u,i)=>{
         const _bad=/^file:|^[a-zA-Z]:\\|^\\\\/.test(u);
         const _prev=u.length>42?u.slice(0,42)+'…':u;
+        const _dr=_canOrdLnk&&_attLinks.length>1?` draggable="true" ondragstart="attLnkDragStart(event,${i})" ondragover="attLnkDragOver(event)" ondragleave="this.style.boxShadow=''" ondrop="attLnkDrop(event,'${t.id}',${i})" ondragend="attLnkDragEnd(event)"`:'';
+        const _dc=_dr?' drg':'';
         return _bad
-          ?`<span class="cattach-item cattach-bad" onclick="event.stopPropagation();_closeAttachPops();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} Link ${i+1} ⚠</b><span class="cattach-url">${escH(_prev)}</span></span>`
-          :`<span class="cattach-item" onclick="event.stopPropagation();_closeAttachPops();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} Link ${i+1}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
+          ?`<span class="cattach-item cattach-bad${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} Link ${i+1} ⚠</b><span class="cattach-url">${escH(_prev)}</span></span>`
+          :`<span class="cattach-item${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} Link ${i+1}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
       }).join('')
       +(_showAttach?(t.imagenes||[]).map((_,i)=>`<span onclick="event.stopPropagation();_closeAttachPops();openTaskImgAt('${t.id}',${i})">${ICO.img} Imagen ${i+1}</span>`).join(''):'')
     }</span></span>`:'';
@@ -1552,6 +1557,34 @@ function toggleAttachPicker(el){
 // position:fixed con z-index alto, si queda abierto flota encima del visor de imagen o de la pantalla.
 function _closeAttachPops(){document.querySelectorAll('.cattach-wrap.open').forEach(x=>x.classList.remove('open'));_resetAttachPops();}
 document.addEventListener('click',e=>{if(!e.target.closest('.cattach-wrap'))_closeAttachPops();});
+// Reordenar los links de la tarjeta arrastrando dentro del popover 🔗 (como la lista de comprobación).
+// Los links viven en link1..link3: se reordenan los cargados y se reescriben compactados.
+let _attLnkIdx=null;
+function attLnkDragStart(ev,i){_attLnkIdx=i;ev.stopPropagation();ev.dataTransfer.effectAllowed='move';try{ev.dataTransfer.setData('text/plain','')}catch(e){}ev.currentTarget.style.opacity='.4';}
+function attLnkDragOver(ev){
+  if(_attLnkIdx===null)return;
+  ev.preventDefault();ev.stopPropagation();ev.dataTransfer.dropEffect='move';
+  const r=ev.currentTarget.getBoundingClientRect();
+  ev.currentTarget.style.boxShadow=(ev.clientY-r.top)<r.height/2?'inset 0 2px 0 #4ade80':'inset 0 -2px 0 #4ade80';
+}
+async function attLnkDrop(ev,id,i){
+  ev.preventDefault();ev.stopPropagation();
+  const r=ev.currentTarget.getBoundingClientRect();const before=(ev.clientY-r.top)<r.height/2;
+  ev.currentTarget.style.boxShadow='';
+  const from=_attLnkIdx;_attLnkIdx=null;
+  if(from===null)return;
+  const t=DATA.find(x=>x.id===id);if(!t)return;
+  const arr=[t.link1,t.link2,t.link3].filter(Boolean);
+  let to=before?i:i+1;if(from<to)to--;if(to===from)return;
+  const[it]=arr.splice(from,1);arr.splice(to,0,it);
+  const upd=Object.assign({},t,{link1:arr[0]||'',link2:arr[1]||'',link3:arr[2]||'',actualizado:nowStamp()});
+  const di=DATA.findIndex(x=>x.id===id);if(di>=0)DATA[di]=upd;
+  await upsertTask(upd);
+  renderCurrent();
+  // renderCurrent cierra el popover: se vuelve a abrir para poder seguir ordenando
+  const chip=document.querySelector('.cattach-wrap[data-tid="'+id+'"] .cattach-chip');if(chip)toggleAttachPicker(chip);
+}
+function attLnkDragEnd(ev){if(ev&&ev.currentTarget)ev.currentTarget.style.opacity='';_attLnkIdx=null;document.querySelectorAll('.cattach-item').forEach(r=>r.style.boxShadow='');}
 async function setReaccion(id,emoji){
   const t=DATA.find(x=>x.id===id);if(!t)return;
   if(t.estado==='Finalizado'&&!isAdmin())return;
