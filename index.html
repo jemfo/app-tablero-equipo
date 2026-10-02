@@ -184,7 +184,9 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .form2 input,.form2 select,.form2 textarea{width:100%}
 /* Textarea "Tareas a realizar": tamaño fijo, no desborda el formulario */
 .ta-wrap{position:relative}
-#f_tareas{resize:vertical;box-sizing:border-box;max-width:100%;width:100%;padding-bottom:30px}
+#f_tareas{resize:vertical;box-sizing:border-box;max-width:100%;width:100%}
+.lbl-emo{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.lbl-emo label{margin:0}
 /* Comentario del equipo — campo reservado a terceros (azul) */
 #comentWrap label{color:#3b82f6!important}
 #f_comentario{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
@@ -192,9 +194,9 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 /* Tarjeta de nota personal del admin */
 .card-nota{background:#ccfbf1!important;border-left-color:#0d9488!important}
 .card-nota .ct{color:#0f766e!important}
-.emoji-btn{position:absolute;left:6px;bottom:8px;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;cursor:pointer;line-height:1.3}
+.emoji-btn{background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;cursor:pointer;line-height:1.3}
 .emoji-btn:hover{border-color:var(--accent)}
-.rt-emojis{position:absolute;left:6px;bottom:36px;z-index:30;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:4px;display:none;grid-template-columns:repeat(6,1fr);gap:2px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.rt-emojis{position:absolute;left:6px;top:4px;z-index:30;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:4px;display:none;grid-template-columns:repeat(6,1fr);gap:2px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 .rt-emojis.open{display:grid}
 .rt-emojis span{cursor:pointer;font-size:16px;padding:3px;border-radius:4px;text-align:center}
 .rt-emojis span:hover{background:var(--bg3)}
@@ -414,10 +416,9 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
         <input id="f_comentario" maxlength="300" placeholder="Dejá una nota corta para el equipo…">
       </div>
-      <div id="wrapTareas" class="full"><label>Tareas a realizar *</label>
+      <div id="wrapTareas" class="full"><div class="lbl-emo"><label>Tareas a realizar *</label><button type="button" class="emoji-btn" onclick="rtToggleEmojis(event)" title="Insertar emoji">😊</button></div>
         <div class="ta-wrap">
           <textarea id="f_tareas" rows="3" placeholder="Describir el trabajo a realizar (mín. 30 caracteres)"></textarea>
-          <button type="button" class="emoji-btn" onclick="rtToggleEmojis(event)" title="Insertar emoji">😊</button>
           <div class="rt-emojis" id="f_emojis"></div>
         </div>
       </div>
@@ -1953,7 +1954,7 @@ function openTaskForm(id){
   // Limpia disabled de una apertura anterior (ej: tarea finalizada → nueva tarea)
   ['f_frec_dias','f_frec_dia','f_copias','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=false;});
   editingId=id||null;
-  {const _ft=document.getElementById('f_tareas');if(_ft){_ft.readOnly=false;_ft.style.color='';}const _em=document.getElementById('f_emojis');if(_em)_em.classList.remove('open');}
+  {const _ft=document.getElementById('f_tareas');if(_ft){_ft.readOnly=false;_ft.style.color='';_ft.style.height='';}const _em=document.getElementById('f_emojis');if(_em)_em.classList.remove('open');}
   fillSel('f_area',AREAS);fillSel('f_prioridad',PRIORIDADES);fillSelFrecuencia('f_frecuencia');
   document.getElementById('f_operador').innerHTML=USERS.filter(u=>!u.hidden||u.user===SESSION.user).map(u=>`<option value="${u.user}">${u.nombre}</option>`).join('');
   if(id){
