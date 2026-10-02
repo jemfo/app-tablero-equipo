@@ -585,7 +585,7 @@ const EST_COLOR={
   'Para ver juntos':'#fb923c','Programado':'#38bdf8','Finalizado':'#4ade80'
 };
 
-let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDerivada=false, filtroAtrasadas=false, filtroIncRuben=false, filtroDev='comercial', VIEW_MODE='estado';
+let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDerivada=false, filtroAtrasadas=false, filtroIncRuben=false, filtroDev='todos', VIEW_MODE='estado';
 
 // ── Utilidades ────────────────────────────────────────────────
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1260,9 +1260,9 @@ function toggleFiltroComentario(){
   _syncEnvBtn();
   renderCurrent();
 }
-// Botón embudo: cicla Comercial → Desarrollos → Todos → Comercial. Solo admin. Arranca en 'comercial'.
+// Botón embudo: cicla Todos → Comercial → Desarrollos → Todos. Solo admin. Arranca en 'todos'.
 function toggleDevButton(){
-  filtroDev = filtroDev==='comercial' ? 'desarrollos' : (filtroDev==='desarrollos' ? 'todos' : 'comercial');
+  filtroDev = filtroDev==='todos' ? 'comercial' : (filtroDev==='comercial' ? 'desarrollos' : 'todos');
   _syncDevBtn();
   renderCurrent();
 }
