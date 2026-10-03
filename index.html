@@ -71,6 +71,8 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .eq-header{position:sticky;top:0;z-index:60}
 @keyframes mencBlink{0%,100%{}50%{background:#fde047;color:#1f2430;border-color:#fde047;box-shadow:0 0 0 3px rgba(253,224,71,.55)}}
 #btnMencA.blink{animation:mencBlink 1s ease-in-out infinite}
+@keyframes envBlink{0%,100%{}50%{background:#16a34a;color:#fff;border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.35)}}
+#btnEnvNot.blink{animation:envBlink 1s ease-in-out infinite}
 @keyframes atrasBlink{0%,100%{}50%{background:#dc2626;color:#fff;border-color:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,.35)}}
 #btnAtrasadasFilter.blink{animation:atrasBlink 1s ease-in-out infinite}
 @keyframes atrasBadgeBlink{0%,100%{}50%{transform:scale(1.25);box-shadow:0 0 0 3px rgba(253,224,71,.65)}}
@@ -1231,6 +1233,7 @@ function _notifItems(kind){
 }
 // Click en el globo verde/amarillo: abre un popover con el listado (reemplaza el tooltip nativo del navegador)
 function toggleNotifPop(kind,el){
+  _marcarEnvVisto();
   const pop=document.getElementById('notifPop');if(!pop)return;
   const wasOpen=pop.dataset.kind===kind&&pop.style.display==='flex';
   pop.style.display='none';pop.dataset.kind='';
@@ -1267,10 +1270,34 @@ function _syncEnvBtn(){
   else if(filtroDerivada){btn.style.background='#eab308';btn.style.borderColor='#eab308';btn.style.color='#1f2430';}
   else if(filtroComentario){btn.style.background='#dc2626';btn.style.borderColor='#dc2626';btn.style.color='#fff';}
   else{btn.style.background='';btn.style.borderColor='';btn.style.color='';}
+  _syncEnvBlink();
 }
+// Buzón: parpadea en verde mientras haya un aviso que todavía no se abrió (comentario, pedido de Rubén, derivada
+// o "Ver Ruben"). Al abrir el buzón o un globo se guarda lo visto; un aviso nuevo lo vuelve a hacer parpadear.
+// Lo visto queda en el navegador (por usuario).
+function _envAvisos(){
+  if(!SESSION)return [];
+  const u=SESSION.user,adm=isAdmin(),w=_esWatcher(),a=[];
+  DATA.forEach(t=>{
+    if(t.comentario&&!t.comentario_ok&&(t.operador===u||t.creado_por===u))a.push('c'+t.id+':'+String(t.comentario).length);
+    if(adm&&(t.comentario_por||'').startsWith('para:')&&USERS.find(x=>x.user===t.creado_por)?.canFinalize===false)a.push('r'+t.id);
+    if(!w&&t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===u||t.operador===u))a.push('d'+t.id);
+    if(w&&t.incluir_ruben&&!t.incluir_ruben_visto&&t.estado!=='Finalizado')a.push('i'+t.id);
+  });
+  return a;
+}
+function _envVistoKey(){return 'env_visto_'+(SESSION?SESSION.user:'');}
+function _syncEnvBlink(){
+  const b=document.getElementById('btnEnvNot');if(!b)return;
+  let visto=[];try{visto=JSON.parse(localStorage.getItem(_envVistoKey())||'[]');}catch(e){}
+  const vs=new Set(visto);
+  b.classList.toggle('blink',_envAvisos().some(x=>!vs.has(x)));
+}
+function _marcarEnvVisto(){try{localStorage.setItem(_envVistoKey(),JSON.stringify(_envAvisos()));}catch(e){}_syncEnvBlink();}
 function _syncIncRubenBtn(){_syncEnvBtn();}
 // Click en el globo de Rubén: filtra el tablero a las tareas donde lo incluyeron (en vez de solo listar en un popover)
 function toggleIncRubenFilter(){
+  _marcarEnvVisto();
   if(filtroIncRuben){filtroIncRuben=false;_syncEnvBtn();goHomeView();return;}
   filtroIncRuben=true;filtroComentario=false;filtroRuben=false;filtroDerivada=false;filtroAtrasadas=false;_syncEnvBtn();_syncAtrasBtn();setViewMode('estado');
 }
@@ -1303,6 +1330,20 @@ async function registrarMensajerias(){
   await logRealizacion(nw);
   _syncMencBlink();
   renderCurrent();
+}
+function toggleEnvButton(){
+  _marcarEnvVisto();
+  const rc=isAdmin()?DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length:0;
+  // "Por equipo" no scopea por operador (a diferencia de Workflow/Por operador) — necesario para que tanto quien derivó/comentó
+  // como el operador puedan ver la misma tarjeta al filtrar, sin importar en qué vista estaban parados.
+  const _home=()=>setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow');
+  if(filtroRuben){filtroRuben=false;_syncEnvBtn();_home();return;}
+  if(rc>0){filtroRuben=true;filtroComentario=false;filtroDerivada=false;_syncEnvBtn();setViewMode('estado');return;}
+  if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();_home();return;}
+  const dc=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user)).length;
+  if(dc>0){filtroDerivada=true;filtroComentario=false;_syncEnvBtn();setViewMode('estado');return;}
+  if(filtroComentario){filtroComentario=false;_syncEnvBtn();_home();return;}
+  filtroComentario=true;_syncEnvBtn();setViewMode('estado');
 }
 // Botón @: solo lo ve el admin; el parpadeo de las 16:00 lo maneja _syncMencBlink.
 function _syncMencBtn(){
