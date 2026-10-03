@@ -15,25 +15,25 @@
 <title>Análisis Comercial — Tablero Equipo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* ── EQUIPO THEME ─────────────────────────────────── */
 :root{--bg:#121212;--bg2:#1c1c1c;--bg3:#262626;--line:#3a3a3a;--txt:#e8e8e8;--muted:#9a9a9a;--accent:#fb2118;--black:#000;--urg:#ff5252;--ok:#5bbf6a;--blue:#5b9bd5;}
-body.light{--bg:#f0f2f5;--bg2:#ffffff;--bg3:#eceef1;--line:#d6d8de;--txt:#1a1a1a;--muted:#5f6470;--accent:#fb2118;--black:#1f2430;--urg:#d32f2f;--ok:#2e8b40;--blue:#3a7bd5;}
+body.light{--bg:#f5f8fa;--bg2:#ffffff;--bg3:#f0f6f9;--line:#d7e4ea;--txt:#14212b;--muted:#64727d;--accent:#fb2118;--black:#062c46;--urg:#d32f2f;--ok:#2e8b40;--blue:#3a7bd5;}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font-family:Arial,Helvetica,sans-serif;font-size:13px}
-.eq-header{background:var(--accent);padding:10px 16px;display:flex;align-items:center;gap:16px;border-bottom:2px solid var(--accent)}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,'Segoe UI',Arial,sans-serif;font-size:13px}
+.eq-header{background:#062c46;padding:10px 16px;display:flex;align-items:center;gap:16px;border-bottom:3px solid var(--accent)}
 .eq-header h1{font-family:'Fredoka',sans-serif;font-size:19px;margin:0;color:#fff;font-weight:600}
 .date{color:#fff;font-weight:bold;margin-left:auto;font-size:17px}
 .userbox{color:rgba(255,255,255,.75);font-size:12px}.userbox b{color:#fff}
-button{background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px}
+button{background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:6px 12px;cursor:pointer;font-size:12px}
 button:hover{filter:brightness(1.15)}
-button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:bold}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:bold;box-shadow:0 6px 14px rgba(255,32,20,.17)}
 #btnNew{background:var(--black);border-color:var(--black)}
 button.danger{color:var(--urg);border-color:#5a2a2a}
-select,input,textarea{background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:5px 7px;font-size:12px;font-family:inherit}
+select,input,textarea{background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px 7px;font-size:12px;font-family:inherit}
 nav{display:flex;gap:8px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--line);align-items:center}
 nav .tab{padding:7px 14px;border-radius:6px;cursor:pointer;border:1px solid transparent}
 nav .tab.active{background:var(--accent);color:#fff;font-weight:bold}
@@ -56,19 +56,34 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 /* ── KANBAN ─────────────────────────────────────── */
 .kanban{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px}
 .kanban.fit5{overflow-x:visible}.kanban.fit5 .col{flex:1 1 0;min-width:0}
-.col{background:var(--bg2);border:1px solid var(--line);border-radius:10px;min-width:155px;flex:1;display:flex;flex-direction:column;overflow:visible}
+/* Pantallas angostas: las columnas no se achican de 200px (las tarjetas no se deforman). Si no entran las 5, se oculta
+   Finalizado (hasta ~1100px); si ni 4 entran (~880px), se desplaza la PAGINA en horizontal. Nunca poner overflow en .kanban.fit5: lo vuelve contenedor de scroll y los encabezados sticky de columna (top de setupSticky) se corren hacia abajo. */
+.kanban.fit5 .col{min-width:200px}
+@media (max-width:1100px){.kanban.fit5 .col[data-estado="Finalizado"]{display:none}}
+@media (max-width:880px){.kanban.fit5 .col{flex:1 0 200px}}
+@media (max-width:1100px){
+  body.dragging-card .kanban.fit5 .col[data-estado="Finalizado"]{display:flex;position:fixed;right:10px;top:110px;bottom:40px;width:210px;min-width:0;z-index:80;background:var(--bg2);border:2px dashed var(--accent);box-shadow:0 14px 40px rgba(6,44,70,.35)}
+  body.dragging-card .kanban.fit5 .col[data-estado="Finalizado"] .cards{overflow-y:auto;flex:1}
+}
+.col{background:var(--bg2);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(6,44,70,.06);min-width:155px;flex:1;display:flex;flex-direction:column;overflow:visible}
 .col-hdr{padding:8px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
 /* ── CABECERA FIJA al hacer scroll vertical (top calculado por setupSticky) ── */
 .eq-header{position:sticky;top:0;z-index:60}
+@keyframes mencBlink{0%,100%{}50%{background:#fde047;color:#1f2430;border-color:#fde047;box-shadow:0 0 0 3px rgba(253,224,71,.55)}}
+#btnMencA.blink{animation:mencBlink 1s ease-in-out infinite}
+@keyframes atrasBlink{0%,100%{}50%{background:#dc2626;color:#fff;border-color:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,.35)}}
+#btnAtrasadasFilter.blink{animation:atrasBlink 1s ease-in-out infinite}
+@keyframes atrasBadgeBlink{0%,100%{}50%{transform:scale(1.25);box-shadow:0 0 0 3px rgba(253,224,71,.65)}}
+#btnAtrasadasFilter.blink #atrasBadge{animation:atrasBadgeBlink 1s ease-in-out infinite}
 #mainNav{position:sticky;z-index:55}
 #equipoTools{position:sticky;z-index:50;background:var(--bg);padding:4px 0}
-#equipoBody .col-hdr{position:sticky;z-index:40;background:var(--bg2);border-radius:9px 9px 0 0}
+#equipoBody .col-hdr{position:sticky;z-index:40;background:var(--bg2);border-radius:13px 13px 0 0}
 .col-hdr .col-title{font-size:12px;font-weight:bold}
 .col-hdr .col-count{font-size:11px;font-weight:bold;background:var(--bg3);border-radius:10px;padding:1px 7px}
 .col .cards{padding:6px;display:flex;flex-direction:column;gap:6px;min-height:40px}
 
 /* ── CARD ───────────────────────────────────────── */
-.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:4px 8px 5px;cursor:default;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s;min-height:74px;display:flex;flex-direction:column}
+.card{position:relative;background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:4px 8px 5px;cursor:default;border-left:3px solid var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.08);transition:box-shadow .15s,border-color .15s,transform .12s;min-height:74px;display:flex;flex-direction:column}
 .card:hover{box-shadow:0 3px 10px rgba(0,0,0,.14)}
 .card.drag{opacity:.35;transform:scale(.97)}
 .card .ct{font-weight:600;font-size:12.5px;line-height:1.3;margin-bottom:3px;letter-spacing:-.1px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -232,6 +247,13 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 /* ── Calendario de finalizadas ─────────────────────────────── */
 #equipoTools.calmode > *:not(.cal-keep){display:none}
 #opToggles{flex-shrink:0}
+/* Barra de filtros siempre en un renglon (chips fijos). En angosto: sin textos "Area:/Prioridad:" y chips mas compactos */
+#equipoTools > *{flex-shrink:0}
+#equipoTools > #filterTxt{flex-shrink:1}
+@media (max-width:1180px){#equipoTools .flbl{display:none}}
+@media (max-width:1000px){#opToggles > *{padding:3px 7px!important}}
+#opToggles .op-i{display:none}
+@media (max-width:960px){#opToggles .op-n{display:none}#opToggles .op-i{display:inline;font-weight:800}#equipoTools{gap:6px!important}#filterID{width:48px!important}#filterTxt{min-width:56px!important}}
 /* En el calendario: VISTA a la izquierda (en el flujo), el mes centrado en la pantalla y los chips a la derecha.
    El mes y los chips van en posición absoluta (la barra ya es sticky = contenedor); así no descentran a VISTA.
    No usar position:relative aquí: el top que calcula setupSticky desplazaría la barra sobre el calendario. */
@@ -315,9 +337,8 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <button id="btnEnvNot" onclick="toggleEnvButton()" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#0ea5e9;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" onclick="event.stopPropagation();toggleNotifPop('coment',this)" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="derivBadge" onclick="event.stopPropagation();toggleNotifPop('derivada',this)" style="position:absolute;bottom:-5px;left:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="rubenIncBadge" onclick="event.stopPropagation();toggleIncRubenFilter()" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border:2px solid #000;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <span id="notifPop" onclick="event.stopPropagation()" class="notif-pop"></span>
     </span>
-    <button id="btnAtrasadasFilter" onclick="toggleAtrasadasFilter()" title="Tareas atrasadas" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px">⏰<span id="atrasBadge" style="position:absolute;top:-5px;right:-5px;background:#000;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
-    <button id="btnDevFilter" onclick="toggleDevButton()" style="margin-left:4px;width:38px;height:32px;padding:0;display:none;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg></button>
-    <span id="devFilterLbl" onclick="toggleDevButton()" style="display:none;align-items:center;height:22px;padding:0 10px;margin-left:6px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;user-select:none">Todo</span>
+    <button id="btnAtrasadasFilter" onclick="toggleAtrasadasFilter()" title="Tareas atrasadas" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px">⏰<span id="atrasBadge" style="position:absolute;top:-5px;right:-5px;background:#fde047;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <a id="btnMencA" href="https://claude.ai/artifact/QE73ixcbJrFMJ5vVXFmNUP" target="_blank" rel="noopener" onclick="registrarMensajerias()" title="Abre el filtro de menciones (todas las veces que quieras). Registra 'Contestar mensajerías' como finalizado, una vez por día" style="margin-left:6px;width:38px;height:32px;box-sizing:border-box;display:none;align-items:center;justify-content:center;font-size:16px;font-weight:700;text-decoration:none;cursor:pointer;background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px">@</a>
     <span class="date" id="todayLabel"></span>
     <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
     <button id="themeBtn" onclick="toggleTheme()" title="Cambiar tema" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg id="themeIco" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
@@ -341,7 +362,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 
     <!-- TABLERO EQUIPO -->
     <div id="pageEquipo">
-      <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:0;align-items:center;flex-wrap:wrap">
+      <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:0;align-items:center;flex-wrap:nowrap">
         <input type="hidden" id="viewMode" value="workflow">
         <div class="cal-keep" style="display:inline-flex;gap:4px;align-items:center">
           <button id="btnVW" class="view-btn" onclick="setViewMode('workflow')" title="Workflow&#10;es el flujo del equipo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
@@ -351,15 +372,15 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
         <span id="calNavSlot" class="cal-keep" style="display:flex;align-items:center;gap:8px"></span>
         <select id="filterOp" style="display:none" onchange="renderEquipo()"><option value="">Todos</option></select>
-        <label class="muted">Área:</label>
-        <select id="filterArea" onchange="renderEquipo()"><option value="">Todas</option></select>
-        <label class="muted">Prioridad:</label>
-        <select id="filterPrio" onchange="renderEquipo()"><option value="">Todas</option></select>
-        <input id="filterTxt" class="cal-keep" placeholder="Buscar tema o tarea…" oninput="renderEquipo()" style="min-width:170px">
+        <label class="muted flbl">Área:</label>
+        <select id="filterArea" title="Área" onchange="renderEquipo()"><option value="">Todas</option></select>
+        <label class="muted flbl">Prioridad:</label>
+        <select id="filterPrio" title="Prioridad" onchange="renderEquipo()"><option value="">Todas</option></select>
+        <input id="filterTxt" class="cal-keep" placeholder="Buscar tema o tarea…" oninput="renderEquipo()" style="min-width:90px;flex:1 1 170px">
         <input id="filterID" class="cal-keep" placeholder="ID…" oninput="renderEquipo()" style="width:60px">
         <button class="cal-keep" onclick="clearFilters()" title="Limpiar todos los filtros" style="background:#ccfbf1;color:#000;border-color:#5eead4;padding:6px 12px;font-size:12px;line-height:1">✕ Limpiar</button>
         <!-- toggle visibilidad operadores -->
-        <div id="opToggles" class="cal-keep" style="display:none;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center"></div>
+        <div id="opToggles" class="cal-keep" style="display:none;gap:6px;margin-left:auto;flex-wrap:nowrap;align-items:center"></div>
       </div>
       <div id="dailyResumen" class="hidden"></div>
       <div id="equipoBody"><div class="loading">Conectando con Supabase…</div></div>
@@ -573,7 +594,7 @@ const EST_COLOR={
   'Para ver juntos':'#fb923c','Programado':'#38bdf8','Finalizado':'#4ade80'
 };
 
-let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDerivada=false, filtroAtrasadas=false, filtroIncRuben=false, filtroDev='todos', VIEW_MODE='estado';
+let DATA=[], SESSION=null, editingId=null, filtroComentario=false, filtroRuben=false, filtroDerivada=false, filtroAtrasadas=false, filtroIncRuben=false, VIEW_MODE='estado';
 
 // ── Utilidades ────────────────────────────────────────────────
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1109,7 +1130,6 @@ function clearFilters(){
     _syncEnvBtn();_syncAtrasBtn();_syncIncRubenBtn();
     if(_wasRuben){setViewMode('workflow',false);}
   }
-  if(filtroDev!=='todos'){filtroDev='todos';_syncDevBtn();}
   renderEquipo();
 }
 function setViewMode(mode,render=true){
@@ -1175,15 +1195,28 @@ function updateEnvBadge(){
   }else if(rib){rib.style.display='none';}
   _syncEnvBtn();
   _syncAtrasBtn();
-  _syncDevBtn();
+  _syncMencBtn();
 }
 function _syncAtrasBtn(){
   const btn=document.getElementById('btnAtrasadasFilter');if(!btn)return;
   if(filtroAtrasadas){btn.style.background='#dc2626';btn.style.borderColor='#dc2626';btn.style.color='#fff';}
   else{btn.style.background='';btn.style.borderColor='';btn.style.color='';}
+  _syncAtrasBlink();
 }
+// Recordatorio: desde las 10:00 (lunes a viernes), si hay atrasadas, el ⏰ parpadea hasta que se lo aprieta ese día.
+// "Visto hoy" se guarda en el navegador (por usuario): en otra PC vuelve a parpadear hasta apretarlo ahí.
+function _atrasVistoKey(){return 'atras_visto_'+(SESSION?SESSION.user:'');}
+function _syncAtrasBlink(){
+  const b=document.getElementById('btnAtrasadasFilter');if(!b)return;
+  const d=new Date(),dia=d.getDay();
+  let visto='';try{visto=localStorage.getItem(_atrasVistoKey())||'';}catch(e){}
+  const on=!!SESSION&&!_esWatcher()&&dia>=1&&dia<=5&&d.getHours()>=10&&visto!==todayISO()&&_atrasadasTodas().length>0;
+  b.classList.toggle('blink',on);
+}
+setInterval(_syncAtrasBlink,30000);
 // Click en el ícono de atrasadas: toggle del filtro (persistente, no se "cierra" como el resumen de inicio)
 function toggleAtrasadasFilter(){
+  try{localStorage.setItem(_atrasVistoKey(),todayISO());}catch(e){}
   if(filtroAtrasadas){filtroAtrasadas=false;_syncAtrasBtn();goHomeView();return;}
   filtroAtrasadas=true;filtroComentario=false;filtroRuben=false;filtroDerivada=false;_syncEnvBtn();_syncAtrasBtn();
   setViewMode('workflow');
@@ -1247,40 +1280,34 @@ function toggleFiltroComentario(){
   _syncEnvBtn();
   renderCurrent();
 }
-// Botón embudo: cicla Todos → Comercial → Desarrollos → Todos. Solo admin. Arranca en 'todos'.
-function toggleDevButton(){
-  filtroDev = filtroDev==='todos' ? 'comercial' : (filtroDev==='comercial' ? 'desarrollos' : 'todos');
-  _syncDevBtn();
+// Botón @ (solo admin, es un <a target=_blank>): abre el artefacto de menciones y registra el ticket "Contestar mensajerías" ya finalizado,
+// una sola vez por día (si ya hay uno de hoy, no crea otro). Queda en el historial (realizaciones) para los reportes.
+const TEMA_MENSAJERIAS='Contestar mensajerías';
+// Recordatorio: desde las 16:00 (lunes a viernes) el @ parpadea hasta que se registre "Contestar mensajerías" de hoy.
+function _syncMencBlink(){
+  const b=document.getElementById('btnMencA');if(!b)return;
+  const d=new Date(),dia=d.getDay();
+  const pendiente=isAdmin()&&dia>=1&&dia<=5&&d.getHours()>=16&&!DATA.some(x=>x.tema===TEMA_MENSAJERIAS&&x.estado==='Finalizado'&&x.fecha_estado===todayISO());
+  b.classList.toggle('blink',pendiente);
+}
+setInterval(_syncMencBlink,30000);
+async function registrarMensajerias(){
+  const _b0=document.getElementById('btnMencA');if(_b0)_b0.classList.remove('blink');
+  if(!SESSION||!isAdmin())return;
+  const hoy=todayISO();
+  if(DATA.some(x=>x.tema===TEMA_MENSAJERIAS&&x.estado==='Finalizado'&&x.fecha_estado===hoy)){showToast('Ya registraste "'+TEMA_MENSAJERIAS+'" hoy ✓');return;}
+  const nw={id:uid(),numero:await getNextNumero(),creado_por:SESSION.user,operador:SESSION.user,tema:TEMA_MENSAJERIAS,tareas:'',area:'A.Com',prioridad:'Baja',frecuencia:'Unica',estado:'Finalizado',ingreso:hoy,finalizacion:hoy,fecha_estado:hoy,actualizado:nowStamp(),link1:'',link2:'',link3:'',imagenes:[],privado:false,desarrollo:false,derivado_tercero:false,incluir_ruben:false,checklist:null};
+  const ok=await insertConNumero(nw);
+  if(!ok)return;
+  DATA.push(nw);
+  await logRealizacion(nw);
+  _syncMencBlink();
   renderCurrent();
 }
-function _syncDevBtn(){
-  const btn=document.getElementById('btnDevFilter');if(!btn)return;
-  const lbl=document.getElementById('devFilterLbl');
-  btn.style.display=isAdmin()?'inline-flex':'none';
-  if(lbl)lbl.style.display=isAdmin()?'inline-flex':'none';
-  let bg,fg,txt;
-  if(filtroDev==='comercial'){
-    bg='#22c55e';fg='#fff';txt='Comercial';
-  }else if(filtroDev==='desarrollos'){
-    bg='#fbbf24';fg='#1f2430';txt='Desarrollo';
-  }else{
-    bg='#9ca3af';fg='#fff';txt='Todo';
-  }
-  btn.style.background=bg;btn.style.borderColor=bg;btn.style.color=fg;
-  if(lbl){lbl.style.background=bg;lbl.style.color=fg;lbl.textContent=txt;}
-}
-function toggleEnvButton(){
-  const rc=isAdmin()?DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length:0;
-  // "Por equipo" no scopea por operador (a diferencia de Workflow/Por operador) — necesario para que tanto quien derivó/comentó
-  // como el operador puedan ver la misma tarjeta al filtrar, sin importar en qué vista estaban parados.
-  const _home=()=>setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow');
-  if(filtroRuben){filtroRuben=false;_syncEnvBtn();_home();return;}
-  if(rc>0){filtroRuben=true;filtroComentario=false;filtroDerivada=false;_syncEnvBtn();setViewMode('estado');return;}
-  if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();_home();return;}
-  const dc=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user)).length;
-  if(dc>0){filtroDerivada=true;filtroComentario=false;_syncEnvBtn();setViewMode('estado');return;}
-  if(filtroComentario){filtroComentario=false;_syncEnvBtn();_home();return;}
-  filtroComentario=true;_syncEnvBtn();setViewMode('estado');
+// Botón @: solo lo ve el admin; el parpadeo de las 16:00 lo maneja _syncMencBlink.
+function _syncMencBtn(){
+  const b=document.getElementById('btnMencA');if(b)b.style.display=isAdmin()?'inline-flex':'none';
+  _syncMencBlink();
 }
 function renderEquipo(){
   fillFilterOp();fillFiltros();
@@ -1311,12 +1338,6 @@ function renderEquipo(){
   let list=DATA.slice();
   if(fop)list=list.filter(t=>t.operador===fop);
   if(far)list=list.filter(t=> far==='DES' ? (t.area==='DES'||t.desarrollo) : t.area===far);
-  // Toggle Comercial/Desarrollos (botón embudo, solo admin): 'comercial' oculta desarrollos, 'desarrollos' deja solo desarrollos.
-  // El isAdmin() es obligatorio: el default pasó a 'comercial' y el botón no lo ve el resto, que quedaría filtrado sin poder desactivarlo.
-  if(isAdmin()){
-    if(filtroDev==='comercial')list=list.filter(t=>!(t.desarrollo||t.area==='DES'));
-    else if(filtroDev==='desarrollos')list=list.filter(t=>t.desarrollo||t.area==='DES');
-  }
   if(fpr)list=list.filter(t=>t.prioridad===fpr);
   if(fid)list=list.filter(t=>String(t.numero||'')===fid);
   if(ftx)list=list.filter(t=>((t.tema||'')+' '+(t.tareas||'')).toLowerCase().includes(ftx));
@@ -1491,7 +1512,7 @@ function cardHTML(t){
       ${(()=>{const _cr=USERS.find(u=>u.user===t.creado_por);return(_cr&&_cr.canFinalize===false&&t.creado_por!==t.operador)?`<span class="cop" style="background:${opColor(t.creado_por)}22;color:${opColor(t.creado_por)};border:1px solid ${opColor(t.creado_por)}66">${iniOp(t.creado_por)}</span>`:'';})()}
       <span class="cop" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${ocOp}22;color:${ocOp};border:1px solid ${ocOp}66;cursor:pointer">${iniOp(t.operador)}</span>
       ${t.incluir_ruben?(()=>{const _rb=USERS.find(u=>u.canFinalize===false);if(!_rb)return'';const _tip=(SESSION.user===_rb.user)?(_rb.nombre+', cuando puedas, '+(nombreOp(t.operador)||t.operador)+' quiere revisar contigo esta tarea. Si podés, contactalo. Gracias.'):('Esta tarea se revisa en conjunto con '+_rb.nombre+'.');return `<span class="cop" title="${escH(_tip)}" style="background:${opColor(_rb.user)}22;color:${opColor(_rb.user)};border:1px solid ${opColor(_rb.user)}66">${iniOp(_rb.user)}</span>`;})():''}
-      ${_canPin?`<select class="cpill-sel csel-area" onclick="event.stopPropagation()" onchange="event.stopPropagation();quickUpdateField('${t.id}','area',this.value)">${AREAS.map(a=>`<option value="${a}" ${a===t.area?'selected':''}>${a}</option>`).join('')}</select>`:`<span class="cpill">${t.area}</span>`}
+      <span class="cpill">${t.area}</span>
       ${_canPin?`<select class="cpill-sel csel-prio${t.prioridad==='Urgente'?' urg':t.prioridad==='Alta'?' alt':t.prioridad==='Media'?' med':''}" onclick="event.stopPropagation()" onchange="event.stopPropagation();quickUpdateField('${t.id}','prioridad',this.value)">${PRIORIDADES.map(p=>`<option value="${p}" ${p===t.prioridad?'selected':''}>${p}</option>`).join('')}</select>`:prioHtml}
     </div>
     <div class="cfoot">
@@ -1725,10 +1746,10 @@ function renderOpToggles(){
   const ordered=[...USERS.filter(u=>!u.hidden&&u.canFinalize===false),...USERS.filter(u=>!u.hidden&&u.canFinalize!==false)];
   wrap.innerHTML=ordered.map(u=>{
     const oc=opColor(u.user);
-    const pill=`<span style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid ${oc};background:${oc};color:#fff">${u.nombre}</span>`;
+    const pill=`<span style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid ${oc};background:${oc};color:#fff" title="${u.nombre}"><span class="op-n">${u.nombre}</span><span class="op-i">${iniOp(u.user)}</span></span>`;
     if(canFilter){
       const off=HIDDEN_OPS.has(u.user);
-      return `<button onclick="toggleOpVis('${u.user}')" style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;border:1.5px solid ${off?'var(--line)':oc};background:${off?'var(--bg3)':oc};color:${off?'var(--muted)':'#fff'};text-decoration:${off?'line-through':'none'}">${u.nombre}</button>`;
+      return `<button onclick="toggleOpVis('${u.user}')" style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;border:1.5px solid ${off?'var(--line)':oc};background:${off?'var(--bg3)':oc};color:${off?'var(--muted)':'#fff'};text-decoration:${off?'line-through':'none'}" title="${u.nombre}"><span class="op-n">${u.nombre}</span><span class="op-i">${iniOp(u.user)}</span></button>`;
     }
     return pill;
   }).join('');
@@ -1833,8 +1854,20 @@ function byOpHTML(list){
 
 // ── Drag & Drop ───────────────────────────────────────────────
 let dragId=null;
-function dragStart(e){dragId=e.currentTarget.dataset.id;e.currentTarget.classList.add('drag');e.dataTransfer.effectAllowed='move';}
-function dragEnd(e){e.currentTarget.classList.remove('drag');}
+function dragStart(e){dragId=e.currentTarget.dataset.id;e.currentTarget.classList.add('drag');e.dataTransfer.effectAllowed='move';setTimeout(()=>document.body.classList.add('dragging-card'),0);}
+function dragEnd(e){e.currentTarget.classList.remove('drag');_limpiarArrastre();}
+// Limpia todo rastro de un arrastre: Finalizado flotante, tarjeta transparente y resaltado de columna.
+// Si el re-render saca la tarjeta del DOM (o se suelta fuera de la ventana) dragend puede no llegar: por eso
+// también se limpia al soltar y con el primer movimiento del mouse (durante un arrastre no hay mousemove).
+function _limpiarArrastre(){
+  if(!document.body.classList.contains('dragging-card')&&!document.querySelector('.card.drag'))return;
+  document.body.classList.remove('dragging-card');
+  document.querySelectorAll('.card.drag').forEach(x=>x.classList.remove('drag'));
+  document.querySelectorAll('.drop-hover').forEach(x=>x.classList.remove('drop-hover'));
+}
+document.addEventListener('dragend',_limpiarArrastre);
+document.addEventListener('drop',_limpiarArrastre);
+document.addEventListener('mousemove',_limpiarArrastre);
 function dragOver(e){e.preventDefault();e.currentTarget.closest('.col').classList.add('drop-hover');}
 function dragLeave(e){e.currentTarget.closest('.col').classList.remove('drop-hover');}
 async function drop(e){
