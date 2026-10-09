@@ -1575,7 +1575,8 @@ function cardHTML(t){
     ${t.tareas&&_tareasAbiertas.has(t.id)?`<div class="ctareas" onclick="event.stopPropagation()">${(t.tema||'').length>30?`<b>${escH(t.tema)}</b>\n`:''}${escH(t.tareas)}</div>`:''}
     <div class="cmeta">
       ${t.numero?`<span class="cnum">ID ${t.numero}</span>`:''}
-      ${(()=>{const _cr=USERS.find(u=>u.user===t.creado_por);return(_cr&&_cr.canFinalize===false&&t.creado_por!==t.operador)?`<span class="cop" style="background:${opColor(t.creado_por)}22;color:${opColor(t.creado_por)};border:1px solid ${opColor(t.creado_por)}66">${iniOp(t.creado_por)}</span>`:'';})()}
+      ${(()=>{const _cr=USERS.find(u=>u.user===t.creado_por);// chip de quien la creó: solicitudes de Rubén y tareas marcadas "Derivar 3ros" (ayuda visual para no mezclarlas con las propias)
+        return(_cr&&(_cr.canFinalize===false||t.derivado_tercero)&&t.creado_por!==t.operador)?`<span class="cop" style="background:${opColor(t.creado_por)}22;color:${opColor(t.creado_por)};border:1px solid ${opColor(t.creado_por)}66">${iniOp(t.creado_por)}</span>`:'';})()}
       <span class="cop" onclick="event.stopPropagation();openTaskForm('${t.id}')" style="background:${ocOp}22;color:${ocOp};border:1px solid ${ocOp}66;cursor:pointer">${iniOp(t.operador)}</span>
       ${t.incluir_ruben?(()=>{const _rb=USERS.find(u=>u.canFinalize===false);if(!_rb)return'';const _tip=(SESSION.user===_rb.user)?(_rb.nombre+', cuando puedas, '+(nombreOp(t.operador)||t.operador)+' quiere revisar contigo esta tarea. Si podés, contactalo. Gracias.'):('Esta tarea se revisa en conjunto con '+_rb.nombre+'.');return `<span class="cop" title="${escH(_tip)}" style="background:${opColor(_rb.user)}22;color:${opColor(_rb.user)};border:1px solid ${opColor(_rb.user)}66">${iniOp(_rb.user)}</span>`;})():''}
       <span class="cpill">${t.area}</span>
