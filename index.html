@@ -166,6 +166,7 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .cattach-pop span.cattach-bad{color:#f87171}
 .cattach-pop span.cattach-item{flex-direction:column;align-items:flex-start;gap:1px}
 .cattach-pop span.cattach-item b{font-weight:400;display:inline-flex;align-items:center;gap:6px}
+.cattach-pop .cattach-name{font-weight:700;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cattach-pop .cattach-url{font-size:9px;color:#9ca3af;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cattach-pop span.cattach-bad .cattach-url{color:#f87171}
 .cattach-pop span.cattach-item.drg b::before{content:'';width:6px;height:12px;flex-shrink:0;background:radial-gradient(circle,#9ca3af 1px,transparent 1.4px) 0 0/6px 4px}
@@ -1512,9 +1513,10 @@ function cardHTML(t){
         const _prev=u.length>42?u.slice(0,42)+'…':u;
         const _dr=_canOrdLnk&&_attLinks.length>1?` draggable="true" ondragstart="attLnkDragStart(event,${i})" ondragover="attLnkDragOver(event)" ondragleave="this.style.boxShadow=''" ondrop="attLnkDrop(event,'${t.id}',${i})" ondragend="attLnkDragEnd(event)"`:'';
         const _dc=_dr?' drg':'';
+        const _nom=_linkNombre(u),_nomH=_nom?`<span class="cattach-name">· ${escH(_nom)}</span>`:'';
         return _bad
-          ?`<span class="cattach-item cattach-bad${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} Link ${i+1} ⚠</b><span class="cattach-url">${escH(_prev)}</span></span>`
-          :`<span class="cattach-item${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} Link ${i+1}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
+          ?`<span class="cattach-item cattach-bad${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} Link ${i+1} ⚠${_nomH}</b><span class="cattach-url">${escH(_prev)}</span></span>`
+          :`<span class="cattach-item${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} Link ${i+1}${_nomH}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
       }).join('')
       +(_showAttach?(t.imagenes||[]).map((_,i)=>`<span onclick="event.stopPropagation();_closeAttachPops();openTaskImgAt('${t.id}',${i})">${ICO.img} Imagen ${i+1}</span>`).join(''):'')
     }</span></span>`:'';
@@ -1661,6 +1663,24 @@ async function attLnkDrop(ev,id,i){
   renderCurrent();
   // renderCurrent cierra el popover: se vuelve a abrir para poder seguir ordenando
   const chip=document.querySelector('.cattach-wrap[data-tid="'+id+'"] .cattach-chip');if(chip)toggleAttachPicker(chip);
+}
+// Nombre legible de un link para el popover de adjuntos (sale de la URL; no se guarda nada):
+// archivo de SharePoint/OneDrive (&file=) o último tramo con extensión; "Mensaje N" / "Tracker N" para gestion/tracker;
+// links para compartir de SharePoint sin nombre → tipo de archivo (Excel/Word/PDF/PowerPoint); si no, el dominio.
+function _linkNombre(u){
+  const dec=s=>{try{return decodeURIComponent(s.replace(/\+/g,' '));}catch(e){return s;}};
+  if(/^file:|^[a-zA-Z]:\\|^\\\\/.test(u)){const p=u.replace(/^file:\/+/,'').split(/[\\/]/).filter(Boolean);return p.length?dec(p[p.length-1]):'';}
+  let x;try{x=new URL(u);}catch(e){return '';}
+  const f=x.searchParams.get('file')||x.searchParams.get('FileName');if(f)return dec(f);
+  const host=x.hostname.replace(/^www\./,'');
+  let m;
+  if(/(^|\.)gestion\.vitolen\.com$/.test(host)&&(m=x.pathname.match(/\/mensajes\/(\d+)/)))return 'Mensaje '+m[1];
+  if(/(^|\.)tracker\.vitolen\.com$/.test(host)&&(m=x.pathname.match(/\/tasks\/(\d+)/)))return 'Tracker '+m[1];
+  const seg=x.pathname.split('/').filter(Boolean),last=seg.length?dec(seg[seg.length-1]):'';
+  if(/\.[a-z0-9]{2,5}$/i.test(last)&&!/\.aspx$/i.test(last))return last;
+  if(/sharepoint\.com$/.test(host)){const t=(x.pathname.match(/^\/:([a-z]):\//)||[])[1];const tip={x:'Excel',w:'Word',b:'PDF',p:'PowerPoint',f:'Carpeta',o:'OneNote'}[t];if(tip)return tip;}
+  if(/teams\.microsoft\.com$/.test(host))return 'Teams';
+  return host;
 }
 function attLnkDragEnd(ev){if(ev&&ev.currentTarget)ev.currentTarget.style.opacity='';_attLnkIdx=null;document.querySelectorAll('.cattach-item').forEach(r=>r.style.boxShadow='');}
 async function setReaccion(id,emoji){
