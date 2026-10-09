@@ -1233,20 +1233,25 @@ function _notifItems(kind){
   if(kind==='coment')return DATA.filter(t=>t.comentario&&!t.comentario_ok&&(t.operador===SESSION.user||t.creado_por===SESSION.user));
   if(kind==='derivada')return DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user));
   if(kind==='incruben')return DATA.filter(t=>t.incluir_ruben&&!t.incluir_ruben_visto&&t.estado!=='Finalizado');
+  if(kind.startsWith('fin:'))return _finHoyDe(kind.slice(4));
   return[];
 }
 // Click en el globo verde/amarillo: abre un popover con el listado (reemplaza el tooltip nativo del navegador)
 function toggleNotifPop(kind,el){
-  _marcarEnvVisto();
+  const _esFin=kind.startsWith('fin:');// lista de finalizadas de hoy (click en un check del header): no toca lo "visto" del buzón
+  if(!_esFin)_marcarEnvVisto();
   const pop=document.getElementById('notifPop');if(!pop)return;
   const wasOpen=pop.dataset.kind===kind&&pop.style.display==='flex';
   pop.style.display='none';pop.dataset.kind='';
   if(wasOpen)return;
   const items=_notifItems(kind);
   if(!items.length)return;
-  pop.innerHTML=items.map(t=>{
+  const _u=_esFin?kind.slice(4):'';
+  pop.innerHTML=(_esFin?`<span style="font-size:11px;font-weight:700;color:${opColor(_u)};padding:3px 8px">${escH(nombreOp(_u))} · finalizadas hoy (${items.length})</span>`:'')+items.map(t=>{
     const sub=kind==='coment'
       ?'"'+escH(t.comentario)+'" — '+escH(nombreOp(t.comentario_por))
+      :kind.startsWith('fin:')
+      ?'ID '+escH(String(t.numero??'—'))+' · '+escH(t.area||'')+(t.frecuencia&&t.frecuencia!=='Unica'?' · '+escH(frecBase(t.frecuencia)):'')
       :kind==='incruben'
       ?'Contactá a '+escH(nombreOp(t.operador))+' para revisarla juntos'
       :(t.estado==='Finalizado'?'Finalizada — esperando que leas el comentario de cierre':'Derivada a '+escH(nombreOp(t.operador))+' · '+escH(t.estado));
@@ -1263,7 +1268,7 @@ function toggleNotifPop(kind,el){
   else{pop.style.bottom=(window.innerHeight-r.top+6)+'px';pop.style.top='auto';}
 }
 document.addEventListener('click',e=>{
-  if(!e.target.closest('#notifPop')&&!e.target.closest('#envBadge')&&!e.target.closest('#derivBadge')&&!e.target.closest('#rubenIncBadge')){
+  if(!e.target.closest('#notifPop')&&!e.target.closest('#envBadge')&&!e.target.closest('#derivBadge')&&!e.target.closest('#rubenIncBadge')&&!e.target.closest('#finHoy')){
     const pop=document.getElementById('notifPop');if(pop){pop.style.display='none';pop.dataset.kind='';}
   }
 });
@@ -1352,14 +1357,15 @@ function toggleEnvButton(){
 // Contador del header: tareas finalizadas hoy por operador, con el check del color de cada uno.
 // El admin ve a todos los ejecutores (mismo orden que los chips: Diego, Maxi, Juan); el resto solo el suyo.
 // Rubén no cuenta ni lo ve (no finaliza). Sale de DATA, así que se actualiza solo al finalizar y por realtime.
+// Click en un check: lista de las finalizadas de hoy de esa persona (mismo popover que los globos del buzón).
+const _finHoyDe=u=>DATA.filter(t=>t.estado==='Finalizado'&&t.fecha_estado===todayISO()&&t.operador===u);
 function _syncFinHoy(){
   const b=document.getElementById('finHoy');if(!b)return;
   if(!SESSION||_esWatcher()){b.style.display='none';return;}
-  const hoy=todayISO();
   const users=isAdmin()?USERS.filter(u=>!u.hidden&&u.canFinalize!==false).map(u=>u.user):[SESSION.user];
   b.innerHTML=users.map(u=>{
-    const n=DATA.filter(t=>t.estado==='Finalizado'&&t.fecha_estado===hoy&&t.operador===u).length;
-    return `<span style="display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="${opColor(u)}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>${n}</span>`;
+    const n=_finHoyDe(u).length;
+    return `<span onclick="event.stopPropagation();toggleNotifPop('fin:${u}',this)" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="${opColor(u)}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>${n}</span>`;
   }).join('');
   b.style.display='inline-flex';
 }
