@@ -129,7 +129,11 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card .cdate-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
 .card .cdate-car{display:inline-block;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid currentColor;margin-left:3px;vertical-align:middle;opacity:.7}
 .card .cpill-sel option{text-transform:none;background:var(--bg2);color:var(--txt);font-size:12px;padding:4px 8px;text-align:left}
-.card .cfoot{display:flex;align-items:center;gap:4px;flex-wrap:wrap;row-gap:2px;margin-top:2px;padding-top:2px;border-top:1px solid var(--line)}
+.card .cfoot{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;margin-top:2px;padding-top:2px;border-top:1px solid var(--line)}
+/* Pie en una línea: si no entra, _fitCardFeet esconde la reacción y la chincheta sin usar; wrap solo como último recurso */
+.card .cfoot.sin-react .creact-wrap.vacia{display:none}
+.card .cfoot.sin-pin .cpin:not(.on){display:none}
+.card .cfoot.wrap{flex-wrap:wrap;row-gap:2px}
 .card .cdate{font-size:12px;color:var(--txt);display:inline-flex;align-items:center;gap:4px}
 .card .cdate.ovd{color:var(--urg)}
 .card .cfoot-icons{margin-left:auto;display:inline-flex;align-items:center;gap:6px}
@@ -1461,7 +1465,21 @@ function renderEquipo(){
   const _isWatcher=USERS.find(u=>u.user===SESSION.user)?.canFinalize===false;
   document.getElementById('equipoBody').innerHTML=mode==='workflow'?workflowHTML(list):((mode==='estado'||_isWatcher)?kanbanHTML(list):byOpHTML(list));
   setupSticky();
+  _fitCardFeet();
 }
+// Pie de tarjeta en una sola línea (frecuencia · fechas · ☑ · 🔗 · reacción · chincheta). Si no entra, se esconde
+// la reacción sin usar, después la chincheta sin usar; solo si aun así no entra, el pie baja a 2 líneas.
+// Lecturas y escrituras en tandas (3 reflows como máximo para todo el tablero).
+function _fitCardFeet(){
+  const feet=[...document.querySelectorAll('#equipoBody .card .cfoot')];
+  feet.forEach(f=>f.classList.remove('sin-react','sin-pin','wrap'));
+  const over=f=>f.scrollWidth>f.clientWidth+1;
+  let l=feet.filter(over);l.forEach(f=>f.classList.add('sin-react'));
+  l=l.filter(over);l.forEach(f=>f.classList.add('sin-pin'));
+  l=l.filter(over);l.forEach(f=>f.classList.add('wrap'));
+}
+let _fitRaf=0;
+window.addEventListener('resize',()=>{cancelAnimationFrame(_fitRaf);_fitRaf=requestAnimationFrame(_fitCardFeet);});
 
 // Calcula el "top" de cada capa fija (cabecera, barra de filtros, encabezados de columna)
 // midiendo las alturas reales, así funciona con o sin banner de TEST y con la barra nav plegada.
@@ -1513,7 +1531,7 @@ function cardHTML(t){
     :`<span class="cpill">${t.prioridad}</span>`;
   const _canInteract=!isFinal||isAdmin();
   const reacc=_canInteract
-    ?`<span class="creact-wrap"><span class="creact-face${t.reaccion?' has':''}" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`
+    ?`<span class="creact-wrap${t.reaccion?'':' vacia'}"><span class="creact-face${t.reaccion?' has':''}" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`
     :(t.reaccion?`<span class="creact-face has" style="pointer-events:none;opacity:.6">${t.reaccion}</span>`:'');
   // Adjuntos agrupados en un solo chip 📎 N (links + imágenes) con popover. Mantiene altura uniforme.
   const _showAttach=isAdmin()||!t.privado;
@@ -1604,8 +1622,8 @@ function cardHTML(t){
       ${_canPin?`<select class="cpill-sel csel-prio${t.prioridad==='Urgente'?' urg':t.prioridad==='Alta'?' alt':t.prioridad==='Media'?' med':''}" onclick="event.stopPropagation()" onchange="event.stopPropagation();quickUpdateField('${t.id}','prioridad',this.value)">${PRIORIDADES.map(p=>`<option value="${p}" ${p===t.prioridad?'selected':''}>${p}</option>`).join('')}</select>`:prioHtml}
     </div>
     <div class="cfoot">
-      <span style="display:inline-flex;gap:6px;align-items:center">${_frecIcon}<span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span>${_fechaHtml}${_desIcon}</span>
-      <span class="cfoot-icons">${envIcon}${clIcon}${reacc}${attachIcon}${pinIcon}</span>
+      <span style="display:inline-flex;gap:6px;align-items:center">${_frecIcon}<span class="cdate">${t.ingreso?fmtDate(t.ingreso):'—'}</span>${_fechaHtml}</span>
+      <span class="cfoot-icons">${envIcon}${clIcon}${attachIcon}${_desIcon}${reacc}${pinIcon}</span>
     </div>
   </div>`;
 }
