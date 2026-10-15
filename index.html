@@ -312,6 +312,33 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .cal-nav{background:var(--bg3);border:1px solid var(--line);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:15px;color:var(--txt)}
 .cal-today{background:var(--bg3);border:1px solid var(--line);border-radius:6px;height:30px;padding:0 12px;cursor:pointer;font-size:12px;color:var(--txt)}
 #calendarBody{padding:0 48px}
+/* Vacaciones: calendario semanal del año (lun→dom), fines de semana en amarillo claro, feriados en gris oscuro */
+#equipoTools.vacmode > .cal-keep:not(#calNavSlot):not(#viewBtns){display:none}
+#equipoTools.vacmode > #opToggles{display:none!important}
+#vacBody{padding:0 48px 30px}
+.vac-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0;position:sticky;z-index:6;background:var(--bg)}
+.vac-modo{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.vac-modo button{border:none;border-radius:0;background:var(--bg2);color:var(--txt);font-size:12px;padding:5px 12px;cursor:pointer}
+.vac-modo button.on{background:var(--black);color:#fff}
+.vac-hint{font-size:11px;color:var(--muted)}
+.vac-ley{display:inline-flex;gap:12px;align-items:center;margin-left:auto;font-size:12px;color:var(--txt)}
+.vac-ley i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.vac-grid{display:grid;grid-template-columns:84px repeat(5,1fr) repeat(2,.75fr);gap:3px;user-select:none}
+.vac-dow{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;text-align:center;padding:2px 0 4px;position:sticky;z-index:5;background:var(--bg)}
+.vac-mes{font-size:12px;font-weight:700;color:var(--txt);padding:5px 4px 0}
+.vac-mes.ini,.vac-day.ini{border-top:2px solid var(--black)}
+.vac-day{background:var(--bg2);border:1px solid var(--line);border-radius:6px;min-height:40px;padding:3px 6px;display:flex;flex-direction:column;gap:2px;cursor:pointer;min-width:0}
+.vac-day:hover{border-color:var(--accent)}
+.vac-day.ro,.vac-day.ro:hover{cursor:default;border-color:var(--line)}
+.vac-day.wknd{background:color-mix(in srgb,#fde68a 30%,var(--bg2))}
+.vac-day.fer{background:#4b5563;border-color:#374151}
+.vac-day.fer .vac-num,.vac-day.fer .vac-sem{color:#fff}
+.vac-day.today{box-shadow:0 0 0 2px var(--accent) inset}
+.vac-day.otro{opacity:.35}
+.vac-num{font-size:12px;font-weight:700;color:var(--txt);display:flex;justify-content:space-between;align-items:baseline;gap:4px}
+.vac-sem{font-size:9px;font-weight:400;color:var(--muted);white-space:nowrap}
+.vac-mks{display:flex;gap:2px;flex-wrap:wrap}
+.vac-mk{font-size:9.5px;font-weight:800;color:#fff;border-radius:3px;padding:0 4px;line-height:14px}
 .cal-grid{display:grid;grid-template-columns:repeat(5,2fr) repeat(2,1fr);gap:6px}
 .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding-bottom:2px;min-width:0}
 .cal-dow.weekend{color:#9aa0a6}
@@ -389,11 +416,12 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <div id="pageEquipo">
       <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:0;align-items:center;flex-wrap:nowrap">
         <input type="hidden" id="viewMode" value="workflow">
-        <div class="cal-keep" style="display:inline-flex;gap:4px;align-items:center">
+        <div id="viewBtns" class="cal-keep" style="display:inline-flex;gap:4px;align-items:center">
           <button id="btnVW" class="view-btn" onclick="setViewMode('workflow')" title="Workflow&#10;es el flujo del equipo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
           <button id="btnVE" class="view-btn" onclick="setViewMode('estado')" title="Por equipo&#10;consolidado de tareas"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><path d="M2 16c0-2.2 1.3-3 3-3s3 .8 3 3"/><circle cx="12" cy="6" r="2"/><path d="M9 16c0-2.2 1.3-3 3-3s3 .8 3 3"/><circle cx="19" cy="6" r="2"/><path d="M16 16c0-2.2 1.3-3 3-3s3 .8 3 3"/></svg></button>
           <button id="btnVO" class="view-btn" onclick="setViewMode('operador')" title="Por operador&#10;estas son tus tareas"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
           <button id="btnVC" class="view-btn" onclick="setViewMode('calendario')" title="Calendario&#10;estos son tus finalizados"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+          <button id="btnVV" class="view-btn" onclick="setViewMode('vacaciones')" title="Vacaciones&#10;días tomados y feriados"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16.5" cy="3.6" r="2.1" fill="currentColor" stroke="none"/><path d="M16 7.6 14.6 13.4"/><path d="M14.6 13.4 17.4 17 18 21.5"/><path d="M14.6 13.4 13 17.4 11.6 21"/><path d="M15.9 8.8 18.8 11.3"/><path d="M15.7 9.1 8.6 9.4"/><g transform="rotate(18 6 15.5)"><rect x="3" y="11.5" width="6" height="8" rx="1.3"/><path d="M6 11.5V8.4"/><path d="M5 14v3M7 14v3" stroke-width="1.4"/><circle cx="4.3" cy="21" r=".8"/><circle cx="7.7" cy="21" r=".8"/></g></svg></button>
         </div>
         <span id="calNavSlot" class="cal-keep" style="display:flex;align-items:center;gap:8px"></span>
         <select id="filterOp" style="display:none" onchange="renderEquipo()"><option value="">Todos</option></select>
@@ -410,6 +438,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       <div id="dailyResumen" class="hidden"></div>
       <div id="equipoBody"><div class="loading">Conectando con Supabase…</div></div>
       <div id="calendarBody" class="hidden"></div>
+      <div id="vacBody" class="hidden"></div>
     </div>
 
     <!-- ANALISIS -->
@@ -1159,8 +1188,8 @@ function clearFilters(){
 }
 function setViewMode(mode,render=true){
   document.getElementById('viewMode').value=mode;
-  ['btnVW','btnVO','btnVE','btnVC'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
-  const _map={workflow:'btnVW',operador:'btnVO',estado:'btnVE',calendario:'btnVC'};
+  ['btnVW','btnVO','btnVE','btnVC','btnVV'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  const _map={workflow:'btnVW',operador:'btnVO',estado:'btnVE',calendario:'btnVC',vacaciones:'btnVV'};
   const _ab=document.getElementById(_map[mode]);if(_ab)_ab.classList.add('active');
   if(render)renderEquipo();
 }
@@ -1402,6 +1431,17 @@ function renderEquipo(){
   const _tools=document.getElementById('equipoTools');
   const _body=document.getElementById('equipoBody');
   const _calB=document.getElementById('calendarBody');
+  const _vacB=document.getElementById('vacBody');
+  if(mode==='vacaciones'){
+    const entering=(_lastView!=='vacaciones');_lastView=mode;
+    _tools.classList.add('calmode','vacmode');
+    _body.classList.add('hidden');_calB.classList.add('hidden');_vacB.classList.remove('hidden');
+    if(entering){_vacB.innerHTML='<div class="loading">Cargando vacaciones…</div>';loadVacaciones().then(()=>renderVacaciones(true));}
+    else renderVacaciones();
+    setupSticky();
+    return;
+  }
+  _tools.classList.remove('vacmode');_vacB.classList.add('hidden');
   if(mode==='calendario'){
     const entering=(_lastView!=='calendario');_lastView=mode;
     _tools.classList.add('calmode');
@@ -1501,6 +1541,9 @@ function setupSticky(){
     acc+=tools.getBoundingClientRect().height;
   }
   document.querySelectorAll('#equipoBody .col-hdr').forEach(h=>{h.style.top=acc+'px';});
+  // Vacaciones: la barra "Mis vacaciones / Feriado" y los días de la semana quedan fijos debajo de los filtros
+  const vt=document.querySelector('#vacBody .vac-top');
+  if(vt&&vt.offsetParent!==null){vt.style.top=acc+'px';const a2=acc+vt.getBoundingClientRect().height;document.querySelectorAll('#vacBody .vac-dow').forEach(x=>{x.style.top=a2+'px';});}
 }
 window.addEventListener('resize',setupSticky);
 
@@ -2863,6 +2906,84 @@ function startCierreWatcher(){
     if(!SESSION||_esWatcher())return;
     if(new Date().getHours()>=17&&!_resumenSeen('cierre'))showResumenCierre(false);
   },60000);
+}
+// ── Vacaciones (vista con el ícono del viajero con valija) ──────
+// Tabla `vacaciones(usuario, fecha)`: usuario = 'juan'|'diego'|'maxi' (días tomados) o 'feriado' (feriado nacional).
+// Cada ejecutor marca solo sus días; los feriados los marca cualquier ejecutor; Rubén (watcher) e Invitado solo miran.
+// Calendario semanal del año (semana lun→dom), como el planificador de WinCalendar.
+let VAC=[],VAC_LOADED=false,VAC_Y,_vacModo='vac',_vacAncla=null;
+const VAC_MES_C=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+function _vacOps(){return USERS.filter(u=>!u.hidden&&u.canFinalize!==false);}
+function _vacPuede(){return !!(SESSION&&_vacOps().some(u=>u.user===SESSION.user));}
+async function loadVacaciones(){
+  if(!SESSION||SESSION.demo){VAC_LOADED=true;return;}
+  const{data,error}=await _SB.from('vacaciones').select('*');
+  if(error){console.error(error);showToast('No se pudieron cargar las vacaciones');return;}
+  VAC=data||[];VAC_LOADED=true;
+}
+async function _vacSet(usuario,fechas,on){
+  const antes=VAC.slice();
+  if(on)fechas.forEach(f=>{if(!VAC.some(v=>v.usuario===usuario&&v.fecha===f))VAC.push({usuario,fecha:f});});
+  else VAC=VAC.filter(v=>!(v.usuario===usuario&&fechas.includes(v.fecha)));
+  renderVacaciones();
+  if(SESSION.demo)return;
+  const{error}=on
+    ?await _SB.from('vacaciones').upsert(fechas.map(f=>({usuario,fecha:f})),{onConflict:'usuario,fecha'})
+    :await _SB.from('vacaciones').delete().eq('usuario',usuario).in('fecha',fechas);
+  if(error){
+    // No se guardó: se deshace en pantalla lo que se había marcado/desmarcado
+    console.error(error);showToast('No se pudo guardar');
+    VAC=antes;renderVacaciones();
+  }
+}
+// Clic: marca/desmarca el día (mis vacaciones o feriado, según el modo). Shift+clic: aplica lo mismo a todo el rango desde el último clic.
+function vacClick(ev,iso){
+  if(!_vacPuede())return;
+  const u=_vacModo==='fer'?'feriado':SESSION.user;
+  let on=!VAC.some(v=>v.usuario===u&&v.fecha===iso),fechas=[iso];
+  if(ev.shiftKey&&_vacAncla&&_vacAncla.u===u&&_vacAncla.iso!==iso){
+    on=_vacAncla.on;fechas=[];
+    const[a,b]=[_vacAncla.iso,iso].sort(),d=new Date(a+'T12:00:00');
+    while(_locISO(d)<=b){fechas.push(_locISO(d));d.setDate(d.getDate()+1);}
+  }
+  _vacAncla={u,iso,on};
+  _vacSet(u,fechas,on);
+}
+function vacModo(m){_vacModo=m;_vacAncla=null;renderVacaciones();}
+function vacNav(d){VAC_Y+=d;_vacAncla=null;renderVacaciones();}
+function vacHoy(){VAC_Y=new Date().getFullYear();renderVacaciones(true);}
+function _isoSemana(d){const t=new Date(d.getFullYear(),d.getMonth(),d.getDate());t.setDate(t.getDate()+3-((t.getDay()+6)%7));const w1=new Date(t.getFullYear(),0,4);return 1+Math.round(((t-w1)/864e5-3+((w1.getDay()+6)%7))/7);}
+function renderVacaciones(irAHoy){
+  const box=document.getElementById('vacBody');if(!box)return;
+  if(VAC_Y===undefined)VAC_Y=new Date().getFullYear();
+  const slot=document.getElementById('calNavSlot');
+  if(slot)slot.innerHTML='<button class="cal-nav" onclick="vacNav(-1)" title="Año anterior">‹</button><span class="cal-month">Vacaciones '+VAC_Y+'</span><button class="cal-nav" onclick="vacNav(1)" title="Año siguiente">›</button><button class="cal-today" onclick="vacHoy()">Hoy</button>';
+  const ops=_vacOps(),puede=_vacPuede(),hoy=todayISO();
+  const byDay={};VAC.forEach(v=>{(byDay[v.fecha]=byDay[v.fecha]||[]).push(v.usuario);});
+  let h='<div class="vac-top">';
+  if(puede)h+='<span class="vac-modo"><button class="'+(_vacModo==='vac'?'on':'')+'" onclick="vacModo(\'vac\')">Mis vacaciones</button><button class="'+(_vacModo==='fer'?'on':'')+'" onclick="vacModo(\'fer\')">Feriado</button></span><span class="vac-hint">Clic marca o desmarca · Shift+clic marca un rango</span>';
+  h+='<span class="vac-ley">'+ops.map(u=>'<span><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+'</span>').join('')+'<span><i style="background:#4b5563"></i>Feriado</span></span></div>';
+  h+='<div class="vac-grid"><div class="vac-dow"></div>'+['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(d=>'<div class="vac-dow">'+d+'</div>').join('');
+  // Semanas: desde el lunes de la semana del 1/1 hasta el domingo de la semana del 31/12
+  const d=new Date(VAC_Y,0,1);d.setDate(d.getDate()-((d.getDay()+6)%7));
+  const fin=new Date(VAC_Y,11,31);
+  while(d<=fin){
+    // Rótulo del mes en la semana donde cae su día 1 (esa fila lleva además una línea arriba)
+    let mes='';
+    for(let k=0;k<7;k++){const x=new Date(d);x.setDate(d.getDate()+k);if(x.getDate()===1&&x.getFullYear()===VAC_Y)mes=VAC_MES_C[x.getMonth()]+' '+VAC_Y;}
+    h+='<div class="vac-mes'+(mes?' ini':'')+'">'+mes+'</div>';
+    for(let k=0;k<7;k++){
+      const iso=_locISO(d),quien=byDay[iso]||[],fer=quien.includes('feriado');
+      const cls='vac-day'+(k>=5?' wknd':'')+(fer?' fer':'')+(iso===hoy?' today':'')+(d.getFullYear()!==VAC_Y?' otro':'')+(puede?'':' ro')+(mes?' ini':'');
+      const mks=ops.filter(u=>quien.includes(u.user)).map(u=>'<span class="vac-mk" style="background:'+opColor(u.user)+'" title="'+escH(u.nombre)+' de vacaciones">'+escH(iniOp(u.user))+'</span>').join('');
+      h+='<div class="'+cls+'"'+(puede?' onclick="vacClick(event,\''+iso+'\')"':'')+'><span class="vac-num">'+d.getDate()+(k===0?'<span class="vac-sem">Semana '+_isoSemana(d)+'</span>':'')+'</span><div class="vac-mks">'+mks+'</div></div>';
+      d.setDate(d.getDate()+1);
+    }
+  }
+  h+='</div>';
+  box.innerHTML=h;
+  setupSticky();
+  if(irAHoy){const t=box.querySelector('.vac-day.today');if(t)t.scrollIntoView({block:'center'});}
 }
 function calNav(d){CAL_M+=d;if(CAL_M<0){CAL_M=11;CAL_Y--;}if(CAL_M>11){CAL_M=0;CAL_Y++;}renderCalendar();}
 function calHoy(){const n=new Date();CAL_Y=n.getFullYear();CAL_M=n.getMonth();renderCalendar();}
