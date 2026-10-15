@@ -352,6 +352,8 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .cal-cell.today .cal-daynum{color:var(--accent)}
 .cal-tasks{display:flex;flex-direction:column;gap:3px;overflow:auto;max-height:260px}
 .cal-task{font-size:10px;line-height:1.3;padding:2px 5px;border-radius:4px;border-left:3px solid var(--blue);background:var(--bg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default}
+.cal-task.cal-task-vac{font-weight:700}
+.cal-cell.fer{background:color-mix(in srgb,#4b5563 14%,var(--bg2))}
 .cal-empty-day{font-size:10px;color:var(--muted);opacity:.5;margin-top:2px}
 .view-btn{box-sizing:border-box;width:32px;padding:6px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--txt);transition:background .15s,color .15s,border-color .15s}
 .view-btn.active{background:var(--black);color:#fff;border-color:var(--black)}
@@ -1447,7 +1449,7 @@ function renderEquipo(){
     _tools.classList.add('calmode');
     _body.classList.add('hidden');_calB.classList.remove('hidden');
     if(CAL_Y===undefined){const _n=new Date();CAL_Y=_n.getFullYear();CAL_M=_n.getMonth();}
-    if(entering||!CAL_LOADED){_calB.innerHTML='<div class="loading">Cargando finalizadas…</div>';loadRealCalendar(entering).then(renderCalendar);}
+    if(entering||!CAL_LOADED){_calB.innerHTML='<div class="loading">Cargando finalizadas…</div>';Promise.all([loadRealCalendar(entering),loadVacaciones()]).then(renderCalendar);}
     else renderCalendar();
     setupSticky();
     return;
@@ -3028,9 +3030,16 @@ function renderCalendar(){
     const gd=new Date(CAL_Y,CAL_M,d).getDay();// 0=dom,6=sáb
     const esWknd=(gd===0||gd===6);
     const items=byDay[d]||[];
-    let cell='<div class="cal-cell'+(esHoy?' today':'')+(esWknd?' weekend':'')+'"><span class="cal-daynum">'+d+'</span>';
-    if(items.length){
+    // Vacaciones y feriados del día (tabla vacaciones): TODOS ven las de todos, como una tarea más del día
+    // ("Vacaciones", una por persona, en su color). El admin respeta el filtro de chips.
+    const _vq=VAC.filter(v=>v.fecha===iso).map(v=>v.usuario);
+    const _fer=_vq.includes('feriado');
+    const _vac=_vacOps().filter(u=>_vq.includes(u.user)&&(soloMias||!HIDDEN_OPS.has(u.user)));
+    let cell='<div class="cal-cell'+(esHoy?' today':'')+(esWknd?' weekend':'')+(_fer?' fer':'')+'"><span class="cal-daynum">'+d+'</span>';
+    if(items.length||_fer||_vac.length){
       cell+='<div class="cal-tasks">';
+      if(_fer)cell+='<div class="cal-task cal-task-vac" style="border-left-color:#4b5563;background:#4b556333" title="Feriado">Feriado</div>';
+      _vac.forEach(u=>{const oc=opColor(u.user);cell+='<div class="cal-task cal-task-vac" style="border-left-color:'+oc+';background:'+oc+'33" title="Vacaciones — '+escH(u.nombre)+'">Vacaciones</div>';});
       items.forEach(r=>{
         const oc=opColor(r.operador||r.completado_por);
         const tt=(r.tema||'')+' — '+nombreOp(r.operador||r.completado_por);
