@@ -169,6 +169,14 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .cattach-pop .cattach-name{font-weight:700;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cattach-pop .cattach-url{font-size:9px;color:#9ca3af;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cattach-pop span.cattach-bad .cattach-url{color:#f87171}
+/* Los span internos del ítem (título, nombre, URL) no heredan el padding/hover de ".cattach-pop span": así quedan pegados */
+.cattach-pop span.cattach-item span{padding:0;border-radius:0}
+.cattach-pop span.cattach-item span:hover{background:none}
+.cattach-pop .cattach-tit{font-weight:700;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Título opcional de cada link en el formulario: ocupa el lugar del rótulo "Link N" */
+.form2 input.ltit{font-size:11.5px;padding:1px 7px;height:22px;margin-bottom:3px;background:transparent}
+/* Finalización comparte fila con Link 1: su campo de fecha baja para quedar alineado con el del link */
+#wrapFinalizacion{display:flex;flex-direction:column;justify-content:flex-end}
 .cattach-pop span.cattach-item.drg b::before{content:'';width:6px;height:12px;flex-shrink:0;background:radial-gradient(circle,#9ca3af 1px,transparent 1.4px) 0 0/6px 4px}
 /* Popover clickeable de notificaciones (buzón ✉) — reemplaza tooltips nativos de los globos verde/amarillo */
 .notif-pop{display:none;flex-direction:column;background:#000;border:1px solid #444;border-radius:8px;padding:5px;gap:2px;max-height:280px;overflow-y:auto;box-shadow:0 4px 14px rgba(0,0,0,.35)}
@@ -483,12 +491,12 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         </div>
       </div>
       <div id="wrapFinalizacion"><label>Finalización *</label><input type="date" id="f_finalizacion"></div>
-      <div id="wrapLink1"><label>Link 1 (fuente principal)</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link1" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link1').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button><button type="button" id="btnAddLink" onclick="addLinkRow()" style="padding:0 6px;font-size:20px;line-height:1;color:#16a34a;border:none;background:none;cursor:pointer;flex-shrink:0;font-weight:700" title="Agregar otro link (máx. 5)">+</button></div></div>
+      <div id="wrapLink1"><input id="f_ltit1" class="ltit" maxlength="60" placeholder="Título (opcional)"><div style="display:flex;gap:4px;align-items:center"><input id="f_link1" placeholder="https://..." style="flex:1"><button type="button" onclick="document.getElementById('f_link1').value=''" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Limpiar">×</button><button type="button" id="btnAddLink" onclick="addLinkRow()" style="padding:0 6px;font-size:20px;line-height:1;color:#16a34a;border:none;background:none;cursor:pointer;flex-shrink:0;font-weight:700" title="Agregar otro link (máx. 5)">+</button></div></div>
       <div class="full" id="wrapLinksExtra" style="display:none"><div class="form2">
-<div id="rowLink2" style="display:none"><label>Link 2</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link2" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(2)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
-<div id="rowLink3" style="display:none"><label>Link 3</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link3" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(3)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
-<div id="rowLink4" style="display:none"><label>Link 4</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link4" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(4)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
-<div id="rowLink5" style="display:none"><label>Link 5</label><div style="display:flex;gap:4px;align-items:center"><input id="f_link5" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(5)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
+<div id="rowLink2" style="display:none"><input id="f_ltit2" class="ltit" maxlength="60" placeholder="Título (opcional)"><div style="display:flex;gap:4px;align-items:center"><input id="f_link2" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(2)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
+<div id="rowLink3" style="display:none"><input id="f_ltit3" class="ltit" maxlength="60" placeholder="Título (opcional)"><div style="display:flex;gap:4px;align-items:center"><input id="f_link3" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(3)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
+<div id="rowLink4" style="display:none"><input id="f_ltit4" class="ltit" maxlength="60" placeholder="Título (opcional)"><div style="display:flex;gap:4px;align-items:center"><input id="f_link4" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(4)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
+<div id="rowLink5" style="display:none"><input id="f_ltit5" class="ltit" maxlength="60" placeholder="Título (opcional)"><div style="display:flex;gap:4px;align-items:center"><input id="f_link5" placeholder="https://..." style="flex:1"><button type="button" onclick="removeLinkRow(5)" style="padding:0 7px;font-size:16px;line-height:1;color:var(--muted);border:none;background:none;cursor:pointer;flex-shrink:0" title="Quitar">×</button></div></div>
       </div></div>
       <div id="wrapImgs" class="full" style="display:none"><div class="thumbs" id="imgThumbs"></div></div>
     </div>
@@ -1502,7 +1510,9 @@ function cardHTML(t){
     :(t.reaccion?`<span class="creact-face has" style="pointer-events:none;opacity:.6">${t.reaccion}</span>`:'');
   // Adjuntos agrupados en un solo chip 📎 N (links + imágenes) con popover. Mantiene altura uniforme.
   const _showAttach=isAdmin()||!t.privado;
-  const _attLinks=_showAttach?[t.link1,t.link2,t.link3,t.link4,t.link5].filter(Boolean):[];
+  // Cada link con su título opcional (link_titulos[n-1]); se arman juntos antes de filtrar para que no se desalineen
+  const _attPairs=_showAttach?[1,2,3,4,5].map(n=>({u:t['link'+n],tt:String((Array.isArray(t.link_titulos)&&t.link_titulos[n-1])||'').trim()})).filter(p=>p.u):[];
+  const _attLinks=_attPairs.map(p=>p.u);
   const _attImgs=(_showAttach&&t.imagenes&&t.imagenes.length)?t.imagenes.length:0;
   const _nAtt=_attLinks.length+_attImgs;
   // Reordenar links arrastrando en el popover: mismo permiso que la chincheta (no en Finalizado)
@@ -1513,10 +1523,12 @@ function cardHTML(t){
         const _prev=u.length>42?u.slice(0,42)+'…':u;
         const _dr=_canOrdLnk&&_attLinks.length>1?` draggable="true" ondragstart="attLnkDragStart(event,${i})" ondragover="attLnkDragOver(event)" ondragleave="this.style.boxShadow=''" ondrop="attLnkDrop(event,'${t.id}',${i})" ondragend="attLnkDragEnd(event)"`:'';
         const _dc=_dr?' drg':'';
-        const _nom=_linkNombre(u),_nomH=_nom?`<span class="cattach-name">· ${escH(_nom)}</span>`:'';
+        // Con título cargado se muestra el título; sin título, "Link N · nombre sacado de la URL"
+        const _tt=_attPairs[i].tt,_lbl=_tt?`<span class="cattach-tit">${escH(_tt)}</span>`:`Link ${i+1}`;
+        const _nom=_tt?'':_linkNombre(u),_nomH=_nom?`<span class="cattach-name">· ${escH(_nom)}</span>`:'';
         return _bad
-          ?`<span class="cattach-item cattach-bad${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} Link ${i+1} ⚠${_nomH}</b><span class="cattach-url">${escH(_prev)}</span></span>`
-          :`<span class="cattach-item${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} Link ${i+1}${_nomH}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
+          ?`<span class="cattach-item cattach-bad${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();alert('Este link es una ruta local de tu PC y no funciona para el resto del equipo.\n\nReemplazalo por un link para compartir (ej. Copiar vínculo de OneDrive).')"><b>${ICO.link} ${_lbl} ⚠${_nomH}</b><span class="cattach-url">${escH(_prev)}</span></span>`
+          :`<span class="cattach-item${_dc}"${_dr} onclick="event.stopPropagation();_closeAttachPops();window.open('${escH(u)}','_blank','noopener')"><b>${ICO.link} ${_lbl}${_nomH}</b><span class="cattach-url">${escH(_prev)}</span></span>`;
       }).join('')
       +(_showAttach?(t.imagenes||[]).map((_,i)=>`<span onclick="event.stopPropagation();_closeAttachPops();openTaskImgAt('${t.id}',${i})">${ICO.img} Imagen ${i+1}</span>`).join(''):'')
     }</span></span>`:'';
@@ -1653,11 +1665,15 @@ async function attLnkDrop(ev,id,i){
   const from=_attLnkIdx;_attLnkIdx=null;
   if(from===null)return;
   const t=DATA.find(x=>x.id===id);if(!t)return;
-  const arr=[t.link1,t.link2,t.link3,t.link4,t.link5].filter(Boolean);
+  // Cada link viaja con su título (link_titulos)
+  const _tts=Array.isArray(t.link_titulos)?t.link_titulos:[];
+  const arr=[1,2,3,4,5].map(n=>({u:t['link'+n],tt:_tts[n-1]||''})).filter(p=>p.u);
   let to=before?i:i+1;if(from<to)to--;if(to===from)return;
   const[it]=arr.splice(from,1);arr.splice(to,0,it);
-  const upd=Object.assign({},t,{link1:arr[0]||'',link2:arr[1]||'',link3:arr[2]||'',actualizado:nowStamp()});
-  if(arr.length>3||('link4' in t)){upd.link4=arr[3]||'';upd.link5=arr[4]||'';}
+  const _u=k=>arr[k]?arr[k].u:'';
+  const upd=Object.assign({},t,{link1:_u(0),link2:_u(1),link3:_u(2),actualizado:nowStamp()});
+  if(arr.length>3||('link4' in t)){upd.link4=_u(3);upd.link5=_u(4);}
+  if(('link_titulos' in t)||arr.some(p=>p.tt))upd.link_titulos=arr.some(p=>p.tt)?arr.map(p=>p.tt):[];
   const di=DATA.findIndex(x=>x.id===id);if(di>=0)DATA[di]=upd;
   await upsertTask(upd);
   renderCurrent();
@@ -2084,10 +2100,18 @@ function syncLinkRows(reset){
   if(b){const _pv=!isAdmin()&&document.getElementById('f_privado').checked;b.style.display=_pv?'none':'';b.style.visibility=_linkVis>=5?'hidden':'';}
 }
 let _linkNota=false;
-function setLinkFields(t){for(let n=1;n<=5;n++){const e=_lv(n);if(e)e.value=(t&&t['link'+n])||'';}syncLinkRows(true);}
+// Título opcional de cada link (f_ltit1..5 → columna link_titulos jsonb, alineada con link1..link5)
+function _lt(n){return document.getElementById('f_ltit'+n);}
+function setLinkFields(t){const tt=(t&&Array.isArray(t.link_titulos))?t.link_titulos:[];for(let n=1;n<=5;n++){const e=_lv(n);if(e)e.value=(t&&t['link'+n])||'';const h=_lt(n);if(h)h.value=tt[n-1]||'';}syncLinkRows(true);}
 function addLinkRow(){if(_linkVis>=5)return;_linkVis++;syncLinkRows(false);const e=_lv(_linkVis);if(e)e.focus();}
-function removeLinkRow(n){for(let k=n;k<5;k++){_lv(k).value=_lv(k+1).value;}_lv(5).value='';_linkVis=Math.max(1,_linkVis-1);syncLinkRows(false);}
-function readLinkVals(){const rest=[2,3,4,5].map(n=>_lv(n).value.trim()).filter(Boolean);return{link1:_lv(1).value.trim(),link2:rest[0]||'',link3:rest[1]||'',link4:rest[2]||'',link5:rest[3]||''};}
+function removeLinkRow(n){for(let k=n;k<5;k++){_lv(k).value=_lv(k+1).value;_lt(k).value=_lt(k+1).value;}_lv(5).value='';_lt(5).value='';_linkVis=Math.max(1,_linkVis-1);syncLinkRows(false);}
+function readLinkVals(){
+  // 2..5 se compactan sin huecos y cada título acompaña a su link; el título de un link vacío se descarta
+  const rest=[2,3,4,5].filter(n=>_lv(n).value.trim()).map(n=>({u:_lv(n).value.trim(),tt:_lt(n).value.trim()}));
+  const l1=_lv(1).value.trim(),tit=[l1?_lt(1).value.trim():'',...rest.map(r=>r.tt)];
+  const _u=k=>rest[k]?rest[k].u:'';
+  return{link1:l1,link2:_u(0),link3:_u(1),link4:_u(2),link5:_u(3),link_titulos:tit.some(Boolean)?tit:[]};
+}
 function togglePriv(){
   const on=document.getElementById('f_privado').checked;
   {const _wi=document.getElementById('wrapImgs');if(_wi)_wi.classList.toggle('priv-blur',on);}
@@ -2139,6 +2163,7 @@ function openTaskForm(id){
   // Limpia disabled de una apertura anterior (ej: tarea finalizada → nueva tarea)
   ['f_frec_dias','f_frec_dia','f_copias','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=false;});
   document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button,#btnImgPick,#wrapChecklist button').forEach(e=>e.disabled=false);
+  for(let n=1;n<=5;n++){const e=_lt(n);if(e){e.readOnly=false;e.style.color='';e.style.background='';}}
   {const _cn=document.getElementById('f_chkNew');if(_cn)_cn.value='';_chkSugCache=null;}
   editingId=id||null;
   {const _ft=document.getElementById('f_tareas');if(_ft){_ft.readOnly=false;_ft.style.color='';_ft.style.height='';}const _em=document.getElementById('f_emojis');if(_em)_em.classList.remove('open');}
@@ -2191,7 +2216,7 @@ function openTaskForm(id){
     }
   }else{
     document.getElementById('modalTitle').textContent='Nueva tarea';
-    ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3','f_link4','f_link5'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
+    ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3','f_link4','f_link5','f_ltit1','f_ltit2','f_ltit3','f_ltit4','f_ltit5'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
     syncLinkRows(true);
     const _fder0=document.getElementById('f_derivado');if(_fder0)_fder0.checked=false;
     const _fruben0=document.getElementById('f_incluir_ruben');if(_fruben0)_fruben0.checked=false;
@@ -2213,7 +2238,7 @@ function openTaskForm(id){
   const _t=id?DATA.find(x=>x.id===id):null;
   // Rubén: solo lectura en tareas ajenas (puede comentar, no editar nada más)
   if(_isWatcher&&id&&_t&&_t.creado_por!==SESSION.user){
-    ['f_tema','f_tareas','f_frec_dias','f_frec_dia','f_link1','f_link2','f_link3','f_link4','f_link5'].forEach(x=>{const el=document.getElementById(x);if(el){el.readOnly=true;el.style.background='var(--border)';}});
+    ['f_tema','f_tareas','f_frec_dias','f_frec_dia','f_link1','f_link2','f_link3','f_link4','f_link5','f_ltit1','f_ltit2','f_ltit3','f_ltit4','f_ltit5'].forEach(x=>{const el=document.getElementById(x);if(el){el.readOnly=true;el.style.background='var(--border)';}});
     ['f_operador','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=true;});
     document.querySelectorAll('#btnImgPick').forEach(e=>e.disabled=true);
     document.querySelectorAll('#wrapChecklist button').forEach(e=>e.disabled=true);
@@ -2229,7 +2254,7 @@ function openTaskForm(id){
   syncLinkRows(false);
   if(!isAdmin()&&_priv){
     // el operador NO ve el contenido reservado (mail / Link 2 / Link 3 / imágenes): en blanco. Link 1 SÍ se ve.
-    ['f_link2','f_link3','f_link4','f_link5'].forEach(x=>document.getElementById(x).value='');syncLinkRows(true);
+    ['f_link2','f_link3','f_link4','f_link5','f_ltit2','f_ltit3','f_ltit4','f_ltit5'].forEach(x=>document.getElementById(x).value='');syncLinkRows(true);
     curImgs=[];renderThumbs();
   }
   // Sección comentario — solo visible al editar
@@ -2270,7 +2295,7 @@ function openTaskForm(id){
   const _tFin=id?DATA.find(x=>x.id===id):null;
   if(_tFin&&_tFin.estado==='Finalizado'&&!isAdmin()){
     _formReadOnly=true;
-    ['f_tema','f_tareas','f_link1','f_link2','f_link3','f_link4','f_link5'].forEach(x=>{const e=document.getElementById(x);if(e){e.readOnly=true;e.style.color='var(--muted)';}});
+    ['f_tema','f_tareas','f_link1','f_link2','f_link3','f_link4','f_link5','f_ltit1','f_ltit2','f_ltit3','f_ltit4','f_ltit5'].forEach(x=>{const e=document.getElementById(x);if(e){e.readOnly=true;e.style.color='var(--muted)';}});
     ['f_area','f_prioridad','f_frecuencia','f_operador','f_finalizacion','f_copias','f_frec_dias','f_frec_dia','f_imgfile','f_chkNew'].forEach(x=>{const e=document.getElementById(x);if(e)e.disabled=true;});
     document.querySelectorAll('#btnImgPick').forEach(e=>e.disabled=true);
     document.querySelectorAll('#wrapChecklist button').forEach(e=>e.disabled=true);
@@ -2385,6 +2410,8 @@ async function saveTask(){
   }
   // link4/link5 solo se mandan si hay un 4º/5º link o la tarea ya tiene esas columnas (así no falla si la base todavía no las tiene)
   if(!vals.link4&&!vals.link5){const _tl=editingId?DATA.find(x=>x.id===editingId):null;if(!_tl||!('link4' in _tl)){delete vals.link4;delete vals.link5;}}
+  // link_titulos: mismo criterio (solo si hay algún título o la tarea ya tiene la columna)
+  if(!(vals.link_titulos||[]).length){const _tl=editingId?DATA.find(x=>x.id===editingId):null;if(!_tl||!('link_titulos' in _tl))delete vals.link_titulos;}
   const _ejSel=document.getElementById('f_ejecutor_sel');
   if(!_notaMode&&_ejSel){if(!_ejSel.value){alert('Seleccioná el operador que va a realizar la tarea.');_ejSel.focus();return;}vals.operador=_ejSel.value;}
   if(!_notaMode&&vals.privado)vals.operador=(USERS.find(u=>u.rol==='admin')||{}).user||'juan';
@@ -2430,7 +2457,9 @@ async function saveTask(){
     if(editingId){
       const t=DATA.find(x=>x.id===editingId);
       // Si un operador edita una tarea reservada, se conserva el contenido oculto (no lo pisa con los vacíos)
-      if(t&&t.privado&&!isAdmin()){vals.medio=t.medio;vals.link2=t.link2;vals.link3=t.link3;vals.link4=t.link4;vals.link5=t.link5;vals.imagenes=t.imagenes;vals.privado=t.privado;}
+      if(t&&t.privado&&!isAdmin()){vals.medio=t.medio;vals.link2=t.link2;vals.link3=t.link3;vals.link4=t.link4;vals.link5=t.link5;vals.imagenes=t.imagenes;vals.privado=t.privado;
+        // títulos: el del Link 1 sale del form; los de 2..5 (ocultos para el operador) se conservan
+        if(('link_titulos' in vals)||('link_titulos' in t)){const _a=Array.isArray(t.link_titulos)?t.link_titulos.slice():[];_a[0]=(vals.link_titulos||[])[0]||'';for(let k=0;k<_a.length;k++)_a[k]=_a[k]||'';vals.link_titulos=_a.some(Boolean)?_a:[];}}
       const upd=Object.assign({},t,vals,{actualizado:nowStamp()});
       const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===editingId);if(i>=0)DATA[i]=upd;}
     }else{
