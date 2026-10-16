@@ -260,9 +260,9 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .kpi{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:120px}
 .kpi .n{font-size:24px;font-weight:bold}.kpi .l{color:var(--muted);font-size:11px}
 /* Análisis: barras verticales de finalizadas por mes (año en curso) */
-.an-meses{display:flex;align-items:flex-end;gap:10px;height:190px;padding:4px 4px 0;border-bottom:1px solid var(--line);max-width:860px}
+.an-meses{display:flex;align-items:flex-end;gap:14px;height:220px;padding:4px 4px 0;border-bottom:1px solid var(--line)}
 .an-mes{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;position:relative;padding-bottom:20px}
-.an-bar{width:100%;max-width:46px;background:var(--ok);border-radius:4px 4px 0 0;min-height:0}
+.an-bar{width:100%;max-width:72px;background:var(--ok);border-radius:4px 4px 0 0;min-height:0}
 .an-v{font-size:11px;font-weight:700;color:var(--txt)}
 .an-l{position:absolute;bottom:2px;font-size:11px;color:var(--muted)}
 .an-mes.fut .an-l{opacity:.5}
@@ -271,7 +271,28 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .an-mes.clic:not(.sel) .an-bar{opacity:.55}
 .an-mes.clic:hover .an-bar{opacity:1}
 .an-mes.sel .an-l{color:var(--txt);font-weight:700}
-.an-dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px 32px;max-width:1000px}
+.an-dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px 40px}
+/* Análisis ocupa todo el ancho: 4 tarjetas parejas y barras horizontales en % de su columna */
+#analisisBody .kpis{display:grid;grid-template-columns:repeat(4,1fr)}
+#analisisBody .kpi .n{font-size:28px}
+.print-only{display:none}
+/* Impresión de Análisis: A4 apaisada en una hoja. De la barra superior solo queda el título y la fecha
+   (sin usuario, contadores ni avisos); sin pestañas, botones ni banners de TEST. */
+@page{size:A4 landscape;margin:8mm}
+@media print{
+  html,body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body>*:not(#appView){display:none!important}
+  #mainNav,#dailyResumen,#pageEquipo,#pageRegistro,.no-print{display:none!important}
+  #appView .eq-header{position:static!important;padding:6px 12px!important;border-radius:6px}
+  #appView .eq-header>*:not(h1):not(#todayLabel){display:none!important}
+  #appView .eq-header #todayLabel{margin-left:auto!important}
+  #analisisBody{zoom:.74}
+  #analisisBody .an-meses{height:170px}
+  .print-only{display:block!important}
+  .an-print-cab{font-size:12px;color:#64727d;margin:4px 0 8px}
+}
+#analisisBody .bar-row .bbar-w{flex:1;min-width:0}
+#analisisBody .bar-row .bval{width:36px;text-align:right;font-variant-numeric:tabular-nums}
 .bar-row{display:flex;align-items:center;gap:8px;margin:5px 0}
 .bar-row .bname{width:120px;font-size:12px}
 .bbar{height:18px;background:var(--blue);border-radius:4px;min-width:2px}
@@ -2753,7 +2774,7 @@ function renderAnalisis(){
   const _vencida=t=>t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0&&!_esDes(t);
   const venc=act.filter(_vencida);
   const term=DATA.filter(t=>t.estado==='Finalizado');
-  let h=`<div class="kpis"><div class="kpi"><div class="n">${act.length}</div><div class="l">Activos</div></div><div class="kpi"><div class="n" style="color:var(--urg)">${venc.length}</div><div class="l">Vencidos</div></div><div class="kpi"><div class="n" style="color:var(--ok)">${term.length}</div><div class="l">Finalizados</div></div><div class="kpi"><div class="n">${DATA.length}</div><div class="l">Total</div></div></div>`;
+  let h=`<div class="print-only an-print-cab">Reporte de la pestaña Análisis · generado el ${new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</div><div class="kpis"><div class="kpi"><div class="n">${act.length}</div><div class="l">Activos</div></div><div class="kpi"><div class="n" style="color:var(--urg)">${venc.length}</div><div class="l">Vencidos</div></div><div class="kpi"><div class="n" style="color:var(--ok)">${term.length}</div><div class="l">Finalizados</div></div><div class="kpi"><div class="n">${DATA.length}</div><div class="l">Total</div></div></div>`;
   // Finalizadas por mes del año en curso (mes = fecha_estado, día en que se finalizó; sin notas)
   {
     const yHoy=String(new Date().getFullYear());
@@ -2773,7 +2794,8 @@ function renderAnalisis(){
     h+='<div class="section-title" style="display:flex;align-items:center;gap:8px">Trabajos finalizados por mes · '
       +'<select onchange="AN_ANIO=this.value;renderAnalisis()" style="font-size:12px;padding:2px 6px">'+anios.map(a=>`<option${a===y?' selected':''}>${a}</option>`).join('')+'</select>'
       +'<span class="muted" style="font-size:11px">total '+pm.reduce((s,v)=>s+v,0)+'</span>'
-      +'<button onclick="AN_ANIO=null;AN_MES=null;renderAnalisis()" title="Volver al año y mes actuales" style="margin-left:auto;background:#ccfbf1;color:#000;border-color:#5eead4;padding:5px 12px;font-size:12px;line-height:1">✕ Limpiar</button></div><div class="an-meses">'
+      +'<button class="no-print" onclick="window.print()" title="Imprimir o guardar en PDF (A4 apaisada)" style="margin-left:auto;padding:5px 12px;font-size:12px;line-height:1">🖨 Imprimir / PDF</button>'
+      +'<button class="no-print" onclick="AN_ANIO=null;AN_MES=null;renderAnalisis()" title="Volver al año y mes actuales" style="background:#ccfbf1;color:#000;border-color:#5eead4;padding:5px 12px;font-size:12px;line-height:1">✕ Limpiar</button></div><div class="an-meses">'
       +pm.map((v,i)=>{
         if(_sinApp(i))return '<div class="an-mes sinapp" title="Sin registro: todavía no se usaba la app"><span class="an-v"></span><div class="an-bar" style="height:'+(_prom/mx*100)+'%"></div><span class="an-l">'+MES_C[i]+'</span></div>';
         // Click en un mes (pasado o actual) → los bloques de la derecha muestran ese mes; el elegido queda resaltado
@@ -2785,7 +2807,7 @@ function renderAnalisis(){
   // Desarrollo va como barra propia (check 🔧); el resto, por el área que lo pidió
   const perA=[{a:'Desarrollo',v:act.filter(_esDes).length}].concat(AREAS.map(a=>({a,v:act.filter(t=>!_esDes(t)&&t.area===a).length}))).filter(x=>x.v>0);
   // Barras horizontales (n=nombre, v=valor, c=color, p=punto de color al lado del nombre)
-  const _barras=arr=>{const mx=Math.max(1,...arr.map(x=>x.v));return arr.map(x=>`<div class="bar-row"><div class="bname" style="display:flex;align-items:center;gap:6px">${x.p?`<span style="width:9px;height:9px;border-radius:50%;background:${x.c};display:inline-block"></span>`:''}${x.n}</div><div class="bbar" style="width:${(x.v/mx)*240}px;background:${x.c}"></div><div>${x.v}</div></div>`).join('');};
+  const _barras=arr=>{const mx=Math.max(1,...arr.map(x=>x.v));return arr.map(x=>`<div class="bar-row"><div class="bname" style="display:flex;align-items:center;gap:6px">${x.p?`<span style="width:9px;height:9px;border-radius:50%;background:${x.c};display:inline-block"></span>`:''}${x.n}</div><div class="bbar-w"><div class="bbar" style="width:${x.v/mx*100}%;background:${x.c}"></div></div><div class="bval">${x.v}</div></div>`).join('');};
   const _tot=arr=>'<span class="muted" style="font-size:11px;font-weight:400">total '+arr.reduce((s,x)=>s+x.v,0)+'</span>';
   // Mes elegido = barra clickeada en el gráfico de arriba (mueve los dos bloques de la derecha)
   const _MESL=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
