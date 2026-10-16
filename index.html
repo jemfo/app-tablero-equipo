@@ -879,7 +879,7 @@ async function finalizarTarea(t){
       // Lista completa: se ofrece cerrar el proyecto en vez de abrir otra etapa. Mismo permiso que el botón
       // "Cerrar proyecto" (admin, operador o creador; el watcher ya quedó afuera al inicio de esta función).
       const _clCompleta=Array.isArray(t.checklist)&&t.checklist.length>0&&t.checklist.every(x=>x.ok);
-      cerroProy=_clCompleta&&(isAdmin()||t.creado_por===SESSION.user||t.operador===SESSION.user)&&confirm('La lista de comprobación está completa.\n\n¿Cerrás el proyecto?\n\nAceptar = se finaliza sin crear otra etapa.\nCancelar = se crea la etapa siguiente.');
+      cerroProy=_clCompleta&&(t.derivado_tercero?t.operador===SESSION.user:(isAdmin()||t.creado_por===SESSION.user||t.operador===SESSION.user))&&confirm('La lista de comprobación está completa.\n\n¿Cerrás el proyecto?\n\nAceptar = se finaliza sin crear otra etapa.\nCancelar = se crea la etapa siguiente.');
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
       if(!cerroProy&&!_yaTieneProxima(t)){
@@ -2439,7 +2439,8 @@ function openTaskForm(id){
     document.getElementById('btnDelete').style.display=_canDel?'inline-block':'none';
     // Cerrar proyecto (Por Etapas): el admin en cualquiera; el resto en los que ejecuta (operador) o creó.
     // Excluye al watcher/gerente (canFinalize:false): cerrar el proyecto finaliza la tarea, y esa acción es de los operadores.
-    const _canCerrarProy=t.frecuencia==='Por Etapas'&&(isAdmin()||((t.creado_por===SESSION.user||t.operador===SESSION.user)&&!_esWatcher()));
+    // Derivada a 3ros: el proyecto lo cierra solo quien la realiza (pedido de Juan, punto 78); si no, admin, creador u operador
+    const _canCerrarProy=t.frecuencia==='Por Etapas'&&!_esWatcher()&&(t.derivado_tercero?t.operador===SESSION.user:(isAdmin()||t.creado_por===SESSION.user||t.operador===SESSION.user));
     document.getElementById('btnCerrarProyecto').style.display=_canCerrarProy?'inline-block':'none';
     document.getElementById('btnFinalizarPersonalizada').style.display=((frecBase(t.frecuencia)==='Personalizada'||frecBase(t.frecuencia)==='Mensual')&&isAdmin())?'inline-block':'none';
     document.getElementById('btnDuplicar').style.display=(isAdmin()&&t.estado==='Finalizado'&&t.frecuencia!=='Nota')?'inline-block':'none';
@@ -2616,6 +2617,7 @@ async function cerrarProyecto(){
   const t=DATA.find(x=>x.id===editingId);if(!t)return;
   // Mismo criterio que la visibilidad del botón en openTaskForm: admin en cualquiera, operador o creador en los suyos, nunca el watcher.
   if(_esWatcher()){showToast('La finalización de tareas la realizan los operadores','err');return;}
+  if(t.derivado_tercero&&t.operador!==SESSION.user){showToast('Tarea derivada: el proyecto lo cierra quien la realiza','err');return;}
   if(!isAdmin()&&t.creado_por!==SESSION.user&&t.operador!==SESSION.user){showToast('Solo quien ejecuta o creó el proyecto puede cerrarlo','err');return;}
   if(!confirm('¿Confirmás que el proyecto está completamente terminado?\n\nSe finaliza sin generar una nueva etapa. No se puede revertir.'))return;
   const logged=await logRealizacion(t);
