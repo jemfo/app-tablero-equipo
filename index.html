@@ -271,6 +271,9 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .an-mes.clic:not(.sel) .an-bar{opacity:.55}
 .an-mes.clic:hover .an-bar{opacity:1}
 .an-mes.sel .an-l{color:var(--txt);font-weight:700}
+/* Tarjeta nueva de una recurrente: borde verde que late ~4 s (box-shadow, sin transform: ver §8.2 del contexto) */
+@keyframes cardNueva{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}50%{box-shadow:0 0 0 5px rgba(22,163,74,.5)}}
+.card.card-nueva{outline:2px solid #16a34a;outline-offset:1px;animation:cardNueva .9s ease-in-out 5}
 .an-dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px 40px}
 /* Análisis ocupa todo el ancho: 4 tarjetas parejas y barras horizontales en % de su columna */
 #analisisBody .kpis{display:grid;grid-template-columns:repeat(4,1fr)}
@@ -924,7 +927,7 @@ async function finalizarTarea(t){
     logged=await logRealizacion(t);
     if(!logged&&!confirm('No se pudo registrar en el historial. ¿Finalizar de todos modos?'))return;
     let extra='';
-    let cerroProy=false;
+    let cerroProy=false,_nuevaId=null;
     // Anti-duplicado: si ya existe una "próxima tarjeta" viva de esta misma serie generada hoy, no crear otra
     const _yaTieneProxima=t=>DATA.some(x=>x.id!==t.id&&x.tema===t.tema&&x.operador===t.operador&&x.estado==='Programado'&&x.fecha_estado===todayISO());
     if(esEtapas){
@@ -939,7 +942,7 @@ async function finalizarTarea(t){
         const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
         // Por Etapas: la lista es el avance del proyecto, así que la etapa nueva conserva lo tildado
         const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:todayISO(),fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x})):t.checklist});
-        const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
+        const ok=await insertConNumero(nueva);if(ok){DATA.push(nueva);_nuevaId=nueva.id;}
         extra=' · nueva etapa creada';
       }
     }else if(esPersonalizada||esMensual){
@@ -950,20 +953,29 @@ async function finalizarTarea(t){
       if(!_yaTieneProxima(t)){
         const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
         const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
-        const ok=await insertConNumero(nueva);if(ok)DATA.push(nueva);
+        const ok=await insertConNumero(nueva);if(ok){DATA.push(nueva);_nuevaId=nueva.id;}
         extra=' · próxima: '+fmtDate(next);
       }
     }else{
       t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
       await upsertTask(t);
     }
+    if(_nuevaId)_resaltar={id:_nuevaId,hasta:Date.now()+4500};
     renderCurrent();
+    if(_nuevaId)_irATarjeta(_nuevaId);
     if(logged)showToast((cerroProy?'Proyecto cerrado ✓':esEtapas?'Etapa registrada ✓':esRec?'Registrada ✓':'Finalizada ✓')+extra);
   }finally{
     window._finalizingIds.delete(t.id);
   }
 }
 
+// Tarjeta recién generada por una recurrente: se resalta unos segundos (sobrevive a re-renders) y se lleva a la vista
+let _resaltar=null;
+function _esNueva(id){return !!(_resaltar&&_resaltar.id===id&&Date.now()<_resaltar.hasta);}
+function _irATarjeta(id){
+  setTimeout(()=>{const el=document.querySelector('#equipoBody .card[data-id="'+id+'"]');if(el)el.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});},60);
+  setTimeout(()=>{if(_resaltar&&_resaltar.id===id){_resaltar=null;document.querySelectorAll('#equipoBody .card.card-nueva').forEach(c=>c.classList.remove('card-nueva'));}},4600);
+}
 function startRealtime(){
   _SB.channel('trabajos-live')
     .on('postgres_changes',{event:'*',schema:'public',table:'trabajos'},p=>{
@@ -1838,7 +1850,7 @@ function cardHTML(t){
       ${_pendHtml}
     </div>`;
   }
-  return `<div class="card${venc?' ovd':''}${isFinal?' cfinal':''}${_mc==='verde'?' marked':''}${_mc==='amarillo'?' marked-y':''}${venc&&_isAtrasadaRoja(t.id)?' marked-r':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
+  return `<div class="card${_esNueva(t.id)?' card-nueva':''}${venc?' ovd':''}${isFinal?' cfinal':''}${_mc==='verde'?' marked':''}${_mc==='amarillo'?' marked-y':''}${venc&&_isAtrasadaRoja(t.id)?' marked-r':''}" ${_canDrag?'draggable="true"':''} data-id="${t.id}"
     ${_canDrag?'ondragstart="dragStart(event)" ondragend="dragEnd(event)"':''}
     ${_editClick}
     style="${_cardStyle}">
