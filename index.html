@@ -2469,7 +2469,8 @@ function openTaskForm(id){
   // Limpia disabled de una apertura anterior (ej: tarea finalizada → nueva tarea)
   ['f_frec_dias','f_frec_dia','f_copias','f_imgfile','f_chkNew'].forEach(x=>{const el=document.getElementById(x);if(el)el.disabled=false;});
   document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button,#btnImgPick,#wrapChecklist button').forEach(e=>e.disabled=false);
-  for(let n=1;n<=5;n++){const e=_lt(n);if(e){e.readOnly=false;e.style.color='';e.style.background='';}}
+  // Limpia el solo-lectura de una apertura anterior (tarea finalizada para no-admin, o tarea ajena de Rubén): tema, links y títulos
+  ['f_tema','f_link1','f_link2','f_link3','f_link4','f_link5','f_ltit1','f_ltit2','f_ltit3','f_ltit4','f_ltit5'].forEach(x=>{const e=document.getElementById(x);if(e){e.readOnly=false;e.style.color='';e.style.background='';}});
   {const _cn=document.getElementById('f_chkNew');if(_cn)_cn.value='';_chkSugCache=null;}
   editingId=id||null;
   {const _ft=document.getElementById('f_tareas');if(_ft){_ft.readOnly=false;_ft.style.color='';_ft.style.height='';}const _em=document.getElementById('f_emojis');if(_em)_em.classList.remove('open');}
