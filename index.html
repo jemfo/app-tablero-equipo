@@ -373,6 +373,13 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .vac-hint{font-size:11px;color:var(--muted)}
 .vac-ley{display:inline-flex;gap:12px;align-items:center;margin-left:auto;font-size:12px;color:var(--txt)}
 .vac-ley i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.vac-ley-op{display:inline-flex;flex-direction:column;align-items:center;gap:1px}
+.vac-saldo{font-size:10.5px;font-weight:700;color:var(--ok);white-space:nowrap}
+.vac-saldo.neg{color:var(--urg)}
+.vac-saldo.vacio{font-weight:400;color:var(--muted)}
+.vac-saldo-edit{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;padding:6px 10px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--line);border-radius:8px}
+.vac-saldo-edit i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+.vac-saldo-edit input{width:58px;margin-left:4px;padding:3px 6px}
 .vac-grid{display:grid;grid-template-columns:84px repeat(5,1fr) repeat(2,.75fr);gap:3px;user-select:none}
 .vac-dow{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;text-align:center;padding:2px 0 4px;position:sticky;z-index:5;background:var(--bg)}
 .vac-mes{font-size:12px;font-weight:700;color:var(--txt);padding:5px 4px 0}
@@ -3211,6 +3218,25 @@ async function loadVacaciones(){
   const{data,error}=await _selectTodo('vacaciones','*',q=>q.order('fecha').order('usuario'));
   if(error){console.error(error);showToast('No se pudieron cargar las vacaciones');return;}
   VAC=data||[];VAC_LOADED=true;
+  // Saldo asignado por usuario y año (tabla vacaciones_saldo); si la tabla no existe todavía, sigue sin saldo
+  const rs=await _SB.from('vacaciones_saldo').select('usuario,anio,dias');
+  if(!rs.error)VAC_SALDO=new Map((rs.data||[]).map(r=>[r.usuario+':'+r.anio,r.dias]));
+}
+// ── Saldo de vacaciones (desde 2027; 2026 no descuenta, decisión de Juan) ──
+// Asignados = vacaciones_saldo (los edita el admin con "✎ Días AAAA"). Usados = días marcados de lunes a viernes
+// que no son feriado. Quedan = asignados − usados.
+const VAC_SALDO_DESDE=2027;
+let VAC_SALDO=new Map(),_vacEditSaldo=false;
+function _vacUsados(u,y){
+  const fer=new Set(VAC.filter(v=>v.usuario==='feriado').map(v=>v.fecha));
+  return VAC.filter(v=>v.usuario===u&&v.fecha.startsWith(y+'-')&&!fer.has(v.fecha)&&(()=>{const d=new Date(v.fecha+'T12:00:00').getDay();return d>=1&&d<=5;})()).length;
+}
+async function vacGuardarSaldo(u,val){
+  const dias=Math.max(0,parseInt(val,10)||0);
+  VAC_SALDO.set(u+':'+VAC_Y,dias);renderVacaciones();
+  if(SESSION.demo)return;
+  const{error}=await _SB.from('vacaciones_saldo').upsert({usuario:u,anio:VAC_Y,dias},{onConflict:'usuario,anio'});
+  if(error){console.error(error);showToast('No se pudo guardar el saldo','err');}else showToast('Días de '+nombreOp(u)+' '+VAC_Y+': '+dias+' ✓');
 }
 async function _vacSet(usuario,fechas,on){
   const antes=VAC.slice();
@@ -3256,7 +3282,15 @@ function renderVacaciones(irAHoy){
   let h='<div class="vac-top">';
   if(puede)h+='<span class="vac-modo"><button class="'+(_vacModo==='vac'?'on':'')+'" onclick="vacModo(\'vac\')">Mis vacaciones</button><button class="'+(_vacModo==='fer'?'on':'')+'" onclick="vacModo(\'fer\')">Feriado</button></span>'
     +(_vacFeriadosPend()?'<button class="cal-today" onclick="vacCargarFeriados()" title="Feriados nacionales de argentina.gob.ar; después se desmarcan los que no van">Cargar feriados '+VAC_Y+'</button>':'');
-  h+='<span class="vac-ley">'+ops.map(u=>'<span><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+'</span>').join('')+'<span><i style="background:#e5e7eb;border:1px solid #cbd5e1"></i>Feriado</span><span><i style="background:#dcfce7;border:1px solid #86efac"></i>Feriado cargado</span></span></div>';
+  const _conSaldo=VAC_Y>=VAC_SALDO_DESDE;
+  if(_conSaldo&&isAdmin())h+='<button class="cal-today" onclick="_vacEditSaldo=!_vacEditSaldo;renderVacaciones()" title="Días de vacaciones de cada uno en '+VAC_Y+'">✎ Días '+VAC_Y+'</button>';
+  h+='<span class="vac-ley">'+ops.map(u=>{
+    let sal='';
+    if(_conSaldo){const asig=VAC_SALDO.get(u.user+':'+VAC_Y);
+      if(asig!=null){const q=asig-_vacUsados(u.user,VAC_Y);sal='<small class="vac-saldo'+(q<0?' neg':'')+'" title="'+asig+' asignados − '+(asig-q)+' hábiles marcados">quedan '+q+' de '+asig+'</small>';}
+      else sal='<small class="vac-saldo vacio">sin días cargados</small>';}
+    return '<span class="vac-ley-op">'+sal+'<span><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+'</span></span>';}).join('')+'<span><i style="background:#e5e7eb;border:1px solid #cbd5e1"></i>Feriado</span><span><i style="background:#dcfce7;border:1px solid #86efac"></i>Feriado cargado</span></span></div>';
+  if(_conSaldo&&isAdmin()&&_vacEditSaldo)h+='<div class="vac-saldo-edit">Días de vacaciones '+VAC_Y+':'+ops.map(u=>'<label><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+' <input type="number" min="0" max="60" value="'+(VAC_SALDO.get(u.user+':'+VAC_Y)??'')+'" onchange="vacGuardarSaldo(\''+u.user+'\',this.value)"></label>').join('')+'<span class="muted">Descuentan solo los días hábiles marcados (no fines de semana ni feriados).</span></div>';
   h+='<div class="vac-grid"><div class="vac-dow"></div>'+['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(d=>'<div class="vac-dow">'+d+'</div>').join('');
   // Semanas: desde el lunes de la semana del 1/1 hasta el domingo de la semana del 31/12
   const d=new Date(VAC_Y,0,1);d.setDate(d.getDate()-((d.getDay()+6)%7));
