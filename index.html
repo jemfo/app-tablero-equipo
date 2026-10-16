@@ -130,10 +130,13 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card .cdate-car{display:inline-block;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid currentColor;margin-left:3px;vertical-align:middle;opacity:.7}
 .card .cpill-sel option{text-transform:none;background:var(--bg2);color:var(--txt);font-size:12px;padding:4px 8px;text-align:left}
 .card .cfoot{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;margin-top:2px;padding-top:2px;border-top:1px solid var(--line)}
-/* Pie en una línea: si no entra, _fitCardFeet esconde la reacción y la chincheta sin usar; wrap solo como último recurso */
+/* REGLA DE ORO: el pie de la tarjeta va SIEMPRE en una sola línea (nunca wrap). Si no entra, _fitCardFeet aplica en orden: sin-react, sin-pin, comp (más compacto), sin-ing (sin fecha de ingreso), sin-des (sin 🔧) y, como último recurso, clip (recorta). */
 .card .cfoot.sin-react .creact-wrap.vacia{display:none}
 .card .cfoot.sin-pin .cpin:not(.on){display:none}
-.card .cfoot.wrap{flex-wrap:wrap;row-gap:2px}
+.card .cfoot.comp{gap:3px}.card .cfoot.comp .cfoot-icons{gap:4px}.card .cfoot.comp .clg{display:none}.card .cfoot.comp .clchip{padding-left:4px;padding-right:4px}
+.card .cfoot.sin-ing > span:first-child > .cdate{display:none}
+.card .cfoot.sin-des .cdes{display:none}
+.card .cfoot.clip{overflow:hidden}
 .card .cdate{font-size:12px;color:var(--txt);display:inline-flex;align-items:center;gap:4px}
 .card .cdate.ovd{color:var(--urg)}
 .card .cfoot-icons{margin-left:auto;display:inline-flex;align-items:center;gap:6px}
@@ -273,11 +276,15 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #opToggles{flex-shrink:0}
 /* Barra de filtros siempre en un renglon (chips fijos). En angosto: sin textos "Area:/Prioridad:" y chips mas compactos */
 #equipoTools > *{flex-shrink:0}
-#equipoTools > #filterTxt{flex-shrink:1}
+#equipoTools > #filterTxtWrap{flex-shrink:1}
+.srch-x{position:absolute;left:5px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:16px;height:16px;padding:0;border:none;border-radius:50%;background:var(--line);color:var(--txt);font-size:13px;line-height:1;cursor:pointer}
+#filterTxt:placeholder-shown + .srch-x,#filterID:placeholder-shown + .srch-x{display:none}
+#filterTxt:not(:placeholder-shown),#filterID:not(:placeholder-shown){padding-left:26px}
+#equipoTools .f-on{font-weight:700;border-color:var(--accent);box-shadow:0 0 0 2px rgba(251,33,24,.15)}
 @media (max-width:1180px){#equipoTools .flbl{display:none}}
 @media (max-width:1000px){#opToggles > *{padding:3px 7px!important}}
 #opToggles .op-i{display:none}
-@media (max-width:960px){#opToggles .op-n{display:none}#opToggles .op-i{display:inline;font-weight:800}#equipoTools{gap:6px!important}#filterID{width:48px!important}#filterTxt{min-width:56px!important}}
+@media (max-width:960px){#opToggles .op-n{display:none}#opToggles .op-i{display:inline;font-weight:800}#equipoTools{gap:6px!important}#filterIDWrap{width:58px!important}#filterTxtWrap{min-width:56px!important}}
 /* En el calendario: VISTA a la izquierda (en el flujo), el mes centrado en la pantalla y los chips a la derecha.
    El mes y los chips van en posición absoluta (la barra ya es sticky = contenedor); así no descentran a VISTA.
    No usar position:relative aquí: el top que calcula setupSticky desplazaría la barra sobre el calendario. */
@@ -314,7 +321,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #calendarBody{padding:0 48px}
 /* Vacaciones: calendario semanal del año (lun→dom), fines de semana en amarillo claro, feriados en gris oscuro */
 #equipoTools.vacmode > .cal-keep:not(#calNavSlot):not(#viewBtns){display:none}
-#equipoTools.vacmode > #opToggles{display:none!important}
+#equipoTools.vacmode > #opToggles,#equipoTools.vacmode > #filterTxtWrap,#equipoTools.vacmode > #filterIDWrap{display:none!important}
 #vacBody{padding:0 48px 30px}
 .vac-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0;position:sticky;z-index:6;background:var(--bg)}
 .vac-modo{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
@@ -331,13 +338,21 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .vac-day:hover{border-color:var(--accent)}
 .vac-day.ro,.vac-day.ro:hover{cursor:default;border-color:var(--line)}
 .vac-day.wknd{background:color-mix(in srgb,#fde68a 30%,var(--bg2))}
-.vac-day.fer{background:#4b5563;border-color:#374151}
-.vac-day.fer .vac-num,.vac-day.fer .vac-sem{color:#fff}
+.vac-day.fer{background:#e5e7eb;border-color:#cbd5e1}
+.vac-day.fer .vac-num,.vac-day.fer .vac-sem{color:#374151}.vac-day.fer .vac-fer{color:#4b5563}
 .vac-day.today{box-shadow:0 0 0 2px var(--accent) inset}
 .vac-day.otro{opacity:.35}
 .vac-num{font-size:12px;font-weight:700;color:var(--txt);display:flex;justify-content:space-between;align-items:baseline;gap:4px}
 .vac-sem{font-size:9px;font-weight:400;color:var(--muted);white-space:nowrap}
 .vac-mks{display:flex;gap:2px;flex-wrap:wrap}
+.vac-fer{font-size:9.5px;line-height:1.2;color:#e5e7eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vac-day{position:relative}
+.vac-day.fer.sug{background:#dcfce7;border-color:#86efac}
+.vac-day.fer.sug .vac-num,.vac-day.fer.sug .vac-sem,.vac-day.fer.sug .vac-fer{color:#166534}
+.vac-fer-x{position:absolute;right:5px;bottom:2px;font-size:13px;line-height:1;font-weight:800;color:inherit;cursor:pointer;opacity:.7}
+.vac-day.fer .vac-fer-x{color:#374151}.vac-day.fer.sug .vac-fer-x{color:#166534}
+.vac-fer-x:hover{opacity:1}
+.cal-cell.fer.sug{background:color-mix(in srgb,#22c55e 9%,var(--bg2))}
 .vac-mk{font-size:9.5px;font-weight:800;color:#fff;border-radius:3px;padding:0 4px;line-height:14px}
 .cal-grid{display:grid;grid-template-columns:repeat(5,2fr) repeat(2,1fr);gap:6px}
 .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding-bottom:2px;min-width:0}
@@ -393,6 +408,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <button id="btnAtrasadasFilter" onclick="toggleAtrasadasFilter()" title="Tareas atrasadas" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px">⏰<span id="atrasBadge" style="position:absolute;top:-5px;right:-5px;background:#fde047;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <a id="btnMencA" href="https://claude.ai/artifact/QE73ixcbJrFMJ5vVXFmNUP" target="_blank" rel="noopener" onclick="registrarMensajerias()" title="Abre el filtro de menciones (todas las veces que quieras). Registra 'Contestar mensajerías' como finalizado, una vez por día" style="margin-left:6px;width:38px;height:32px;box-sizing:border-box;display:none;align-items:center;justify-content:center;font-size:16px;font-weight:700;text-decoration:none;cursor:pointer;background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px">@</a>
     <span id="finHoy" style="margin-left:6px;min-width:38px;height:32px;box-sizing:border-box;padding:0 9px;display:none;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:800;background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px;cursor:default"></span>
+    <span id="vacAviso" onclick="setViewMode('vacaciones')" style="margin-left:6px;height:32px;box-sizing:border-box;padding:0 9px;display:none;align-items:center;gap:8px;font-size:12px;font-weight:800;background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px;cursor:pointer"></span>
     <span class="date" id="todayLabel"></span>
     <button onclick="isAdmin()?toggleNav():openPassModal()" id="btnNavToggle" title="Mostrar/ocultar barra" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
     <button id="themeBtn" onclick="toggleTheme()" title="Cambiar tema" style="margin-left:6px;width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center"><svg id="themeIco" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
@@ -431,8 +447,8 @@ table.grid tr:nth-child(even){background:var(--bg2)}
         <select id="filterArea" title="Área" onchange="renderEquipo()"><option value="">Todas</option></select>
         <label class="muted flbl">Prioridad:</label>
         <select id="filterPrio" title="Prioridad" onchange="renderEquipo()"><option value="">Todas</option></select>
-        <input id="filterTxt" class="cal-keep" placeholder="Buscar tema o tarea…" oninput="renderEquipo()" style="min-width:90px;flex:1 1 170px">
-        <input id="filterID" class="cal-keep" placeholder="ID…" oninput="renderEquipo()" style="width:60px">
+        <span id="filterTxtWrap" class="cal-keep" style="position:relative;display:inline-flex;align-items:center;min-width:90px;flex:1 1 170px"><input id="filterTxt" placeholder="Buscar tema o tarea…" oninput="renderEquipo()" style="width:100%;min-width:0"><button type="button" class="srch-x" onclick="limpiarBuscador()" title="Limpiar búsqueda">&times;</button></span>
+        <span id="filterIDWrap" class="cal-keep" style="position:relative;display:inline-flex;align-items:center;width:68px"><input id="filterID" placeholder="ID…" oninput="renderEquipo()" style="width:100%;min-width:0"><button type="button" class="srch-x" onclick="limpiarBuscador('filterID')" title="Limpiar ID">&times;</button></span>
         <button class="cal-keep" onclick="clearFilters()" title="Limpiar todos los filtros" style="background:#ccfbf1;color:#000;border-color:#5eead4;padding:6px 12px;font-size:12px;line-height:1">✕ Limpiar</button>
         <!-- toggle visibilidad operadores -->
         <div id="opToggles" class="cal-keep" style="display:none;gap:6px;margin-left:auto;flex-wrap:nowrap;align-items:center"></div>
@@ -1171,6 +1187,10 @@ function fillFiltros(){
   const fp=document.getElementById('filterPrio');const cp=fp.value;
   fp.innerHTML='<option value="">Todas</option>'+PRIORIDADES.map(p=>`<option value="${p}">${p}</option>`).join('');fp.value=cp;
 }
+// Filtros con valor: se remarcan (borde rojo + negrita) para que se note que el tablero está filtrado.
+function _syncFiltrosActivos(){['filterTxt','filterID','filterArea','filterPrio','filterOp'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.toggle('f-on',!!String(e.value||'').trim());});}
+// 75 — x al comienzo del buscador y del filtro de ID: borra solo ese campo (los demás filtros quedan).
+function limpiarBuscador(id){const i=document.getElementById(id||'filterTxt');i.value='';i.focus();renderEquipo();}
 function clearFilters(){
   document.getElementById('filterArea').value='';
   document.getElementById('filterPrio').value='';
@@ -1420,13 +1440,55 @@ function _syncFinHoy(){
   }).join('');
   b.style.display='inline-flex';
 }
+// 74 — Aviso de vacaciones (solo admin): quién de los ejecutores (incluido el admin) tiene vacaciones de hoy a 7 días,
+// con sus iniciales y el primer día ("hoy" si ya empezó). Click → vista Vacaciones. Las vacaciones se cargan
+// una vez al entrar y cada 30 min (la vista Vacaciones también las recarga al abrirla). Un aviso por período; la × lo da por visto.
+const VAC_AVISO_DIAS=7;
+let _vacAvisoIntento=false;
+function _syncVacAviso(){
+  const b=document.getElementById('vacAviso');if(!b)return;
+  if(!SESSION||!isAdmin()){b.style.display='none';return;}
+  if(!VAC_LOADED){if(!_vacAvisoIntento){_vacAvisoIntento=true;loadVacaciones().then(_syncVacAviso);}b.style.display='none';return;}
+  const hoy=todayISO(),d=new Date();d.setDate(d.getDate()+VAC_AVISO_DIAS);
+  const hasta=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const cerrados=_vacAvisoCerrados();
+  // un aviso por período: el que está en curso o empieza dentro de los próximos días; cerrado con la × no vuelve
+  const items=_vacOps().map(u=>{
+    const p=_vacPeriodos(u.user).find(x=>x.fin>=hoy&&x.ini<=hasta);
+    return p?{u:u.user,ini:p.ini,clave:u.user+':'+p.ini}:null;
+  }).filter(x=>x&&!cerrados.includes(x.clave));
+  if(!items.length){b.style.display='none';return;}
+  b.dataset.claves=items.map(x=>x.clave).join(',');
+  const ico='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8"/><path d="M9 12v4M15 12v4"/></svg>';
+  b.innerHTML=ico+items.map(x=>`<span style="display:inline-flex;align-items:center;gap:4px"><span style="color:${opColor(x.u)}">${iniOp(x.u)}</span>${x.ini<=hoy?'hoy':x.ini.slice(8,10)+'/'+x.ini.slice(5,7)}</span>`).join('')+'<span onclick="event.stopPropagation();cerrarVacAviso()" style="margin-left:2px;padding:0 2px;font-size:15px;line-height:1;color:var(--muted);cursor:pointer">&times;</span>';
+  b.style.display='inline-flex';
+}
+// Períodos de vacaciones de un usuario: días marcados seguidos; un hueco de hasta 3 días (fin de semana, feriado) no corta.
+function _vacPeriodos(u){
+  const fs=VAC.filter(v=>v.usuario===u).map(v=>v.fecha).sort(),out=[];
+  let ini=null,prev=null;
+  for(const x of fs){if(!prev||(Date.parse(x)-Date.parse(prev))/864e5>3){if(ini)out.push({ini,fin:prev});ini=x;}prev=x;}
+  if(ini)out.push({ini,fin:prev});
+  return out;
+}
+// Cerrar el aviso = "me doy por avisado" de esos períodos (se guarda por navegador y usuario; se limpian los de hace +60 días).
+function _vacAvisoKey(){return 'vac_aviso_cerrado_'+(SESSION?SESSION.user:'');}
+function _vacAvisoCerrados(){try{const a=JSON.parse(localStorage.getItem(_vacAvisoKey())||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+function cerrarVacAviso(){
+  const b=document.getElementById('vacAviso');
+  const lim=new Date();lim.setDate(lim.getDate()-60);const limISO=lim.toISOString().slice(0,10);
+  const a=_vacAvisoCerrados().filter(k=>(k.split(':')[1]||'')>=limISO).concat(((b&&b.dataset.claves)||'').split(',').filter(Boolean));
+  try{localStorage.setItem(_vacAvisoKey(),JSON.stringify([...new Set(a)]));}catch(e){}
+  _syncVacAviso();
+}
+setInterval(()=>{if(SESSION&&isAdmin())loadVacaciones().then(_syncVacAviso);},30*60*1000);
 // Botón @: solo lo ve el admin; el parpadeo de las 16:00 lo maneja _syncMencBlink.
 function _syncMencBtn(){
   const b=document.getElementById('btnMencA');if(b)b.style.display=isAdmin()?'inline-flex':'none';
   _syncMencBlink();
 }
 function renderEquipo(){
-  _syncFinHoy();
+  _syncFinHoy();_syncVacAviso();_syncFiltrosActivos();
   fillFilterOp();fillFiltros();
   const mode=document.getElementById('viewMode').value;
   VIEW_MODE=mode;
@@ -1509,16 +1571,17 @@ function renderEquipo(){
   setupSticky();
   _fitCardFeet();
 }
-// Pie de tarjeta en una sola línea (frecuencia · fechas · ☑ · 🔗 · reacción · chincheta). Si no entra, se esconde
-// la reacción sin usar, después la chincheta sin usar; solo si aun así no entra, el pie baja a 2 líneas.
-// Lecturas y escrituras en tandas (3 reflows como máximo para todo el tablero).
+// REGLA DE ORO: pie de tarjeta SIEMPRE en una sola línea (frecuencia · fechas · ✉ · ☑ · 🔗 · 🔧 · reacción · chincheta).
+// Si no entra se aplican pasos en orden: reacción sin usar, chincheta sin fijar, compacto (sin "☑" y menos espacio),
+// sin fecha de ingreso, sin 🔧 y, como último recurso, se recorta. NUNCA se pasa a 2 líneas.
+// Lecturas y escrituras en tandas (un reflow por paso para todo el tablero).
+const _PIE_PASOS=['sin-react','sin-pin','comp','sin-ing','sin-des','clip'];
 function _fitCardFeet(){
   const feet=[...document.querySelectorAll('#equipoBody .card .cfoot')];
-  feet.forEach(f=>f.classList.remove('sin-react','sin-pin','wrap'));
+  feet.forEach(f=>f.classList.remove(..._PIE_PASOS,'wrap'));
   const over=f=>f.scrollWidth>f.clientWidth+1;
-  let l=feet.filter(over);l.forEach(f=>f.classList.add('sin-react'));
-  l=l.filter(over);l.forEach(f=>f.classList.add('sin-pin'));
-  l=l.filter(over);l.forEach(f=>f.classList.add('wrap'));
+  let l=feet.filter(over);
+  for(const p of _PIE_PASOS){if(!l.length)break;l.forEach(f=>f.classList.add(p));l=l.filter(over);}
 }
 let _fitRaf=0;
 window.addEventListener('resize',()=>{cancelAnimationFrame(_fitRaf);_fitRaf=requestAnimationFrame(_fitCardFeet);});
@@ -1619,14 +1682,14 @@ function cardHTML(t){
   const relojIcon=(venc&&!_esWatcher())?`<span class="creloj${_isAtrasadaRoja(t.id)?' on':''}" style="margin-right:4px" title="Marcar/desmarcar en rojo" onclick="event.stopPropagation();toggleAtrasadaRoja('${t.id}')">${ICO.reloj}</span>`:'';
   const envIcon=t.comentario?`<span class="cenv${t.comentario_ok?' ok':''}" title="${escH(nombreOp(t.comentario_por))}: ${escH(t.comentario)}" onclick="event.stopPropagation();openTaskForm('${t.id}')">${ICO.mail} ${(t.comentario_por||'?')[0].toUpperCase()}</span>`:'';
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
-  const clIcon=cl?`<span class="cpill clchip" onclick="event.stopPropagation();toggleChkTip(this,'${t.id}')" style="cursor:pointer;background:${cl.every(x=>x.ok)?'#4ade8033;color:#16a34a':'var(--bg2)'};border-color:${cl.every(x=>x.ok)?'#4ade80':'var(--border)'}">☑ ${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'';
+  const clIcon=cl?`<span class="cpill clchip" onclick="event.stopPropagation();toggleChkTip(this,'${t.id}')" style="cursor:pointer;background:${cl.every(x=>x.ok)?'#4ade8033;color:#16a34a':'var(--bg2)'};border-color:${cl.every(x=>x.ok)?'#4ade80':'var(--border)'}"><span class="clg">☑ </span>${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'';
   const _canDrag=!isFinal&&(!(USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)||t.creado_por===SESSION.user);
   const _isRecurring=frecBase(t.frecuencia)!=='Unica';
   const _frecSvg='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';
   // Marca del tipo de recurrencia: E=Por Etapas, M=Mensual, N=cada N días (Personalizada)
   const _frecMark=(()=>{const f=t.frecuencia||'';if(f==='Por Etapas')return 'E';if(frecBase(f)==='Mensual')return 'M';if(f.startsWith('Personalizada:'))return f.split(':')[1];if(frecBase(f)==='Personalizada')return 'P';return '';})();
   const _frecIcon=_isRecurring?`<span class="cfrec">${_frecSvg}${_frecMark?`<b class="cfrec-mk">${escH(_frecMark)}</b>`:''}</span>`:'';
-  const _desIcon=t.desarrollo?`<span title="Tarea con Desarrollo" style="font-size:12px;filter:grayscale(1) brightness(0.45);flex-shrink:0;line-height:1">🔧</span>`:'';
+  const _desIcon=t.desarrollo?`<span class="cdes" title="Tarea con Desarrollo" style="font-size:12px;filter:grayscale(1) brightness(0.45);flex-shrink:0;line-height:1">🔧</span>`:'';
   const _isNota=t.frecuencia==='Nota';
   const _editClick=(isFinal||_isNota)?'onclick="openTaskForm(\''+t.id+'\')"':'';
   const _mc=isFinal?null:_marcaColor(t.id);
@@ -2915,6 +2978,32 @@ function startCierreWatcher(){
 // Calendario semanal del año (semana lun→dom), como el planificador de WinCalendar.
 let VAC=[],VAC_LOADED=false,VAC_Y,_vacModo='vac',_vacAncla=null;
 const VAC_MES_C=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+// Feriados nacionales con su nombre, copiados de argentina.gob.ar/feriados (JSON /sites/default/files/holidays-AAAA-es.json),
+// sin los días no laborables religiosos opcionales (judíos/islámicos). Ese JSON no se puede leer desde otro sitio (sin CORS):
+// cuando el gobierno publique el año siguiente, agregarlo acá. Se cargan con el botón "Cargar feriados" y se desmarcan a mano.
+const FERIADOS_AR={2026:[
+['2026-01-01','Año Nuevo'],['2026-02-16','Carnaval'],['2026-02-17','Carnaval'],['2026-03-23','Día no laborable con fines turísticos'],
+['2026-03-24','Día Nacional de la Memoria por la Verdad y la Justicia'],['2026-04-02','Día del Veterano y de los Caídos en la Guerra de Malvinas / Jueves Santo Festividad Cristiana'],
+['2026-04-03','Viernes Santo Festividad Cristiana'],['2026-05-01','Día del Trabajador'],['2026-05-25','Día de la Revolución de Mayo'],
+['2026-06-15','Paso a la Inmortalidad del Gral. Don Martín Miguel de Güemes (17/6)'],['2026-06-20','Paso a la Inmortalidad del Gral. Manuel Belgrano'],
+['2026-07-09','Día de la Independencia'],['2026-07-10','Día no laborable con fines turísticos'],['2026-08-17','Paso a la Inmortalidad del Gral. José de San Martín'],
+['2026-10-12','Día de la Raza'],['2026-11-09','Visita de Su Santidad el Papa León XIV'],
+['2026-11-10','Visita de Su Santidad el Papa León XIV (feriado en Córdoba y Ciudad Autónoma de Buenos Aires)'],
+['2026-11-11','Visita de Su Santidad el Papa León XIV (feriado en Provincia de Buenos Aires)'],['2026-11-23','Día de la Soberanía Nacional (20/11)'],
+['2026-12-07','Día no laborable con fines turísticos'],['2026-12-08','Inmaculada Concepción de María'],['2026-12-25','Navidad'],['2027-01-01','Año nuevo']
+]};
+function _vacFeriadosPend(){return !!(FERIADOS_AR[VAC_Y]&&!VAC.some(v=>v.usuario==='feriado'&&v.nombre&&v.fecha.startsWith(VAC_Y+'-')));}
+async function vacCargarFeriados(){
+  const l=FERIADOS_AR[VAC_Y];if(!l||!_vacPuede())return;
+  const antes=VAC.slice(),m=new Map(l);
+  VAC=VAC.map(x=>x.usuario==='feriado'&&m.has(x.fecha)?{...x,nombre:m.get(x.fecha)}:x);
+  l.forEach(([f,n])=>{if(!VAC.some(x=>x.usuario==='feriado'&&x.fecha===f))VAC.push({usuario:'feriado',fecha:f,nombre:n});});
+  renderVacaciones();
+  if(SESSION.demo)return;
+  const{error}=await _SB.from('vacaciones').upsert(l.map(([f,n])=>({usuario:'feriado',fecha:f,nombre:n})),{onConflict:'usuario,fecha'});
+  if(error){console.error(error);showToast('No se pudieron cargar los feriados');VAC=antes;renderVacaciones();return;}
+  showToast('Feriados '+VAC_Y+' cargados ✓');
+}
 function _vacOps(){return USERS.filter(u=>!u.hidden&&u.canFinalize!==false);}
 function _vacPuede(){return !!(SESSION&&_vacOps().some(u=>u.user===SESSION.user));}
 async function loadVacaciones(){
@@ -2951,6 +3040,8 @@ function vacClick(ev,iso){
   _vacAncla={u,iso,on};
   _vacSet(u,fechas,on);
 }
+// Los feriados cargados son una ayuda (suelen cambiar): cada uno se quita con su ×, en cualquier modo.
+function vacQuitarFeriado(iso){if(!_vacPuede())return;_vacAncla=null;_vacSet('feriado',[iso],false);}
 function vacModo(m){_vacModo=m;_vacAncla=null;renderVacaciones();}
 function vacNav(d){VAC_Y+=d;_vacAncla=null;renderVacaciones();}
 function vacHoy(){VAC_Y=new Date().getFullYear();renderVacaciones(true);}
@@ -2961,10 +3052,11 @@ function renderVacaciones(irAHoy){
   const slot=document.getElementById('calNavSlot');
   if(slot)slot.innerHTML='<button class="cal-nav" onclick="vacNav(-1)" title="Año anterior">‹</button><span class="cal-month">Vacaciones '+VAC_Y+'</span><button class="cal-nav" onclick="vacNav(1)" title="Año siguiente">›</button><button class="cal-today" onclick="vacHoy()">Hoy</button>';
   const ops=_vacOps(),puede=_vacPuede(),hoy=todayISO();
-  const byDay={};VAC.forEach(v=>{(byDay[v.fecha]=byDay[v.fecha]||[]).push(v.usuario);});
+  const byDay={},ferNom={},ferSug={};VAC.forEach(v=>{(byDay[v.fecha]=byDay[v.fecha]||[]).push(v.usuario);if(v.usuario==='feriado'){ferNom[v.fecha]=v.nombre||'Feriado';if(v.nombre)ferSug[v.fecha]=1;}});
   let h='<div class="vac-top">';
-  if(puede)h+='<span class="vac-modo"><button class="'+(_vacModo==='vac'?'on':'')+'" onclick="vacModo(\'vac\')">Mis vacaciones</button><button class="'+(_vacModo==='fer'?'on':'')+'" onclick="vacModo(\'fer\')">Feriado</button></span><span class="vac-hint">Clic marca o desmarca · Shift+clic marca un rango</span>';
-  h+='<span class="vac-ley">'+ops.map(u=>'<span><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+'</span>').join('')+'<span><i style="background:#4b5563"></i>Feriado</span></span></div>';
+  if(puede)h+='<span class="vac-modo"><button class="'+(_vacModo==='vac'?'on':'')+'" onclick="vacModo(\'vac\')">Mis vacaciones</button><button class="'+(_vacModo==='fer'?'on':'')+'" onclick="vacModo(\'fer\')">Feriado</button></span><span class="vac-hint">Clic marca o desmarca · Shift+clic marca un rango · × quita un feriado</span>'
+    +(_vacFeriadosPend()?'<button class="cal-today" onclick="vacCargarFeriados()" title="Feriados nacionales de argentina.gob.ar; después se desmarcan los que no van">Cargar feriados '+VAC_Y+'</button>':'');
+  h+='<span class="vac-ley">'+ops.map(u=>'<span><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+'</span>').join('')+'<span><i style="background:#e5e7eb;border:1px solid #cbd5e1"></i>Feriado</span><span><i style="background:#dcfce7;border:1px solid #86efac"></i>Feriado cargado</span></span></div>';
   h+='<div class="vac-grid"><div class="vac-dow"></div>'+['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(d=>'<div class="vac-dow">'+d+'</div>').join('');
   // Semanas: desde el lunes de la semana del 1/1 hasta el domingo de la semana del 31/12
   const d=new Date(VAC_Y,0,1);d.setDate(d.getDate()-((d.getDay()+6)%7));
@@ -2976,9 +3068,10 @@ function renderVacaciones(irAHoy){
     h+='<div class="vac-mes'+(mes?' ini':'')+'">'+mes+'</div>';
     for(let k=0;k<7;k++){
       const iso=_locISO(d),quien=byDay[iso]||[],fer=quien.includes('feriado');
-      const cls='vac-day'+(k>=5?' wknd':'')+(fer?' fer':'')+(iso===hoy?' today':'')+(d.getFullYear()!==VAC_Y?' otro':'')+(puede?'':' ro')+(mes?' ini':'');
+      const cls='vac-day'+(k>=5?' wknd':'')+(fer?' fer':'')+(fer&&ferSug[iso]?' sug':'')+(iso===hoy?' today':'')+(d.getFullYear()!==VAC_Y?' otro':'')+(puede?'':' ro')+(mes?' ini':'');
       const mks=ops.filter(u=>quien.includes(u.user)).map(u=>'<span class="vac-mk" style="background:'+opColor(u.user)+'" title="'+escH(u.nombre)+' de vacaciones">'+escH(iniOp(u.user))+'</span>').join('');
-      h+='<div class="'+cls+'"'+(puede?' onclick="vacClick(event,\''+iso+'\')"':'')+'><span class="vac-num">'+d.getDate()+(k===0?'<span class="vac-sem">Semana '+_isoSemana(d)+'</span>':'')+'</span><div class="vac-mks">'+mks+'</div></div>';
+      const fn=fer?ferNom[iso]:'';
+      h+='<div class="'+cls+'"'+(fn?' title="'+escH(fn)+'"':'')+(puede?' onclick="vacClick(event,\''+iso+'\')"':'')+'><span class="vac-num">'+d.getDate()+(k===0?'<span class="vac-sem">Semana '+_isoSemana(d)+'</span>':'')+'</span>'+(fn?'<span class="vac-fer">'+escH(fn)+'</span>':'')+'<div class="vac-mks">'+mks+'</div>'+(fer&&puede?'<b class="vac-fer-x" title="Quitar este feriado" onclick="event.stopPropagation();vacQuitarFeriado(\''+iso+'\')">&times;</b>':'')+'</div>';
       d.setDate(d.getDate()+1);
     }
   }
@@ -3033,12 +3126,12 @@ function renderCalendar(){
     // Vacaciones y feriados del día (tabla vacaciones): TODOS ven las de todos, como una tarea más del día
     // ("Vacaciones", una por persona, en su color). El admin respeta el filtro de chips.
     const _vq=VAC.filter(v=>v.fecha===iso).map(v=>v.usuario);
-    const _fer=_vq.includes('feriado');
+    const _fer=_vq.includes('feriado');const _ferSug=_fer&&!!(VAC.find(v=>v.usuario==='feriado'&&v.fecha===iso)||{}).nombre;
     const _vac=_vacOps().filter(u=>_vq.includes(u.user)&&(soloMias||!HIDDEN_OPS.has(u.user)));
-    let cell='<div class="cal-cell'+(esHoy?' today':'')+(esWknd?' weekend':'')+(_fer?' fer':'')+'"><span class="cal-daynum">'+d+'</span>';
+    let cell='<div class="cal-cell'+(esHoy?' today':'')+(esWknd?' weekend':'')+(_fer?' fer':'')+(_ferSug?' sug':'')+'"><span class="cal-daynum">'+d+'</span>';
     if(items.length||_fer||_vac.length){
       cell+='<div class="cal-tasks">';
-      if(_fer)cell+='<div class="cal-task cal-task-vac" style="border-left-color:#4b5563;background:#4b556333" title="Feriado">Feriado</div>';
+      if(_fer){const _fn=(VAC.find(v=>v.usuario==='feriado'&&v.fecha===iso)||{}).nombre||'Feriado';cell+='<div class="cal-task cal-task-vac" style="border-left-color:'+(_ferSug?'#22c55e;background:#22c55e22':'#9ca3af;background:#9ca3af22')+'" title="Feriado — '+escH(_fn)+'">'+escH(_fn)+'</div>';}
       _vac.forEach(u=>{const oc=opColor(u.user);cell+='<div class="cal-task cal-task-vac" style="border-left-color:'+oc+';background:'+oc+'33" title="Vacaciones — '+escH(u.nombre)+'">Vacaciones</div>';});
       items.forEach(r=>{
         const oc=opColor(r.operador||r.completado_por);
