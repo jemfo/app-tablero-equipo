@@ -276,7 +276,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #opToggles{flex-shrink:0}
 /* Barra de filtros siempre en un renglon (chips fijos). En angosto: sin textos "Area:/Prioridad:" y chips mas compactos */
 #equipoTools > *{flex-shrink:0}
-#equipoTools > #filterTxtWrap{flex-shrink:1}
+#equipoTools > #filterTxtWrap{flex-shrink:1}#equipoTools.calmode > #filterTxtWrap{flex:0 1 150px!important}@media (max-width:1300px){#equipoTools.calmode > #calNavSlot,#equipoTools.calmode > #opToggles{position:static!important;transform:none!important}#equipoTools.calmode > #calNavSlot{margin:0 auto!important}}
 .srch-x{position:absolute;left:5px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:16px;height:16px;padding:0;border:none;border-radius:50%;background:var(--line);color:var(--txt);font-size:13px;line-height:1;cursor:pointer}
 #filterTxt:placeholder-shown + .srch-x,#filterID:placeholder-shown + .srch-x{display:none}
 #filterTxt:not(:placeholder-shown),#filterID:not(:placeholder-shown){padding-left:26px}
@@ -3054,7 +3054,7 @@ function renderVacaciones(irAHoy){
   const ops=_vacOps(),puede=_vacPuede(),hoy=todayISO();
   const byDay={},ferNom={},ferSug={};VAC.forEach(v=>{(byDay[v.fecha]=byDay[v.fecha]||[]).push(v.usuario);if(v.usuario==='feriado'){ferNom[v.fecha]=v.nombre||'Feriado';if(v.nombre)ferSug[v.fecha]=1;}});
   let h='<div class="vac-top">';
-  if(puede)h+='<span class="vac-modo"><button class="'+(_vacModo==='vac'?'on':'')+'" onclick="vacModo(\'vac\')">Mis vacaciones</button><button class="'+(_vacModo==='fer'?'on':'')+'" onclick="vacModo(\'fer\')">Feriado</button></span><span class="vac-hint">Clic marca o desmarca · Shift+clic marca un rango · × quita un feriado</span>'
+  if(puede)h+='<span class="vac-modo"><button class="'+(_vacModo==='vac'?'on':'')+'" onclick="vacModo(\'vac\')">Mis vacaciones</button><button class="'+(_vacModo==='fer'?'on':'')+'" onclick="vacModo(\'fer\')">Feriado</button></span>'
     +(_vacFeriadosPend()?'<button class="cal-today" onclick="vacCargarFeriados()" title="Feriados nacionales de argentina.gob.ar; después se desmarcan los que no van">Cargar feriados '+VAC_Y+'</button>':'');
   h+='<span class="vac-ley">'+ops.map(u=>'<span><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+'</span>').join('')+'<span><i style="background:#e5e7eb;border:1px solid #cbd5e1"></i>Feriado</span><span><i style="background:#dcfce7;border:1px solid #86efac"></i>Feriado cargado</span></span></div>';
   h+='<div class="vac-grid"><div class="vac-dow"></div>'+['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(d=>'<div class="vac-dow">'+d+'</div>').join('');
