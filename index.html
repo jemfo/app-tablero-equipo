@@ -257,6 +257,19 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .kpis{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
 .kpi{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:120px}
 .kpi .n{font-size:24px;font-weight:bold}.kpi .l{color:var(--muted);font-size:11px}
+/* Análisis: barras verticales de finalizadas por mes (año en curso) */
+.an-meses{display:flex;align-items:flex-end;gap:10px;height:190px;padding:4px 4px 0;border-bottom:1px solid var(--line);max-width:860px}
+.an-mes{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;position:relative;padding-bottom:20px}
+.an-bar{width:100%;max-width:46px;background:var(--ok);border-radius:4px 4px 0 0;min-height:0}
+.an-v{font-size:11px;font-weight:700;color:var(--txt)}
+.an-l{position:absolute;bottom:2px;font-size:11px;color:var(--muted)}
+.an-mes.fut .an-l{opacity:.5}
+.an-mes.sinapp .an-bar{background:var(--line);opacity:.7}
+.an-mes.clic{cursor:pointer}
+.an-mes.clic:not(.sel) .an-bar{opacity:.55}
+.an-mes.clic:hover .an-bar{opacity:1}
+.an-mes.sel .an-l{color:var(--txt);font-weight:700}
+.an-dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px 32px;max-width:1000px}
 .bar-row{display:flex;align-items:center;gap:8px;margin:5px 0}
 .bar-row .bname{width:120px;font-size:12px}
 .bbar{height:18px;background:var(--blue);border-radius:4px;min-width:2px}
@@ -647,7 +660,8 @@ const opColor=u=>OP_COLOR[u]||'#5b9bd5';
 const opColorBg=u=>{const c=opColor(u);return c+'28';};  // semi-transparente
 
 // ── Catálogos ─────────────────────────────────────────────────
-const AREAS      =['DES','COM','A.Com','GER','ARM','MKT','LC','PROD'];
+// Desarrollo NO es un área: se marca con el check 🔧 (t.desarrollo). El área es siempre quién lo pide. (DES se quitó el 16/10/2026)
+const AREAS      =['COM','A.Com','GER','ARM','MKT','LC','PROD'];
 const PRIORIDADES=['Baja','Media','Alta','Urgente'];
 const FRECUENCIAS=['Unica','Personalizada','Mensual','Por Etapas'];
 const ESTADOS    =['Programado','Pendiente','En curso','Para ver juntos','Finalizado'];
@@ -1197,7 +1211,8 @@ function fillFilterOp(){
 }
 function fillFiltros(){
   const fa=document.getElementById('filterArea');const ca=fa.value;
-  fa.innerHTML='<option value="">Todas</option>'+AREAS.filter(a=>isAdmin()||a!=='DES').map(a=>`<option value="${a}">${a}</option>`).join('');fa.value=ca;
+  // "Desarrollo" (solo admin) filtra por el check 🔧, no por un área
+  fa.innerHTML='<option value="">Todas</option>'+AREAS.map(a=>`<option value="${a}">${a}</option>`).join('')+(isAdmin()?'<option value="DES">Desarrollo</option>':'');fa.value=ca;
   const fp=document.getElementById('filterPrio');const cp=fp.value;
   fp.innerHTML='<option value="">Todas</option>'+PRIORIDADES.map(p=>`<option value="${p}">${p}</option>`).join('');fp.value=cp;
 }
@@ -2361,7 +2376,7 @@ function openTaskForm(id){
     document.getElementById('f_tema').value=t.tema||'';document.getElementById('f_tareas').value=t.tareas||'';
     const _fop=document.getElementById('f_operador');
     if(t.operador&&!Array.from(_fop.options).some(o=>o.value===t.operador))_fop.insertAdjacentHTML('beforeend',`<option value="${t.operador}">${nombreOp(t.operador)||t.operador}</option>`);
-    _fop.value=t.operador;document.getElementById('f_area').value=t.area;
+    _fop.value=t.operador;document.getElementById('f_area').value=AREAS.includes(t.area)?t.area:'COM';// área DES vieja → COM + check 🔧
     document.getElementById('f_prioridad').value=t.prioridad;
     const _fb=frecBase(t.frecuencia);document.getElementById('f_frecuencia').value=_fb;
     if(_fb==='Personalizada'){const _d=document.getElementById('f_frec_dias');if(_d)_d.value=(t.frecuencia||'').split(':')[1]||'';}
@@ -2429,7 +2444,7 @@ function openTaskForm(id){
   const _priv=!!(_t&&_t.privado);
   document.getElementById('f_privado').checked=_priv;
   document.getElementById('privWrap').style.display=isAdmin()?'flex':'none';
-  document.getElementById('f_desarrollo').checked=!!(_t&&_t.desarrollo);
+  document.getElementById('f_desarrollo').checked=!!(_t&&(_t.desarrollo||_t.area==='DES'));
   document.getElementById('devWrap').style.display=isAdmin()?'inline-flex':'none';
   togglePriv();
   syncLinkRows(false);
@@ -2521,7 +2536,7 @@ function duplicarTarea(id){
   const _fop=document.getElementById('f_operador');
   if(t.operador&&!Array.from(_fop.options).some(o=>o.value===t.operador))_fop.insertAdjacentHTML('beforeend',`<option value="${t.operador}">${nombreOp(t.operador)||t.operador}</option>`);
   _fop.value=t.operador;// la copia queda con el operador original
-  document.getElementById('f_area').value=t.area||'A.Com';
+  document.getElementById('f_area').value=AREAS.includes(t.area)?t.area:(t.area==='DES'?'COM':'A.Com');
   document.getElementById('f_prioridad').value=t.prioridad||'Baja';
   const _fb=frecBase(t.frecuencia);
   document.getElementById('f_frecuencia').value=_fb;
@@ -2531,7 +2546,7 @@ function duplicarTarea(id){
   curImgs=Array.isArray(t.imagenes)?t.imagenes.slice():[];
   curChecklist=Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):[];// checklist reseteado
   document.getElementById('f_privado').checked=!!t.privado;togglePriv();
-  document.getElementById('f_desarrollo').checked=!!t.desarrollo;
+  document.getElementById('f_desarrollo').checked=!!(t.desarrollo||t.area==='DES');
   toggleCopias();
   // Fecha VACÍA y editable: obliga a completarla antes de guardar (sin señal falsa en el tablero)
   const _fin=document.getElementById('f_finalizacion');_fin.value='';_fin.readOnly=false;_fin.style.background='';
@@ -2710,26 +2725,72 @@ async function deleteTask(){
 }
 
 // ── Análisis ──────────────────────────────────────────────────
+let AN_MES=null,AN_ANIO=null;// mes (AAAA-MM) y año elegidos en Análisis; por defecto los actuales
 function renderAnalisis(){
   const act=DATA.filter(t=>t.estado!=='Finalizado');
-  const venc=act.filter(t=>diasPara(t.finalizacion)<0);
+  // Desarrollo = check 🔧 (o área DES vieja). En Análisis los desarrollos NO cuentan como vencidos:
+  // son trabajos que esperan respuesta de terceros (regla pedida por Juan, 16/10/2026)
+  const _esDes=t=>t.desarrollo||t.area==='DES';
+  const _vencida=t=>t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0&&!_esDes(t);
+  const venc=act.filter(_vencida);
   const term=DATA.filter(t=>t.estado==='Finalizado');
   let h=`<div class="kpis"><div class="kpi"><div class="n">${act.length}</div><div class="l">Activos</div></div><div class="kpi"><div class="n" style="color:var(--urg)">${venc.length}</div><div class="l">Vencidos</div></div><div class="kpi"><div class="n" style="color:var(--ok)">${term.length}</div><div class="l">Finalizados</div></div><div class="kpi"><div class="n">${DATA.length}</div><div class="l">Total</div></div></div>`;
-  h+='<div class="section-title">Volumen por operador (activos)</div>';
+  // Finalizadas por mes del año en curso (mes = fecha_estado, día en que se finalizó; sin notas)
+  {
+    const yHoy=String(new Date().getFullYear());
+    const anios=[...new Set(term.map(t=>(t.fecha_estado||'').slice(0,4)).filter(a=>/^\d{4}$/.test(a)).concat(yHoy))].sort().reverse();
+    if(!AN_ANIO||!anios.includes(AN_ANIO))AN_ANIO=yHoy;
+    const y=AN_ANIO,mAct=y===yHoy?new Date().getMonth():(y<yHoy?11:-1);
+    const MES_C=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const pm=Array(12).fill(0);
+    term.forEach(t=>{const f=t.fecha_estado||'';if(t.frecuencia!=='Nota'&&f.slice(0,4)===y)pm[+f.slice(5,7)-1]++;});
+    const mx=Math.max(1,...pm);
+    // Meses anteriores al primer registro de la app: barra gris clara de relleno (alto = promedio de los meses con datos), sin número
+    const _primerMes=term.map(t=>(t.fecha_estado||'').slice(0,7)).filter(m=>/^\d{4}-\d{2}$/.test(m)).sort()[0]||'';
+    const _conDatos=pm.filter(v=>v>0),_prom=_conDatos.length?_conDatos.reduce((a,b)=>a+b,0)/_conDatos.length:0;
+    const _sinApp=i=>(y+'-'+String(i+1).padStart(2,'0'))<_primerMes;
+    // Mes elegido: por defecto el actual (o diciembre si es un año pasado); al cambiar de año se reinicia
+    if(!AN_MES||AN_MES.slice(0,4)!==y)AN_MES=y===yHoy?todayISO().slice(0,7):y+'-12';
+    h+='<div class="section-title" style="display:flex;align-items:center;gap:8px">Trabajos finalizados por mes · '
+      +'<select onchange="AN_ANIO=this.value;renderAnalisis()" style="font-size:12px;padding:2px 6px">'+anios.map(a=>`<option${a===y?' selected':''}>${a}</option>`).join('')+'</select>'
+      +'<span class="muted" style="font-size:11px">total '+pm.reduce((s,v)=>s+v,0)+'</span>'
+      +'<button onclick="AN_ANIO=null;AN_MES=null;renderAnalisis()" title="Volver al año y mes actuales" style="margin-left:auto;background:#ccfbf1;color:#000;border-color:#5eead4;padding:5px 12px;font-size:12px;line-height:1">✕ Limpiar</button></div><div class="an-meses">'
+      +pm.map((v,i)=>{
+        if(_sinApp(i))return '<div class="an-mes sinapp" title="Sin registro: todavía no se usaba la app"><span class="an-v"></span><div class="an-bar" style="height:'+(_prom/mx*100)+'%"></div><span class="an-l">'+MES_C[i]+'</span></div>';
+        // Click en un mes (pasado o actual) → los bloques de la derecha muestran ese mes; el elegido queda resaltado
+        const ym=y+'-'+String(i+1).padStart(2,'0'),ok=i<=mAct,sel=ym===AN_MES;
+        return '<div class="an-mes'+(i>mAct?' fut':'')+(ok?' clic':'')+(sel?' sel':'')+'"'+(ok?` onclick="AN_MES='${ym}';renderAnalisis()" title="Ver ${MES_C[i]} en los bloques de abajo"`:'')+'><span class="an-v">'+(v||(i>mAct?'':'0'))+'</span><div class="an-bar" style="height:'+(v/mx*100)+'%"></div><span class="an-l">'+MES_C[i]+'</span></div>';
+      }).join('')+'</div>';
+  }
+  // Por área (activos): debajo del gráfico de finalizados por mes
+  // Desarrollo va como barra propia (check 🔧); el resto, por el área que lo pidió
+  const perA=[{a:'Desarrollo',v:act.filter(_esDes).length}].concat(AREAS.map(a=>({a,v:act.filter(t=>!_esDes(t)&&t.area===a).length}))).filter(x=>x.v>0);
+  // Barras horizontales (n=nombre, v=valor, c=color, p=punto de color al lado del nombre)
+  const _barras=arr=>{const mx=Math.max(1,...arr.map(x=>x.v));return arr.map(x=>`<div class="bar-row"><div class="bname" style="display:flex;align-items:center;gap:6px">${x.p?`<span style="width:9px;height:9px;border-radius:50%;background:${x.c};display:inline-block"></span>`:''}${x.n}</div><div class="bbar" style="width:${(x.v/mx)*240}px;background:${x.c}"></div><div>${x.v}</div></div>`).join('');};
+  const _tot=arr=>'<span class="muted" style="font-size:11px;font-weight:400">total '+arr.reduce((s,x)=>s+x.v,0)+'</span>';
+  // Mes elegido = barra clickeada en el gráfico de arriba (mueve los dos bloques de la derecha)
+  const _MESL=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const _selMes='<b style="color:var(--txt)">'+_MESL[+AN_MES.slice(5,7)-1]+' '+AN_MES.slice(0,4)+'</b>';
+  const finMes=term.filter(t=>t.frecuencia!=='Nota'&&(t.fecha_estado||'').slice(0,7)===AN_MES);
+  const _porArea=lista=>[{n:'Desarrollo',v:lista.filter(_esDes).length,c:'var(--accent)'}].concat(AREAS.map(a=>({n:a,v:lista.filter(t=>!_esDes(t)&&t.area===a).length,c:'var(--accent)'}))).filter(x=>x.v>0);
+  const areaMes=_porArea(finMes);
+  // Área: activos hoy | finalizados en el mes
+  h+='<div class="an-dos"><div><div class="section-title" style="display:flex;align-items:center;gap:8px">Tickets activos HOY por área solicitada'+_tot(perA.map(x=>({v:x.v})))+'</div>'
+    +_barras(perA.map(x=>({n:x.a,v:x.v,c:'var(--accent)'})))+'</div>'
+    +'<div><div class="section-title" style="display:flex;align-items:center;gap:8px">Tickets FINALIZADOS por área en '+_selMes+_tot(areaMes)+'</div>'+_barras(areaMes)+'</div></div>';
+  // Operador: activos hoy | finalizados en el mes
   const _uAn=USERS.filter(u=>u.canFinalize!==false&&!u.demo);
-  const perOp=_uAn.map(u=>({n:u.nombre,v:act.filter(t=>t.operador===u.user).length,c:opColor(u.user)}));
-  const maxO=Math.max(1,...perOp.map(x=>x.v));
-  perOp.forEach(x=>{h+=`<div class="bar-row"><div class="bname" style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:${x.c};display:inline-block"></span>${x.n}</div><div class="bbar" style="width:${(x.v/maxO)*300}px;background:${x.c}"></div><div>${x.v}</div></div>`;});
+  const perOp=_uAn.map(u=>({n:u.nombre,v:act.filter(t=>t.operador===u.user).length,c:opColor(u.user),p:1}));
+  const perMes=_uAn.map(u=>({n:u.nombre,v:finMes.filter(t=>t.operador===u.user).length,c:opColor(u.user),p:1}));
+  h+='<div class="an-dos"><div><div class="section-title">Tickets ACTIVOS por operador HOY</div>'+_barras(perOp)+'</div>'
+    +'<div><div class="section-title" style="display:flex;align-items:center;gap:8px">Tickets FINALIZADOS por operador en '+_selMes+_tot(perMes)+'</div>'+_barras(perMes)+'</div></div>';
   h+='<div class="section-title">Tareas por operador y estado</div><div class="scrollx"><table class="grid"><tr><th>Operador</th>'+ESTADOS.map(e=>`<th>${e}</th>`).join('')+'<th>Vencidos</th><th>Total</th></tr>';
   _uAn.forEach(u=>{
     const its=DATA.filter(t=>t.operador===u.user);
-    const vc=its.filter(t=>t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0).length;
+    const vc=its.filter(_vencida).length;
     h+=`<tr><td style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:${opColor(u.user)};display:inline-block"></span>${u.nombre}</td>`+ESTADOS.map(e=>`<td>${its.filter(t=>t.estado===e).length}</td>`).join('')+`<td class="${vc?'eurg':''}">${vc}</td><td>${its.length}</td></tr>`;
   });
-  h+='</table></div><div class="section-title">Por área (activos)</div>';
-  const perA=AREAS.map(a=>({a,v:act.filter(t=>t.area===a).length})).filter(x=>x.v>0);
-  const maxA=Math.max(1,...perA.map(x=>x.v));
-  perA.forEach(x=>{h+=`<div class="bar-row"><div class="bname">${x.a}</div><div class="bbar" style="width:${(x.v/maxA)*300}px;background:var(--accent)"></div><div>${x.v}</div></div>`;});
+  h+='</table></div>';
   document.getElementById('analisisBody').innerHTML=h;
 }
 
