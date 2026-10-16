@@ -443,6 +443,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     </span>
     <button id="btnDerivNot" onclick="toggleDerivButton()" title="Tareas derivadas a terceros" style="position:relative;width:38px;height:32px;padding:0;display:none;align-items:center;justify-content:center;margin-left:4px"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg><span id="derivBadge" onclick="event.stopPropagation();toggleNotifPop('derivada',this)" style="position:absolute;top:-5px;right:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <button id="btnAtrasadasFilter" onclick="toggleAtrasadasFilter()" title="Tareas atrasadas" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px">⏰<span id="atrasBadge" style="position:absolute;top:-5px;right:-5px;background:#fde047;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <button id="btnUndo" onclick="deshacer()" title="Nada para deshacer" disabled style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;opacity:.4;cursor:default"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
     <a id="btnMencA" href="https://claude.ai/artifact/QE73ixcbJrFMJ5vVXFmNUP" target="_blank" rel="noopener" onclick="registrarMensajerias()" title="Abre el filtro de menciones (todas las veces que quieras). Registra 'Contestar mensajerías' como finalizado, una vez por día" style="margin-left:6px;width:38px;height:32px;box-sizing:border-box;display:none;align-items:center;justify-content:center;font-size:16px;font-weight:700;text-decoration:none;cursor:pointer;background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px">@</a>
     <span id="finHoy" style="margin-left:6px;min-width:38px;height:32px;box-sizing:border-box;padding:0 9px;display:none;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:800;background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px;cursor:default"></span>
     <span id="vacAviso" onclick="setViewMode('vacaciones')" style="margin-left:6px;height:32px;box-sizing:border-box;padding:0 9px;display:none;align-items:center;gap:8px;font-size:12px;font-weight:800;background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px;cursor:pointer"></span>
@@ -744,7 +745,7 @@ async function insertConNumero(task){
     setSyncSt('Guardando…');
     const{error}=await _SB.from('trabajos').upsert(task);
     setSyncSt('');
-    if(!error){showToast('Guardado ✓');return true;}
+    if(!error){_undoOp({t:'ins',id:task.id,tema:task.tema});_srvSet(task);showToast('Guardado ✓');return true;}
     const choque = error.code==='23505' || /duplicate key|trabajos_numero_unico/i.test(error.message||'');
     if(choque && task.numero!=null){
       task.numero=await getNextNumero();// pedir un número nuevo y reintentar
@@ -775,23 +776,74 @@ async function loadData(){
   const{data,error}=await _selectTodo('trabajos','*',q=>q.order('actualizado',{ascending:false}).order('id'));
   setSyncSt('');
   if(error){showToast('Error al cargar: '+error.message,'err');return;}
-  DATA=data||[]; updateEnvBadge(); renderCurrent();
+  DATA=data||[]; _SRV=new Map(DATA.map(t=>[t.id,_copia(t)])); updateEnvBadge(); renderCurrent();
 }
-async function upsertTask(task){
+// opt.sinDeshacer: escrituras automáticas (no son una acción del usuario) que no entran en Deshacer
+async function upsertTask(task,opt){
   if(SESSION&&SESSION.demo){showToast('Guardado ✓');return true;}// modo demo: no persiste (sandbox en memoria)
+  const antes=_SRV.get(task.id);
   setSyncSt('Guardando…');
   const{error}=await _SB.from('trabajos').upsert(task);
   setSyncSt('');
   if(error){showToast('Error: '+error.message,'err');return false;}
+  if(!(opt&&opt.sinDeshacer))_undoOp(antes?{t:'upd',antes,despues:task.actualizado,tema:task.tema}:{t:'ins',id:task.id,tema:task.tema});
+  _srvSet(task);
   showToast('Guardado ✓'); return true;
 }
 async function removeTask(id){
   if(SESSION&&SESSION.demo){showToast('Eliminado ✓');return true;}// modo demo: no persiste (sandbox en memoria)
+  const antes=_SRV.get(id);
   setSyncSt('Eliminando…');
   const{error}=await _SB.from('trabajos').delete().eq('id',id);
   setSyncSt('');
   if(error){showToast('Error: '+error.message,'err');return false;}
+  if(antes)_undoOp({t:'del',fila:antes,tema:antes.tema});
+  _SRV.delete(id);
   showToast('Eliminado ✓'); return true;
+}
+// ── Deshacer (botón ↶ junto al ⏰): las últimas 10 acciones propias, de a una, mientras no se recargue ──
+// _SRV = última versión conocida de cada tarea en la base (al cargar, al guardar y por realtime): de ahí sale el "antes".
+// Una acción = las escrituras que ocurren seguidas (menos de 1,5 s entre una y otra): p. ej. finalizar una etapa
+// = actualizar la tarjeta + crear la etapa nueva + registrar la realización; Deshacer revierte las tres.
+let _SRV=new Map();const UNDO=[];let _undoGrupo=null,_undoT=0,_undoPausa=false;
+function _copia(o){return JSON.parse(JSON.stringify(o));}
+function _srvSet(t){_SRV.set(t.id,_copia(t));}
+function _undoOp(op){
+  if(_undoPausa||!SESSION||SESSION.demo)return;
+  const now=Date.now();
+  if(!_undoGrupo||now-_undoT>1500){_undoGrupo={ops:[]};UNDO.push(_undoGrupo);if(UNDO.length>10)UNDO.shift();}
+  _undoT=now;_undoGrupo.ops.push(op);_syncUndoBtn();
+}
+function _undoDesc(g){
+  const o=g.ops[0],n=o.tema?'«'+o.tema+'»':'la tarea';
+  if(g.ops.some(x=>x.t==='real'))return 'finalizar '+n;
+  return (o.t==='ins'?'crear ':o.t==='del'?'eliminar ':'cambio en ')+n;
+}
+function _syncUndoBtn(){
+  const b=document.getElementById('btnUndo');if(!b)return;
+  const g=UNDO[UNDO.length-1];
+  b.disabled=!g;b.style.opacity=g?'1':'.4';b.style.cursor=g?'pointer':'default';
+  b.title=g?'Deshacer: '+_undoDesc(g)+(UNDO.length>1?' ('+UNDO.length+' acciones para deshacer)':''):'Nada para deshacer';
+}
+async function deshacer(){
+  const g=UNDO[UNDO.length-1];if(!g)return;
+  // Si alguien cambió después una de esas tareas, se avisa antes de pisar su cambio
+  const pisa=g.ops.some(o=>{if(o.t!=='upd')return false;const c=DATA.find(x=>x.id===o.antes.id);return c&&c.actualizado!==o.despues;});
+  if(!confirm('¿Deshacer: '+_undoDesc(g)+'?'+(pisa?'\n\nOjo: esa tarea se modificó después; se va a volver a como estaba antes de tu acción.':'')))return;
+  UNDO.pop();_undoGrupo=null;_undoPausa=true;
+  let ok=true;
+  try{
+    for(const o of g.ops.slice().reverse()){
+      let r;
+      if(o.t==='upd'){r=await _SB.from('trabajos').upsert(o.antes);if(!r.error){const i=DATA.findIndex(x=>x.id===o.antes.id);if(i>=0)DATA[i]=_copia(o.antes);else DATA.push(_copia(o.antes));_srvSet(o.antes);}}
+      else if(o.t==='ins'){r=await _SB.from('trabajos').delete().eq('id',o.id);if(!r.error){DATA=DATA.filter(x=>x.id!==o.id);_SRV.delete(o.id);}}
+      else if(o.t==='del'){r=await _SB.from('trabajos').upsert(o.fila);if(!r.error){DATA.push(_copia(o.fila));_srvSet(o.fila);}}
+      else if(o.t==='real'){r=await _SB.from('realizaciones').delete().eq('id',o.id);}
+      if(r&&r.error){ok=false;console.error(r.error);}
+    }
+  }finally{_undoPausa=false;}
+  CAL_LOADED=false;updateEnvBadge();renderCurrent();_syncUndoBtn();
+  showToast(ok?'Deshecho ✓':'Se deshizo en parte: revisá la tarea',ok?undefined:'err');
 }
 
 // ── Frecuencia: próxima fecha y semana en curso ───────────────
@@ -824,8 +876,9 @@ function rolling7ISO(){const d=new Date();d.setDate(d.getDate()-6);return d.getF
 async function logRealizacion(t,tipo='finalizado'){
   if(SESSION&&SESSION.demo)return true;// modo demo: no registra en realizaciones (no contamina reportes)
   const row={trabajo_id:String(t.id),numero:t.numero||null,tema:t.tema||'',operador:t.operador||'',completado_por:SESSION?SESSION.user:'',area:t.area||'',prioridad:t.prioridad||'',frecuencia:t.frecuencia||'',finalizacion:t.finalizacion||'',tipo};
-  const{error}=await _SB.from('realizaciones').insert(row);
+  const{data,error}=await _SB.from('realizaciones').insert(row).select('id').single();
   if(error){showToast('Cerrada, pero NO se registró: '+error.message,'err');return false;}
+  if(data&&data.id!=null)_undoOp({t:'real',id:data.id,tema:t.tema});
   return true;
 }
 
@@ -914,9 +967,9 @@ async function finalizarTarea(t){
 function startRealtime(){
   _SB.channel('trabajos-live')
     .on('postgres_changes',{event:'*',schema:'public',table:'trabajos'},p=>{
-      if(p.eventType==='INSERT'){if(!DATA.find(x=>x.id===p.new.id))DATA.push(p.new);}
-      else if(p.eventType==='UPDATE'){const i=DATA.findIndex(x=>x.id===p.new.id);if(i>=0)DATA[i]=p.new;else DATA.push(p.new);}
-      else if(p.eventType==='DELETE') DATA=DATA.filter(x=>x.id!==p.old.id);
+      if(p.eventType==='INSERT'){if(!DATA.find(x=>x.id===p.new.id))DATA.push(p.new);_srvSet(p.new);}
+      else if(p.eventType==='UPDATE'){const i=DATA.findIndex(x=>x.id===p.new.id);if(i>=0)DATA[i]=p.new;else DATA.push(p.new);_srvSet(p.new);}
+      else if(p.eventType==='DELETE'){DATA=DATA.filter(x=>x.id!==p.old.id);_SRV.delete(p.old.id);}
       updateEnvBadge();renderCurrent();
     }).subscribe();
 }
@@ -2415,7 +2468,7 @@ function openTaskForm(id){
     // Rubén abrió una tarea donde lo incluyeron: se marca como vista (apaga el globo rosa) sin bloquear el render del form
     if(_esWatcher()&&t.incluir_ruben&&!t.incluir_ruben_visto){
       const _updV=Object.assign({},t,{incluir_ruben_visto:true});
-      upsertTask(_updV).then(ok=>{if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=_updV;updateEnvBadge();}});
+      upsertTask(_updV,{sinDeshacer:true}).then(ok=>{if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=_updV;updateEnvBadge();}});
     }
     document.getElementById('modalTitle').textContent='Editar tarea';
     document.getElementById('f_tema').value=t.tema||'';document.getElementById('f_tareas').value=t.tareas||'';
