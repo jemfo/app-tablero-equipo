@@ -379,6 +379,10 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .vac-sal b{color:var(--ok);font-weight:800}
 .vac-sal.neg b{color:var(--urg)}
 .vac-sal.vacio{font-style:italic}
+.vac-chip.clic{cursor:pointer}
+.vac-chip.clic:hover{background:var(--bg3)}
+.vac-day.filt-no:not(.fer){opacity:.45}
+.vac-vacio{grid-column:1/-1;padding:24px;text-align:center;color:var(--muted);font-size:13px}
 .vac-btn{height:30px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--txt);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
 .vac-btn:hover{background:var(--bg3)}
 .vac-btn.on{background:var(--black);color:#fff;border-color:var(--black)}
@@ -3294,31 +3298,55 @@ function renderVacaciones(irAHoy){
     if(_conSaldo){const asig=VAC_SALDO.get(u.user+':'+VAC_Y);
       if(asig!=null){const q=asig-_vacUsados(u.user,VAC_Y);sal='<span class="vac-sal'+(q<0?' neg':'')+'" title="'+(q<0?'Te pasaste '+(-q)+' día'+(q===-1?'':'s')+' de vacaciones':'Te quedan '+q+' día'+(q===1?'':'s')+' de vacaciones')+'"><b>'+q+'</b>/'+asig+'</span>';}
       else sal='<span class="vac-sal vacio">sin días</span>';}
-    return '<span class="vac-chip"><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+sal+'</span>';}).join('')
+    const _on=_vacFiltro===u.user;
+    return '<span class="vac-chip clic'+(_on?' on':'')+'" onclick="vacFiltrar(\''+u.user+'\')" title="'+(_on?'Ver a todos':'Ver solo los días de '+escH(u.nombre))+'"'+(_on?' style="border-color:'+opColor(u.user)+';background:'+opColor(u.user)+'1f"':'')+'><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+sal+'</span>';}).join('')
     +'<span class="vac-chip"><i style="background:#e5e7eb;border:1px solid #cbd5e1"></i>Feriado</span><span class="vac-chip"><i style="background:#dcfce7;border:1px solid #86efac"></i>Feriado cargado</span></span></div>';
   if(_conSaldo&&isAdmin()&&_vacEditSaldo)h+='<div class="vac-saldo-edit">Días de vacaciones '+VAC_Y+':'+ops.map(u=>'<label><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+' <input type="number" min="0" max="60" value="'+(VAC_SALDO.get(u.user+':'+VAC_Y)??'')+'" onchange="vacGuardarSaldo(\''+u.user+'\',this.value)"></label>').join('')+'<span class="muted">Descuentan solo los días hábiles marcados (no fines de semana ni feriados).</span></div>';
   h+='<div class="vac-grid"><div class="vac-dow"></div>'+['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(d=>'<div class="vac-dow">'+d+'</div>').join('');
   // Semanas: desde el lunes de la semana del 1/1 hasta el domingo de la semana del 31/12
   const d=new Date(VAC_Y,0,1);d.setDate(d.getDate()-((d.getDay()+6)%7));
   const fin=new Date(VAC_Y,11,31);
+  // Con filtro por persona (como un filtro de Excel) solo se dibujan las semanas con algún día suyo
+  const _diasFiltro=_vacFiltro?new Set(VAC.filter(v=>v.usuario===_vacFiltro).map(v=>v.fecha)):null;
+  let _ultMes='',_filaIni=false;
   while(d<=fin){
+    if(_diasFiltro){
+      let tiene=false,mesF='';
+      for(let k=0;k<7;k++){const x=new Date(d);x.setDate(d.getDate()+k);if(_diasFiltro.has(_locISO(x))){tiene=true;if(!mesF)mesF=VAC_MES_C[x.getMonth()]+' '+x.getFullYear();}}
+      if(!tiene){d.setDate(d.getDate()+7);continue;}
+      // rótulo: el mes del primer día filtrado de la semana, cuando cambia respecto de la fila anterior
+      const mesR=mesF!==_ultMes?mesF:'';_ultMes=mesF;
+      h+='<div class="vac-mes'+(mesR?' ini':'')+'">'+mesR+'</div>';
+      _filaIni=!!mesR;
+    }else{
     // Rótulo del mes en la semana donde cae su día 1 (esa fila lleva además una línea arriba)
     let mes='';
     for(let k=0;k<7;k++){const x=new Date(d);x.setDate(d.getDate()+k);if(x.getDate()===1&&x.getFullYear()===VAC_Y)mes=VAC_MES_C[x.getMonth()]+' '+VAC_Y;}
     h+='<div class="vac-mes'+(mes?' ini':'')+'">'+mes+'</div>';
+    _filaIni=!!mes;
+    }
     for(let k=0;k<7;k++){
       const iso=_locISO(d),quien=byDay[iso]||[],fer=quien.includes('feriado');
-      const cls='vac-day'+(k>=5?' wknd':'')+(fer?' fer':'')+(fer&&ferSug[iso]?' sug':'')+(iso===hoy?' today':'')+(d.getFullYear()!==VAC_Y?' otro':'')+(puede?'':' ro')+(mes?' ini':'');
-      const mks=ops.filter(u=>quien.includes(u.user)).map(u=>'<span class="vac-mk" style="background:'+opColor(u.user)+'" title="'+escH(u.nombre)+' de vacaciones">'+escH(iniOp(u.user))+'</span>').join('');
+      const cls='vac-day'+(k>=5?' wknd':'')+(fer?' fer':'')+(fer&&ferSug[iso]?' sug':'')+(iso===hoy?' today':'')+(d.getFullYear()!==VAC_Y?' otro':'')+(puede?'':' ro')+(_filaIni?' ini':'');
+      const _fq=_vacFiltro?quien.includes(_vacFiltro):false;
+      const mks=ops.filter(u=>quien.includes(u.user)&&(!_vacFiltro||u.user===_vacFiltro)).map(u=>'<span class="vac-mk" style="background:'+opColor(u.user)+'" title="'+escH(u.nombre)+' de vacaciones">'+escH(iniOp(u.user))+'</span>').join('');
       const fn=fer?ferNom[iso]:'';
-      h+='<div class="'+cls+'"'+(fn?' title="'+escH(fn)+'"':'')+(puede?' onclick="vacClick(event,\''+iso+'\')"':'')+'><span class="vac-num">'+d.getDate()+(k===0?'<span class="vac-sem">Semana '+_isoSemana(d)+'</span>':'')+'</span>'+(fn?'<span class="vac-fer">'+escH(fn)+'</span>':'')+'<div class="vac-mks">'+mks+'</div>'+(fer&&puede?'<b class="vac-fer-x" title="Quitar este feriado" onclick="event.stopPropagation();vacQuitarFeriado(\''+iso+'\')">&times;</b>':'')+'</div>';
+      h+='<div class="'+cls+(_vacFiltro?(_fq?' filt-si':' filt-no'):'')+'"'+(_fq?' style="background:'+opColor(_vacFiltro)+'26;border-color:'+opColor(_vacFiltro)+'"':'')+(fn?' title="'+escH(fn)+'"':'')+(puede?' onclick="vacClick(event,\''+iso+'\')"':'')+'><span class="vac-num">'+d.getDate()+(k===0?'<span class="vac-sem">Semana '+_isoSemana(d)+'</span>':'')+'</span>'+(fn?'<span class="vac-fer">'+escH(fn)+'</span>':'')+'<div class="vac-mks">'+mks+'</div>'+(fer&&puede?'<b class="vac-fer-x" title="Quitar este feriado" onclick="event.stopPropagation();vacQuitarFeriado(\''+iso+'\')">&times;</b>':'')+'</div>';
       d.setDate(d.getDate()+1);
     }
   }
+  if(_diasFiltro&&!_diasFiltro.size)h+='<div class="vac-vacio">'+escH(nombreOp(_vacFiltro))+' no tiene días marcados.</div>';
   h+='</div>';
   box.innerHTML=h;
   setupSticky();
   if(irAHoy){const t=box.querySelector('.vac-day.today');if(t)t.scrollIntoView({block:'center'});}
+}
+// Filtro por persona (click en su pastilla; otro click lo quita): solo se ven sus días, resaltados, y se va al primero
+let _vacFiltro=null;
+function vacFiltrar(u){
+  _vacFiltro=_vacFiltro===u?null:u;
+  renderVacaciones();
+  if(_vacFiltro){const p=document.querySelector('#vacBody .vac-day.filt-si');if(p)p.scrollIntoView({behavior:'smooth',block:'center'});else showToast(nombreOp(u)+' no tiene días marcados en '+VAC_Y);}
 }
 function calNav(d){CAL_M+=d;if(CAL_M<0){CAL_M=11;CAL_Y--;}if(CAL_M>11){CAL_M=0;CAL_Y++;}renderCalendar();}
 function calHoy(){const n=new Date();CAL_Y=n.getFullYear();CAL_M=n.getMonth();renderCalendar();}
