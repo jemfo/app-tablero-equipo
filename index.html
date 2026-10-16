@@ -718,9 +718,23 @@ async function insertConNumero(task){
   showToast('No se pudo asignar un número único (reintentos agotados)','err');
   return false;
 }
+// Supabase devuelve como máximo 1000 filas por consulta: se pide de a 1000 hasta traer todo.
+// `armar` agrega filtros y un orden ÚNICO (desempate por id), si no las páginas pueden repetir o saltear filas.
+async function _selectTodo(tabla,cols,armar){
+  let out=[];
+  for(let desde=0;;desde+=1000){
+    let q=_SB.from(tabla).select(cols);
+    if(armar)q=armar(q);
+    const{data,error}=await q.range(desde,desde+999);
+    if(error)return{data:null,error};
+    out=out.concat(data||[]);
+    if(!data||data.length<1000)break;
+  }
+  return{data:out,error:null};
+}
 async function loadData(){
   setSyncSt('Cargando…');
-  const{data,error}=await _SB.from('trabajos').select('*').order('actualizado',{ascending:false});
+  const{data,error}=await _selectTodo('trabajos','*',q=>q.order('actualizado',{ascending:false}).order('id'));
   setSyncSt('');
   if(error){showToast('Error al cargar: '+error.message,'err');return;}
   DATA=data||[]; updateEnvBadge(); renderCurrent();
@@ -2724,7 +2738,7 @@ let REAL=[];
 async function loadRealizaciones(force){
   if(!isAdmin())return;
   setSyncSt('Cargando registro…');
-  const{data,error}=await _SB.from('realizaciones').select('*').order('completado_en',{ascending:false});
+  const{data,error}=await _selectTodo('realizaciones','*',q=>q.order('completado_en',{ascending:false}).order('id'));
   setSyncSt('');
   if(error){document.getElementById('regBody').innerHTML='<p class="muted">Error al cargar: '+escH(error.message)+'</p>';return;}
   REAL=data||[];
@@ -2797,7 +2811,7 @@ async function loadRealCalendar(force){
   if(SESSION&&SESSION.demo){REAL_CAL=_demoCalendarRows();CAL_LOADED=true;return;}// demo: calendario sembrado en memoria
   if(CAL_LOADED&&!force)return;
   setSyncSt('Cargando finalizadas…');
-  const{data,error}=await _SB.from('realizaciones').select('tema,operador,completado_por,completado_en,tipo,numero').order('completado_en',{ascending:false});
+  const{data,error}=await _selectTodo('realizaciones','id,tema,operador,completado_por,completado_en,tipo,numero',q=>q.order('completado_en',{ascending:false}).order('id'));
   setSyncSt('');
   if(error){REAL_CAL=[];return;}
   REAL_CAL=(data||[]).filter(r=>r.tipo!=='eliminado'&&r.completado_en);
@@ -3008,7 +3022,7 @@ function _vacOps(){return USERS.filter(u=>!u.hidden&&u.canFinalize!==false);}
 function _vacPuede(){return !!(SESSION&&_vacOps().some(u=>u.user===SESSION.user));}
 async function loadVacaciones(){
   if(!SESSION||SESSION.demo){VAC_LOADED=true;return;}
-  const{data,error}=await _SB.from('vacaciones').select('*');
+  const{data,error}=await _selectTodo('vacaciones','*',q=>q.order('fecha').order('usuario'));
   if(error){console.error(error);showToast('No se pudieron cargar las vacaciones');return;}
   VAC=data||[];VAC_LOADED=true;
 }
