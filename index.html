@@ -368,15 +368,20 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #vacBody{padding:0 48px 30px}
 .vac-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0;position:sticky;z-index:6;background:var(--bg)}
 .vac-modo{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.vac-modo button{border:none;border-radius:0;background:var(--bg2);color:var(--txt);font-size:12px;padding:5px 12px;cursor:pointer}
+.vac-modo button{border:none;border-radius:0;background:var(--bg2);color:var(--txt);font:inherit;font-size:12px;font-weight:600;height:28px;padding:0 12px;cursor:pointer}
 .vac-modo button.on{background:var(--black);color:#fff}
 .vac-hint{font-size:11px;color:var(--muted)}
-.vac-ley{display:inline-flex;gap:12px;align-items:center;margin-left:auto;font-size:12px;color:var(--txt)}
-.vac-ley i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
-.vac-ley-op{display:inline-flex;flex-direction:column;align-items:center;gap:1px}
-.vac-saldo{font-size:10.5px;font-weight:700;color:var(--ok);white-space:nowrap}
-.vac-saldo.neg{color:var(--urg)}
-.vac-saldo.vacio{font-weight:400;color:var(--muted)}
+/* Barra de Vacaciones: un solo formato (alto 30 px, borde var(--line), radio 8, Inter 12 px) */
+.vac-ley{display:inline-flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.vac-chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);font-size:12px;font-weight:600;color:var(--txt);white-space:nowrap}
+.vac-chip i{display:inline-block;width:10px;height:10px;border-radius:3px}
+.vac-sal{font-weight:500;color:var(--muted);padding-left:7px;margin-left:1px;border-left:1px solid var(--line)}
+.vac-sal b{color:var(--ok);font-weight:800}
+.vac-sal.neg b{color:var(--urg)}
+.vac-sal.vacio{font-style:italic}
+.vac-btn{height:30px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--txt);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.vac-btn:hover{background:var(--bg3)}
+.vac-btn.on{background:var(--black);color:#fff;border-color:var(--black)}
 .vac-saldo-edit{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;padding:6px 10px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--line);border-radius:8px}
 .vac-saldo-edit i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
 .vac-saldo-edit input{width:58px;margin-left:4px;padding:3px 6px}
@@ -3283,13 +3288,14 @@ function renderVacaciones(irAHoy){
   if(puede)h+='<span class="vac-modo"><button class="'+(_vacModo==='vac'?'on':'')+'" onclick="vacModo(\'vac\')">Mis vacaciones</button><button class="'+(_vacModo==='fer'?'on':'')+'" onclick="vacModo(\'fer\')">Feriado</button></span>'
     +(_vacFeriadosPend()?'<button class="cal-today" onclick="vacCargarFeriados()" title="Feriados nacionales de argentina.gob.ar; después se desmarcan los que no van">Cargar feriados '+VAC_Y+'</button>':'');
   const _conSaldo=VAC_Y>=VAC_SALDO_DESDE;
-  if(_conSaldo&&isAdmin())h+='<button class="cal-today" onclick="_vacEditSaldo=!_vacEditSaldo;renderVacaciones()" title="Días de vacaciones de cada uno en '+VAC_Y+'">✎ Días '+VAC_Y+'</button>';
+  if(_conSaldo&&isAdmin())h+='<button class="vac-btn'+(_vacEditSaldo?' on':'')+'" onclick="_vacEditSaldo=!_vacEditSaldo;renderVacaciones()" title="Días de vacaciones de cada uno en '+VAC_Y+'">✎ Días '+VAC_Y+'</button>';
   h+='<span class="vac-ley">'+ops.map(u=>{
     let sal='';
     if(_conSaldo){const asig=VAC_SALDO.get(u.user+':'+VAC_Y);
-      if(asig!=null){const q=asig-_vacUsados(u.user,VAC_Y);sal='<small class="vac-saldo'+(q<0?' neg':'')+'" title="'+asig+' asignados − '+(asig-q)+' hábiles marcados">quedan '+q+' de '+asig+'</small>';}
-      else sal='<small class="vac-saldo vacio">sin días cargados</small>';}
-    return '<span class="vac-ley-op">'+sal+'<span><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+'</span></span>';}).join('')+'<span><i style="background:#e5e7eb;border:1px solid #cbd5e1"></i>Feriado</span><span><i style="background:#dcfce7;border:1px solid #86efac"></i>Feriado cargado</span></span></div>';
+      if(asig!=null){const q=asig-_vacUsados(u.user,VAC_Y);sal='<span class="vac-sal'+(q<0?' neg':'')+'" title="'+(q<0?'Te pasaste '+(-q)+' día'+(q===-1?'':'s')+' de vacaciones':'Te quedan '+q+' día'+(q===1?'':'s')+' de vacaciones')+'"><b>'+q+'</b>/'+asig+'</span>';}
+      else sal='<span class="vac-sal vacio">sin días</span>';}
+    return '<span class="vac-chip"><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+sal+'</span>';}).join('')
+    +'<span class="vac-chip"><i style="background:#e5e7eb;border:1px solid #cbd5e1"></i>Feriado</span><span class="vac-chip"><i style="background:#dcfce7;border:1px solid #86efac"></i>Feriado cargado</span></span></div>';
   if(_conSaldo&&isAdmin()&&_vacEditSaldo)h+='<div class="vac-saldo-edit">Días de vacaciones '+VAC_Y+':'+ops.map(u=>'<label><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+' <input type="number" min="0" max="60" value="'+(VAC_SALDO.get(u.user+':'+VAC_Y)??'')+'" onchange="vacGuardarSaldo(\''+u.user+'\',this.value)"></label>').join('')+'<span class="muted">Descuentan solo los días hábiles marcados (no fines de semana ni feriados).</span></div>';
   h+='<div class="vac-grid"><div class="vac-dow"></div>'+['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(d=>'<div class="vac-dow">'+d+'</div>').join('');
   // Semanas: desde el lunes de la semana del 1/1 hasta el domingo de la semana del 31/12
