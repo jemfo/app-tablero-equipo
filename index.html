@@ -378,6 +378,9 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .vac-sal{font-weight:500;color:var(--muted);padding-left:7px;margin-left:1px;border-left:1px solid var(--line)}
 .vac-sal b{color:var(--ok);font-weight:800}
 .vac-sal.neg b{color:var(--urg)}
+.vac-temp{white-space:nowrap}
+.vac-temp+.vac-temp{margin-left:7px}
+.vac-temp.neg b{color:var(--urg)}
 .vac-sal.vacio{font-style:italic}
 .vac-chip.clic{cursor:pointer}
 .vac-chip.clic:hover{background:var(--bg3)}
@@ -411,7 +414,11 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .vac-fer-x{position:absolute;right:5px;bottom:2px;font-size:13px;line-height:1;font-weight:800;color:inherit;cursor:pointer;opacity:.7}
 .vac-day.fer .vac-fer-x{color:#374151}.vac-day.fer.sug .vac-fer-x{color:#166534}
 .vac-fer-x:hover{opacity:1}
+.vac-fer-ok{position:absolute;right:20px;bottom:2px;font-size:12px;line-height:1;font-weight:800;color:#166534;cursor:pointer;opacity:.75}
+.vac-fer-ok:hover{opacity:1}
 .cal-cell.fer.sug{background:color-mix(in srgb,#22c55e 9%,var(--bg2))}
+.vac-mk.peg1{box-shadow:0 0 0 2px #f59e0b}
+.vac-mk.peg2{box-shadow:0 0 0 2px #dc2626}
 .vac-mk{font-size:9.5px;font-weight:800;color:#fff;border-radius:3px;padding:0 4px;line-height:14px}
 .cal-grid{display:grid;grid-template-columns:repeat(5,2fr) repeat(2,1fr);gap:6px}
 .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding-bottom:2px;min-width:0}
@@ -3228,24 +3235,31 @@ async function loadVacaciones(){
   if(error){console.error(error);showToast('No se pudieron cargar las vacaciones');return;}
   VAC=data||[];VAC_LOADED=true;
   // Saldo asignado por usuario y año (tabla vacaciones_saldo); si la tabla no existe todavía, sigue sin saldo
-  const rs=await _SB.from('vacaciones_saldo').select('usuario,anio,dias');
-  if(!rs.error)VAC_SALDO=new Map((rs.data||[]).map(r=>[r.usuario+':'+r.anio,r.dias]));
+  const rs=await _SB.from('vacaciones_saldo').select('*');
+  if(!rs.error)VAC_SALDO=new Map((rs.data||[]).map(r=>{
+    // dias_verano/dias_invierno; si solo está el total viejo (dias), se reparte mitad y mitad
+    const v=r.dias_verano??(r.dias!=null?Math.ceil(r.dias/2):null),i=r.dias_invierno??(r.dias!=null?r.dias-Math.ceil(r.dias/2):null);
+    return [r.usuario+':'+r.anio,{v,i}];}));
 }
-// ── Saldo de vacaciones (desde 2027; 2026 no descuenta, decisión de Juan) ──
-// Asignados = vacaciones_saldo (los edita el admin con "✎ Días AAAA"). Usados = días marcados de lunes a viernes
-// que no son feriado. Quedan = asignados − usados.
+// ── Saldo de vacaciones por temporada (lineamiento RRHH 12/08/2025; desde el período 2027, decisión de Juan) ──
+// Período P = VERANO del 1/11/(P-1) al 30/4/P + INVIERNO del 1/5/P al 31/10/P (fechas corregidas por Juan el 16/10/2026).
+// Con +10 años: 28 corridos = 20 hábiles = 2 semanas de verano (10) + 2 de invierno (10).
+// Asignados = vacaciones_saldo.dias_verano / dias_invierno (los edita el admin). Usados = días marcados de lunes a
+// viernes que no son feriado, dentro de cada temporada. Quedan = asignados − usados.
 const VAC_SALDO_DESDE=2027;
 let VAC_SALDO=new Map(),_vacEditSaldo=false;
-function _vacUsados(u,y){
+const _vacPeriodo=()=>Math.max(VAC_Y,VAC_SALDO_DESDE);// el calendario 2026 ya muestra nov–dic, que es verano del período 2027
+function _vacTemporadas(P){return{v:[(P-1)+'-11-01',P+'-04-30'],i:[P+'-05-01',P+'-10-31']};}
+function _vacUsados(u,desde,hasta){
   const fer=new Set(VAC.filter(v=>v.usuario==='feriado').map(v=>v.fecha));
-  return VAC.filter(v=>v.usuario===u&&v.fecha.startsWith(y+'-')&&!fer.has(v.fecha)&&(()=>{const d=new Date(v.fecha+'T12:00:00').getDay();return d>=1&&d<=5;})()).length;
+  return VAC.filter(v=>v.usuario===u&&v.fecha>=desde&&v.fecha<=hasta&&!fer.has(v.fecha)&&(()=>{const d=new Date(v.fecha+'T12:00:00').getDay();return d>=1&&d<=5;})()).length;
 }
-async function vacGuardarSaldo(u,val){
-  const dias=Math.max(0,parseInt(val,10)||0);
-  VAC_SALDO.set(u+':'+VAC_Y,dias);renderVacaciones();
+async function vacGuardarSaldo(u,temp,val){
+  const P=_vacPeriodo(),k=u+':'+P,cur=Object.assign({v:null,i:null},VAC_SALDO.get(k));
+  cur[temp]=Math.max(0,parseInt(val,10)||0);VAC_SALDO.set(k,cur);renderVacaciones();
   if(SESSION.demo)return;
-  const{error}=await _SB.from('vacaciones_saldo').upsert({usuario:u,anio:VAC_Y,dias},{onConflict:'usuario,anio'});
-  if(error){console.error(error);showToast('No se pudo guardar el saldo','err');}else showToast('Días de '+nombreOp(u)+' '+VAC_Y+': '+dias+' ✓');
+  const{error}=await _SB.from('vacaciones_saldo').upsert({usuario:u,anio:P,dias:(cur.v||0)+(cur.i||0),dias_verano:cur.v,dias_invierno:cur.i},{onConflict:'usuario,anio'});
+  if(error){console.error(error);showToast('No se pudo guardar el saldo','err');}else showToast(nombreOp(u)+' · período '+P+': '+(cur.v??0)+' verano / '+(cur.i??0)+' invierno ✓');
 }
 async function _vacSet(usuario,fechas,on){
   const antes=VAC.slice();
@@ -3262,6 +3276,29 @@ async function _vacSet(usuario,fechas,on){
     VAC=antes;renderVacaciones();
   }
 }
+// ── Beneficio "pegado a feriado" (RRHH: licencia antes o después de un feriado, una vez por año calendario) ──
+// Bloque = días marcados seguidos de una persona (los fines de semana y feriados del medio no cortan). El bloque está
+// "pegado" si el día hábil anterior a su inicio o el siguiente a su fin es feriado (saltando sábado y domingo).
+// Devuelve Map fecha → {n: nº de bloque pegado en ese año (1 = el permitido), inicio, fin} para el usuario.
+function _vacPegados(u){
+  const fer=new Set(VAC.filter(v=>v.usuario==='feriado').map(v=>v.fecha));
+  const mias=VAC.filter(v=>v.usuario===u).map(v=>v.fecha).sort();
+  const sum=(iso,k)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+k);return _locISO(d);};
+  const finde=iso=>{const g=new Date(iso+'T12:00:00').getDay();return g===0||g===6;};
+  const bloques=[];
+  mias.forEach(f=>{const b=bloques[bloques.length-1];
+    if(b){let x=sum(b.fin,1);while(x<f&&(finde(x)||fer.has(x)))x=sum(x,1);if(x===f){b.fin=f;b.dias.push(f);return;}}
+    bloques.push({inicio:f,fin:f,dias:[f]});});
+  const out=new Map(),porAnio={};
+  bloques.forEach(b=>{
+    let a=sum(b.inicio,-1);while(finde(a))a=sum(a,-1);
+    let z=sum(b.fin,1);while(finde(z))z=sum(z,1);
+    if(!fer.has(a)&&!fer.has(z))return;
+    const y=b.inicio.slice(0,4);porAnio[y]=(porAnio[y]||0)+1;
+    b.dias.forEach(d=>out.set(d,{n:porAnio[y],inicio:b.inicio,fin:b.fin}));
+  });
+  return out;
+}
 // Clic: marca/desmarca el día (mis vacaciones o feriado, según el modo). Shift+clic: aplica lo mismo a todo el rango desde el último clic.
 function vacClick(ev,iso){
   if(!_vacPuede())return;
@@ -3273,10 +3310,23 @@ function vacClick(ev,iso){
     while(_locISO(d)<=b){fechas.push(_locISO(d));d.setDate(d.getDate()+1);}
   }
   _vacAncla={u,iso,on};
-  _vacSet(u,fechas,on);
+  _vacSet(u,fechas,on).then(()=>{
+    if(!on||u==='feriado')return;
+    const pg=_vacPegados(u),x=fechas.map(f=>pg.get(f)).find(p=>p&&p.n>1);
+    if(x)showToast('Ojo: ya usaste el beneficio de pegarte a un feriado en '+x.inicio.slice(0,4)+'. RRHH lo rechaza','err');
+  });
 }
 // Los feriados cargados son una ayuda (suelen cambiar): cada uno se quita con su ×, en cualquier modo.
 function vacQuitarFeriado(iso){if(!_vacPuede())return;_vacAncla=null;_vacSet('feriado',[iso],false);}
+// ✓ en un feriado cargado: queda confirmado (gris claro, con su nombre). Guarda vacaciones.confirmado=true
+async function vacConfirmarFeriado(iso){
+  if(!_vacPuede())return;
+  const v=VAC.find(x=>x.usuario==='feriado'&&x.fecha===iso);if(!v)return;
+  v.confirmado=true;renderVacaciones();
+  if(SESSION.demo)return;
+  const{error}=await _SB.from('vacaciones').update({confirmado:true}).eq('usuario','feriado').eq('fecha',iso);
+  if(error){console.error(error);v.confirmado=false;renderVacaciones();showToast('No se pudo confirmar el feriado','err');}
+}
 function vacModo(m){_vacModo=m;_vacAncla=null;renderVacaciones();}
 function vacNav(d){VAC_Y+=d;_vacAncla=null;renderVacaciones();}
 function vacHoy(){VAC_Y=new Date().getFullYear();renderVacaciones(true);}
@@ -3287,21 +3337,31 @@ function renderVacaciones(irAHoy){
   const slot=document.getElementById('calNavSlot');
   if(slot)slot.innerHTML='<button class="cal-nav" onclick="vacNav(-1)" title="Año anterior">‹</button><span class="cal-month">Vacaciones '+VAC_Y+'</span><button class="cal-nav" onclick="vacNav(1)" title="Año siguiente">›</button><button class="cal-today" onclick="vacHoy()">Hoy</button>';
   const ops=_vacOps(),puede=_vacPuede(),hoy=todayISO();
-  const byDay={},ferNom={},ferSug={};VAC.forEach(v=>{(byDay[v.fecha]=byDay[v.fecha]||[]).push(v.usuario);if(v.usuario==='feriado'){ferNom[v.fecha]=v.nombre||'Feriado';if(v.nombre)ferSug[v.fecha]=1;}});
+  const _pegMap=Object.fromEntries(ops.map(u=>[u.user,_vacPegados(u.user)]));
+  const byDay={},ferNom={},ferSug={};VAC.forEach(v=>{(byDay[v.fecha]=byDay[v.fecha]||[]).push(v.usuario);if(v.usuario==='feriado'){ferNom[v.fecha]=v.nombre||'Feriado';if(v.nombre&&!v.confirmado)ferSug[v.fecha]=1;}});
   let h='<div class="vac-top">';
   if(puede)h+='<span class="vac-modo"><button class="'+(_vacModo==='vac'?'on':'')+'" onclick="vacModo(\'vac\')">Mis vacaciones</button><button class="'+(_vacModo==='fer'?'on':'')+'" onclick="vacModo(\'fer\')">Feriado</button></span>'
     +(_vacFeriadosPend()?'<button class="cal-today" onclick="vacCargarFeriados()" title="Feriados nacionales de argentina.gob.ar; después se desmarcan los que no van">Cargar feriados '+VAC_Y+'</button>':'');
-  const _conSaldo=VAC_Y>=VAC_SALDO_DESDE;
-  if(_conSaldo&&isAdmin())h+='<button class="vac-btn'+(_vacEditSaldo?' on':'')+'" onclick="_vacEditSaldo=!_vacEditSaldo;renderVacaciones()" title="Días de vacaciones de cada uno en '+VAC_Y+'">✎ Días '+VAC_Y+'</button>';
+  const _conSaldo=true,_P=_vacPeriodo(),_T=_vacTemporadas(_P);
+  if(isAdmin())h+='<button class="vac-btn'+(_vacEditSaldo?' on':'')+'" onclick="_vacEditSaldo=!_vacEditSaldo;renderVacaciones()" title="Días de vacaciones de cada uno en el período '+_P+'">✎ Días '+_P+'</button>';
+  h+='<span class="vac-chip"><i style="background:#e5e7eb;border:1px solid #cbd5e1"></i>Feriado</span><span class="vac-chip"><i style="background:#dcfce7;border:1px solid #86efac"></i>Feriado cargado</span>';
   h+='<span class="vac-ley">'+ops.map(u=>{
     let sal='';
-    if(_conSaldo){const asig=VAC_SALDO.get(u.user+':'+VAC_Y);
-      if(asig!=null){const q=asig-_vacUsados(u.user,VAC_Y);sal='<span class="vac-sal'+(q<0?' neg':'')+'" title="'+(q<0?'Te pasaste '+(-q)+' día'+(q===-1?'':'s')+' de vacaciones':'Te quedan '+q+' día'+(q===1?'':'s')+' de vacaciones')+'"><b>'+q+'</b>/'+asig+'</span>';}
+    if(_conSaldo){const a=VAC_SALDO.get(u.user+':'+_P);
+      if(a&&(a.v!=null||a.i!=null)){
+        const qv=(a.v||0)-_vacUsados(u.user,..._T.v),qi=(a.i||0)-_vacUsados(u.user,..._T.i);
+        const txt=(q,n)=>q<0?'te pasaste '+(-q)+' día'+(q===-1?'':'s')+' de '+n:'te quedan '+q+' día'+(q===1?'':'s')+' de '+n;
+        const tt=txt(qv,'verano')+' y '+txt(qi,'invierno');
+        sal='<span class="vac-sal" title="'+tt.charAt(0).toUpperCase()+tt.slice(1)+'">'
+          +'<span class="vac-temp'+(qv<0?' neg':'')+'">☀ <b>'+qv+'</b>/'+(a.v||0)+'</span><span class="vac-temp'+(qi<0?' neg':'')+'">❄ <b>'+qi+'</b>/'+(a.i||0)+'</span></span>';}
       else sal='<span class="vac-sal vacio">sin días</span>';}
     const _on=_vacFiltro===u.user;
     return '<span class="vac-chip clic'+(_on?' on':'')+'" onclick="vacFiltrar(\''+u.user+'\')" title="'+(_on?'Ver a todos':'Ver solo los días de '+escH(u.nombre))+'"'+(_on?' style="border-color:'+opColor(u.user)+';background:'+opColor(u.user)+'1f"':'')+'><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+sal+'</span>';}).join('')
-    +'<span class="vac-chip"><i style="background:#e5e7eb;border:1px solid #cbd5e1"></i>Feriado</span><span class="vac-chip"><i style="background:#dcfce7;border:1px solid #86efac"></i>Feriado cargado</span></span></div>';
-  if(_conSaldo&&isAdmin()&&_vacEditSaldo)h+='<div class="vac-saldo-edit">Días de vacaciones '+VAC_Y+':'+ops.map(u=>'<label><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+' <input type="number" min="0" max="60" value="'+(VAC_SALDO.get(u.user+':'+VAC_Y)??'')+'" onchange="vacGuardarSaldo(\''+u.user+'\',this.value)"></label>').join('')+'<span class="muted">Descuentan solo los días hábiles marcados (no fines de semana ni feriados).</span></div>';
+    +'</span></div>';
+  if(isAdmin()&&_vacEditSaldo){
+    h+='<div class="vac-saldo-edit">'
+      +ops.map(u=>{const a=VAC_SALDO.get(u.user+':'+_P)||{};return '<label><i style="background:'+opColor(u.user)+'"></i>'+escH(u.nombre)+' ☀<input type="number" min="0" max="40" value="'+(a.v??'')+'" onchange="vacGuardarSaldo(\''+u.user+'\',\'v\',this.value)"> ❄<input type="number" min="0" max="40" value="'+(a.i??'')+'" onchange="vacGuardarSaldo(\''+u.user+'\',\'i\',this.value)"></label>';}).join('')
+      +'</div>';}
   h+='<div class="vac-grid"><div class="vac-dow"></div>'+['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(d=>'<div class="vac-dow">'+d+'</div>').join('');
   // Semanas: desde el lunes de la semana del 1/1 hasta el domingo de la semana del 31/12
   const d=new Date(VAC_Y,0,1);d.setDate(d.getDate()-((d.getDay()+6)%7));
@@ -3329,9 +3389,12 @@ function renderVacaciones(irAHoy){
       const iso=_locISO(d),quien=byDay[iso]||[],fer=quien.includes('feriado');
       const cls='vac-day'+(k>=5?' wknd':'')+(fer?' fer':'')+(fer&&ferSug[iso]?' sug':'')+(iso===hoy?' today':'')+(d.getFullYear()!==VAC_Y?' otro':'')+(puede?'':' ro')+(_filaIni?' ini':'');
       const _fq=_vacFiltro?quien.includes(_vacFiltro):false;
-      const mks=ops.filter(u=>quien.includes(u.user)&&(!_vacFiltro||u.user===_vacFiltro)).map(u=>'<span class="vac-mk" style="background:'+opColor(u.user)+'" title="'+escH(u.nombre)+' de vacaciones">'+escH(iniOp(u.user))+'</span>').join('');
+      const mks=ops.filter(u=>quien.includes(u.user)&&(!_vacFiltro||u.user===_vacFiltro)).map(u=>{
+        const pg=_pegMap[u.user].get(iso);
+        const tit=pg?(pg.n>1?'⚑ '+u.nombre+': ya usó el beneficio de pegarse a un feriado en '+iso.slice(0,4)+' — RRHH lo rechaza':'⚑ '+u.nombre+': pegado a feriado — usa el beneficio de '+iso.slice(0,4)+' (1 vez por año)'):u.nombre+' de vacaciones';
+        return '<span class="vac-mk'+(pg?(pg.n>1?' peg2':' peg1'):'')+'" style="background:'+opColor(u.user)+'" title="'+escH(tit)+'">'+(pg?'⚑':'')+escH(iniOp(u.user))+'</span>';}).join('');
       const fn=fer?ferNom[iso]:'';
-      h+='<div class="'+cls+(_vacFiltro?(_fq?' filt-si':' filt-no'):'')+'"'+(_fq?' style="background:'+opColor(_vacFiltro)+'26;border-color:'+opColor(_vacFiltro)+'"':'')+(fn?' title="'+escH(fn)+'"':'')+(puede?' onclick="vacClick(event,\''+iso+'\')"':'')+'><span class="vac-num">'+d.getDate()+(k===0?'<span class="vac-sem">Semana '+_isoSemana(d)+'</span>':'')+'</span>'+(fn?'<span class="vac-fer">'+escH(fn)+'</span>':'')+'<div class="vac-mks">'+mks+'</div>'+(fer&&puede?'<b class="vac-fer-x" title="Quitar este feriado" onclick="event.stopPropagation();vacQuitarFeriado(\''+iso+'\')">&times;</b>':'')+'</div>';
+      h+='<div class="'+cls+(_vacFiltro?(_fq?' filt-si':' filt-no'):'')+'"'+(_fq?' style="background:'+opColor(_vacFiltro)+'26;border-color:'+opColor(_vacFiltro)+'"':'')+(fn?' title="'+escH(fn)+'"':'')+(puede?' onclick="vacClick(event,\''+iso+'\')"':'')+'><span class="vac-num">'+d.getDate()+(k===0?'<span class="vac-sem">Semana '+_isoSemana(d)+'</span>':'')+'</span>'+(fn?'<span class="vac-fer">'+escH(fn)+'</span>':'')+'<div class="vac-mks">'+mks+'</div>'+(fer&&puede&&ferSug[iso]?'<b class="vac-fer-ok" title="Confirmar este feriado (queda fijo, en gris)" onclick="event.stopPropagation();vacConfirmarFeriado(\''+iso+'\')">&#10003;</b>':'')+(fer&&puede?'<b class="vac-fer-x" title="Quitar este feriado" onclick="event.stopPropagation();vacQuitarFeriado(\''+iso+'\')">&times;</b>':'')+'</div>';
       d.setDate(d.getDate()+1);
     }
   }
@@ -3394,7 +3457,7 @@ function renderCalendar(){
     // Vacaciones y feriados del día (tabla vacaciones): TODOS ven las de todos, como una tarea más del día
     // ("Vacaciones", una por persona, en su color). El admin respeta el filtro de chips.
     const _vq=VAC.filter(v=>v.fecha===iso).map(v=>v.usuario);
-    const _fer=_vq.includes('feriado');const _ferSug=_fer&&!!(VAC.find(v=>v.usuario==='feriado'&&v.fecha===iso)||{}).nombre;
+    const _fer=_vq.includes('feriado');const _ferV=VAC.find(v=>v.usuario==='feriado'&&v.fecha===iso)||{},_ferSug=_fer&&!!_ferV.nombre&&!_ferV.confirmado;
     const _vac=_vacOps().filter(u=>_vq.includes(u.user)&&(soloMias||!HIDDEN_OPS.has(u.user)));
     let cell='<div class="cal-cell'+(esHoy?' today':'')+(esWknd?' weekend':'')+(_fer?' fer':'')+(_ferSug?' sug':'')+'"><span class="cal-daynum">'+d+'</span>';
     if(items.length||_fer||_vac.length){
