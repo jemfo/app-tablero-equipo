@@ -75,6 +75,8 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 #btnMencA.blink{animation:mencBlink 1s ease-in-out infinite}
 @keyframes envBlink{0%,100%{}50%{background:#16a34a;color:#fff;border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.35)}}
 #btnEnvNot.blink{animation:envBlink 1s ease-in-out infinite}
+@keyframes derivBlink{0%,100%{}50%{background:#eab308;color:#1f2430;border-color:#eab308;box-shadow:0 0 0 3px rgba(234,179,8,.35)}}
+#btnDerivNot.blink{animation:derivBlink 1s ease-in-out infinite}
 @keyframes atrasBlink{0%,100%{}50%{background:#dc2626;color:#fff;border-color:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,.35)}}
 #btnAtrasadasFilter.blink{animation:atrasBlink 1s ease-in-out infinite}
 @keyframes atrasBadgeBlink{0%,100%{}50%{transform:scale(1.25);box-shadow:0 0 0 3px rgba(253,224,71,.65)}}
@@ -415,9 +417,10 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <h1>Análisis Comercial</h1>
     <span class="userbox">Sesión: <b id="curUser"></b></span>
     <span style="position:relative;display:inline-flex">
-    <button id="btnEnvNot" onclick="toggleEnvButton()" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#0ea5e9;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" onclick="event.stopPropagation();toggleNotifPop('coment',this)" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="derivBadge" onclick="event.stopPropagation();toggleNotifPop('derivada',this)" style="position:absolute;bottom:-5px;left:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="rubenIncBadge" onclick="event.stopPropagation();toggleIncRubenFilter()" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border:2px solid #000;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
+    <button id="btnEnvNot" onclick="toggleEnvButton()" title="Mensajes de compañeros" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px"><span id="rubenBadge" style="position:absolute;top:-5px;left:-5px;background:#0ea5e9;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>✉<span id="envBadge" onclick="event.stopPropagation();toggleNotifPop('coment',this)" style="position:absolute;top:-5px;right:-5px;background:#16a34a;color:#fff;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span><span id="rubenIncBadge" onclick="event.stopPropagation();toggleIncRubenFilter()" style="position:absolute;top:-5px;left:-5px;background:#e91e8c;color:#fff;border:2px solid #000;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <span id="notifPop" onclick="event.stopPropagation()" class="notif-pop"></span>
     </span>
+    <button id="btnDerivNot" onclick="toggleDerivButton()" title="Tareas derivadas a terceros" style="position:relative;width:38px;height:32px;padding:0;display:none;align-items:center;justify-content:center;margin-left:4px"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg><span id="derivBadge" onclick="event.stopPropagation();toggleNotifPop('derivada',this)" style="position:absolute;top:-5px;right:-5px;background:#eab308;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:15px;height:15px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <button id="btnAtrasadasFilter" onclick="toggleAtrasadasFilter()" title="Tareas atrasadas" style="position:relative;width:38px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px">⏰<span id="atrasBadge" style="position:absolute;top:-5px;right:-5px;background:#fde047;color:#1f2430;border-radius:99px;font-size:9px;font-weight:700;min-width:20px;height:20px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span></button>
     <a id="btnMencA" href="https://claude.ai/artifact/QE73ixcbJrFMJ5vVXFmNUP" target="_blank" rel="noopener" onclick="registrarMensajerias()" title="Abre el filtro de menciones (todas las veces que quieras). Registra 'Contestar mensajerías' como finalizado, una vez por día" style="margin-left:6px;width:38px;height:32px;box-sizing:border-box;display:none;align-items:center;justify-content:center;font-size:16px;font-weight:700;text-decoration:none;cursor:pointer;background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px">@</a>
     <span id="finHoy" style="margin-left:6px;min-width:38px;height:32px;box-sizing:border-box;padding:0 9px;display:none;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:800;background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:6px;cursor:default"></span>
@@ -1276,6 +1279,7 @@ function updateEnvBadge(){
   }
   // Badge amarillo: tareas derivadas a un tercero (manual), sigue activo hasta que la tarea se Finalice. No aplica a Rubén (no ejecuta tareas).
   const db=document.getElementById('derivBadge');
+  const dBtn=document.getElementById('btnDerivNot');if(dBtn)dBtn.style.display=_esWatcher()?'none':'inline-flex';
   if(db&&!_esWatcher()){
     const dTasks=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user));
     const dc=dTasks.length;
@@ -1339,7 +1343,7 @@ function _notifItems(kind){
 // Click en el globo verde/amarillo: abre un popover con el listado (reemplaza el tooltip nativo del navegador)
 function toggleNotifPop(kind,el){
   const _esFin=kind.startsWith('fin:');// lista de finalizadas de hoy (click en un check del header): no toca lo "visto" del buzón
-  if(!_esFin)_marcarEnvVisto();
+  if(kind==='derivada')_marcarDerivVisto();else if(!_esFin)_marcarEnvVisto();
   const pop=document.getElementById('notifPop');if(!pop)return;
   const wasOpen=pop.dataset.kind===kind&&pop.style.display==='flex';
   pop.style.display='none';pop.dataset.kind='';
@@ -1376,10 +1380,28 @@ function _syncEnvBtn(){
   const btn=document.getElementById('btnEnvNot');if(!btn)return;
   if(filtroRuben){btn.style.background='#0ea5e9';btn.style.borderColor='#0ea5e9';btn.style.color='#fff';}
   else if(filtroIncRuben){btn.style.background='#e91e8c';btn.style.borderColor='#e91e8c';btn.style.color='#fff';}
-  else if(filtroDerivada){btn.style.background='#eab308';btn.style.borderColor='#eab308';btn.style.color='#1f2430';}
   else if(filtroComentario){btn.style.background='#dc2626';btn.style.borderColor='#dc2626';btn.style.color='#fff';}
   else{btn.style.background='';btn.style.borderColor='';btn.style.color='';}
-  _syncEnvBlink();
+  _syncEnvBlink();_syncDerivBtn();
+}
+// Botón de derivadas a terceros (flechas 🔀): filtra el tablero a esas tareas; el globo abre la lista.
+// Parpadea en amarillo mientras haya una derivada que todavía no se miró (lo visto queda en el navegador, por usuario).
+function _derivAvisos(){return SESSION&&!_esWatcher()?_notifItems('derivada').map(t=>'d'+t.id):[];}
+function _derivVistoKey(){return 'deriv_visto_'+(SESSION?SESSION.user:'');}
+function _marcarDerivVisto(){try{localStorage.setItem(_derivVistoKey(),JSON.stringify(_derivAvisos()));}catch(e){}_syncDerivBtn();}
+function _syncDerivBtn(){
+  const b=document.getElementById('btnDerivNot');if(!b)return;
+  if(filtroDerivada){b.style.background='#eab308';b.style.borderColor='#eab308';b.style.color='#1f2430';}
+  else{b.style.background='';b.style.borderColor='';b.style.color='';}
+  let visto=[];try{visto=JSON.parse(localStorage.getItem(_derivVistoKey())||'[]');}catch(e){}
+  const vs=new Set(visto);b.classList.toggle('blink',!filtroDerivada&&_derivAvisos().some(x=>!vs.has(x)));
+}
+function toggleDerivButton(){
+  _marcarDerivVisto();
+  const _home=()=>setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow');
+  if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();_home();return;}
+  if(!_notifItems('derivada').length){showToast('No tenés tareas derivadas pendientes');return;}
+  filtroDerivada=true;filtroComentario=false;filtroRuben=false;filtroAtrasadas=false;filtroIncRuben=false;_syncEnvBtn();setViewMode('estado');
 }
 // Buzón: parpadea en verde mientras haya un aviso que todavía no se abrió (comentario, pedido de Rubén, derivada
 // o "Ver Ruben"). Al abrir el buzón o un globo se guarda lo visto; un aviso nuevo lo vuelve a hacer parpadear.
@@ -1390,7 +1412,6 @@ function _envAvisos(){
   DATA.forEach(t=>{
     if(t.comentario&&!t.comentario_ok&&(t.operador===u||t.creado_por===u))a.push('c'+t.id+':'+String(t.comentario).length);
     if(adm&&(t.comentario_por||'').startsWith('para:')&&USERS.find(x=>x.user===t.creado_por)?.canFinalize===false)a.push('r'+t.id);
-    if(!w&&t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===u||t.operador===u))a.push('d'+t.id);
     if(w&&t.incluir_ruben&&!t.incluir_ruben_visto&&t.estado!=='Finalizado')a.push('i'+t.id);
   });
   return a;
@@ -1409,6 +1430,18 @@ function toggleIncRubenFilter(){
   _marcarEnvVisto();
   if(filtroIncRuben){filtroIncRuben=false;_syncEnvBtn();goHomeView();return;}
   filtroIncRuben=true;filtroComentario=false;filtroRuben=false;filtroDerivada=false;filtroAtrasadas=false;_syncEnvBtn();_syncAtrasBtn();setViewMode('estado');
+}
+// Clic ✉: si hay tareas de Rubén pendientes → filtra + va a Por equipo; si no, toggle comentarios. (Las derivadas tienen su propio botón.)
+function toggleEnvButton(){
+  _marcarEnvVisto();
+  const rc=isAdmin()?DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length:0;
+  // "Por equipo" no scopea por operador (a diferencia de Workflow/Por operador) — necesario para que tanto quien derivó/comentó
+  // como el operador puedan ver la misma tarjeta al filtrar, sin importar en qué vista estaban parados.
+  const _home=()=>setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow');
+  if(filtroRuben){filtroRuben=false;_syncEnvBtn();_home();return;}
+  if(rc>0){filtroRuben=true;filtroComentario=false;filtroDerivada=false;_syncEnvBtn();setViewMode('estado');return;}
+  if(filtroComentario){filtroComentario=false;_syncEnvBtn();_home();return;}
+  filtroComentario=true;_syncEnvBtn();setViewMode('estado');
 }
 function toggleFiltroComentario(){
   filtroComentario=!filtroComentario;
@@ -1439,20 +1472,6 @@ async function registrarMensajerias(){
   await logRealizacion(nw);
   _syncMencBlink();
   renderCurrent();
-}
-function toggleEnvButton(){
-  _marcarEnvVisto();
-  const rc=isAdmin()?DATA.filter(t=>(t.comentario_por||'').startsWith('para:')&&USERS.find(u=>u.user===t.creado_por)?.canFinalize===false).length:0;
-  // "Por equipo" no scopea por operador (a diferencia de Workflow/Por operador) — necesario para que tanto quien derivó/comentó
-  // como el operador puedan ver la misma tarjeta al filtrar, sin importar en qué vista estaban parados.
-  const _home=()=>setViewMode((USERS.find(u=>u.user===SESSION.user)?.canFinalize===false)?'estado':'workflow');
-  if(filtroRuben){filtroRuben=false;_syncEnvBtn();_home();return;}
-  if(rc>0){filtroRuben=true;filtroComentario=false;filtroDerivada=false;_syncEnvBtn();setViewMode('estado');return;}
-  if(filtroDerivada){filtroDerivada=false;_syncEnvBtn();_home();return;}
-  const dc=DATA.filter(t=>t.derivado_tercero&&t.estado!=='Finalizado'&&(t.creado_por===SESSION.user||t.operador===SESSION.user)).length;
-  if(dc>0){filtroDerivada=true;filtroComentario=false;_syncEnvBtn();setViewMode('estado');return;}
-  if(filtroComentario){filtroComentario=false;_syncEnvBtn();_home();return;}
-  filtroComentario=true;_syncEnvBtn();setViewMode('estado');
 }
 // Contador del header: tareas finalizadas hoy por operador, con el check del color de cada uno.
 // El admin ve a todos los ejecutores (mismo orden que los chips: Diego, Maxi, Juan); el resto solo el suyo.
