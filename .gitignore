@@ -10,3 +10,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Archivos locales de trabajo (no se publican: el repo es publico)
+.claude/
+Backups SupaBase Manual/
+CLAUDE.md
+schema.sql
