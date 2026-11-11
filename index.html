@@ -366,6 +366,89 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 #equipoTools.vacmode > .cal-keep:not(#calNavSlot):not(#viewBtns){display:none}
 #equipoTools.vacmode > #opToggles,#equipoTools.vacmode > #filterTxtWrap,#equipoTools.vacmode > #filterIDWrap{display:none!important}
 #vacBody{padding:0 48px 30px}
+/* ── Descuentos comerciales ───────────────────────────────── */
+#descBody{padding:6px 0 30px}
+.dsc-grid{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:16px;align-items:start}
+.dsc-col{display:grid;gap:14px}
+.dsc-ftit{display:flex;align-items:center;gap:8px;margin-bottom:8px}.dsc-ftit h3{flex:1;margin:0}
+.dsc-hidebtn{font-size:11px;padding:3px 8px}
+.dsc-showbtn{display:none}
+.dsc-grid.form-oculto{grid-template-columns:34px 1fr}
+.dsc-grid.form-oculto .dsc-col{display:none}
+.dsc-grid.form-oculto .dsc-showbtn{display:block;writing-mode:vertical-rl;transform:rotate(180deg);padding:12px 4px;font-size:12px;font-weight:600;white-space:nowrap;position:sticky;top:var(--dsc-top,90px);cursor:pointer}
+.dsc-card{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.dsc-card h3{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:8px}
+.dsc-card h3 .dsc-cnt{font-weight:400;color:var(--muted);font-size:12px}
+.dsc-form{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.dsc-form label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+.dsc-form .full{grid-column:1/3}
+.dsc-pm{display:grid;grid-template-columns:2fr 1fr;gap:8px 10px}
+.dsc-pm>div{min-width:0}
+.dsc-pm label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#dsc-marca-msg{color:#b45309;font-weight:600}
+#dsc-linkp.dsc-lkfull{color:var(--txt);resize:vertical;min-height:0;height:auto;word-break:break-all;font-family:inherit}
+.dsc-form input,.dsc-form select,.dsc-form textarea{width:100%;box-sizing:border-box}
+/* campos compactos (22px) para que el formulario entre en una laptop al 100% */
+.dsc-form input,.dsc-form select{height:22px!important;min-height:0!important;padding:1px 6px!important;font-size:12px!important;line-height:18px!important}
+.dsc-form select{padding:0 4px!important}
+.dsc-form{gap:5px 10px!important}
+.dsc-form label{margin-bottom:1px!important;line-height:14px}
+#dsc-txt{height:44px!important;padding:3px 6px!important}
+#dsc-linkp.dsc-lkfull{padding:2px 6px!important;line-height:15px}
+#dsc-form .dsc-hint{margin:0 0 4px}
+#dsc-form .dsc-ftit{margin-bottom:4px}
+#dsc-form{padding:8px 12px 8px}
+#dsc-form .dsc-acc{margin-top:2px}
+#dsc-linkp.dsc-lkfull{height:34px!important}
+#dsc-txt{height:78px;resize:vertical;font-size:11px;font-family:inherit}
+.dsc-hint{font-size:11px;color:var(--muted);margin:0 0 6px}
+.dsc-acc{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.dsc-dup{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;padding:6px 8px;font-size:12px;margin-bottom:8px}
+.dsc-ant-vacio{font-size:12px;color:var(--muted)}
+.dsc-ant-item{font-size:12px;padding:5px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:64px 1fr;gap:6px}
+.dsc-ant-item b{font-weight:600}
+.dsc-top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.dsc-top input{flex:1;min-width:0}
+.dsc-cli{flex:0 1 auto;min-width:0;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#dbeafe;color:#1e3a8a;border:1px solid #93c5fd;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
+.dsc-cli-x{cursor:pointer;margin-left:6px;font-size:15px;font-weight:800}
+.dsc-qwrap{flex:1;min-width:0;position:relative;display:flex}
+.dsc-qwrap input{padding-left:28px!important;width:100%}
+.dsc-qx{position:absolute;left:4px;top:50%;transform:translateY(-50%);border:0;background:none;padding:2px 6px;font-size:16px;line-height:1;color:var(--muted);cursor:pointer;visibility:hidden}
+.dsc-qx:hover{color:var(--txt)}
+.dsc-anios{position:relative;flex:0 0 auto}
+.dsc-anios>button{white-space:nowrap}
+.dsc-anios-pop{display:none;position:absolute;top:100%;left:0;margin-top:4px;z-index:40;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 12px;box-shadow:0 6px 18px rgba(0,0,0,.18);min-width:150px}
+.dsc-anios.open .dsc-anios-pop{display:block}
+.dsc-anios-pop label{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:13px;cursor:pointer;white-space:nowrap}
+.dsc-anios-pop input{flex:0 0 auto}
+.dsc-scroll{overflow-x:auto}
+.dsc-tabla{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.dsc-tabla th{color:var(--txt);font-weight:800;font-size:14px;text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.dsc-tabla td{padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+.dsc-tabla td.w{white-space:normal;min-width:160px}
+.dsc-ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dsc-tabla a{color:var(--blue);text-decoration:none;font-weight:700}
+.dsc-lk a{font-weight:600;white-space:nowrap}
+.dsc-add{cursor:pointer;color:var(--muted);font-size:11px;white-space:nowrap}
+.dsc-add:hover{color:var(--blue)}
+.dsc-ed{cursor:pointer;color:var(--muted);font-size:13px;padding:0 4px}
+.dsc-ed:hover{color:var(--blue)}
+.dsc-tabla tr.dsc-sel td{background:rgba(250,204,21,.2)}
+#dsc-form.dsc-editando{outline:2px solid #facc15}
+.prd-modal{max-width:1100px;width:100%;max-height:calc(100vh - 110px);display:flex;flex-direction:column;overflow:hidden;padding:22px 28px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+#ovProductos{z-index:70;align-items:flex-start;padding:70px 40px 40px;box-sizing:border-box}
+.prd-mut{font-size:12px;color:var(--muted);font-weight:400}
+#prd-imp summary{cursor:pointer;font-size:13px;font-weight:600}
+#prd-txt{width:100%;box-sizing:border-box;height:90px;font-size:11px;font-family:inherit}
+.prd-scroll{overflow:auto;min-height:120px;flex:1 1 auto}
+.dsc-x{cursor:pointer;color:var(--muted);font-weight:800;padding:0 4px}
+.dsc-x:hover{color:var(--urg)}
+@media (min-width:1001px){/* formulario y cabecera de la grilla fijos: cada columna scrollea por dentro */
+  .dsc-col{position:sticky;top:var(--dsc-top,90px);max-height:var(--dsc-col-h,calc(100vh - 140px));overflow:auto}
+  #dsc-lista{max-height:var(--dsc-lista-h,calc(100vh - 230px));overflow:auto}
+  .dsc-tabla thead th{position:sticky;top:0;z-index:2;background:var(--bg2)}
+}
+@media (max-width:1000px){.dsc-grid{grid-template-columns:1fr}}
 .vac-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0;position:sticky;z-index:6;background:var(--bg)}
 .vac-modo{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .vac-modo button{border:none;border-radius:0;background:var(--bg2);color:var(--txt);font:inherit;font-size:12px;font-weight:600;height:28px;padding:0 12px;cursor:pointer}
@@ -489,6 +572,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <div class="spacer" id="navSpacer">
       <span id="syncSt"></span>
       <button class="primary" id="btnNew" onclick="openTaskForm()">+ Nueva tarea</button>
+      <button id="btnProductos" onclick="openProductos()" style="display:none" title="Listado de productos y marcas (para Descuentos)">📦 Productos</button>
       <button id="btnNewNota" onclick="openNotaForm()" style="display:none;background:#374151;color:#f9fafb;border-color:#4b5563" title="Crear nota personal (solo visible para vos)">🗒 Nota</button>
       <button id="btnPassNav" onclick="openPassModal()" style="display:none;width:32px;height:32px;padding:0" title="Cambiar contraseña"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
       <button id="btnPesos" onclick="openTEPesos()" style="display:none">⚖ Pesos</button>
@@ -507,7 +591,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
           <button id="btnVE" class="view-btn" onclick="setViewMode('estado')" title="Por equipo&#10;consolidado de tareas"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><path d="M2 16c0-2.2 1.3-3 3-3s3 .8 3 3"/><circle cx="12" cy="6" r="2"/><path d="M9 16c0-2.2 1.3-3 3-3s3 .8 3 3"/><circle cx="19" cy="6" r="2"/><path d="M16 16c0-2.2 1.3-3 3-3s3 .8 3 3"/></svg></button>
           <button id="btnVO" class="view-btn" onclick="setViewMode('operador')" title="Por operador&#10;estas son tus tareas"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
           <button id="btnVC" class="view-btn" onclick="setViewMode('calendario')" title="Calendario&#10;estos son tus finalizados"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
-          <button id="btnVV" class="view-btn" onclick="setViewMode('vacaciones')" title="Vacaciones&#10;días tomados y feriados"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16.5" cy="3.6" r="2.1" fill="currentColor" stroke="none"/><path d="M16 7.6 14.6 13.4"/><path d="M14.6 13.4 17.4 17 18 21.5"/><path d="M14.6 13.4 13 17.4 11.6 21"/><path d="M15.9 8.8 18.8 11.3"/><path d="M15.7 9.1 8.6 9.4"/><g transform="rotate(18 6 15.5)"><rect x="3" y="11.5" width="6" height="8" rx="1.3"/><path d="M6 11.5V8.4"/><path d="M5 14v3M7 14v3" stroke-width="1.4"/><circle cx="4.3" cy="21" r=".8"/><circle cx="7.7" cy="21" r=".8"/></g></svg></button>
+          <button id="btnVV" class="view-btn" onclick="setViewMode('vacaciones')" title="Vacaciones&#10;días tomados y feriados"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16.5" cy="3.6" r="2.1" fill="currentColor" stroke="none"/><path d="M16 7.6 14.6 13.4"/><path d="M14.6 13.4 17.4 17 18 21.5"/><path d="M14.6 13.4 13 17.4 11.6 21"/><path d="M15.9 8.8 18.8 11.3"/><path d="M15.7 9.1 8.6 9.4"/><g transform="rotate(18 6 15.5)"><rect x="3" y="11.5" width="6" height="8" rx="1.3"/><path d="M6 11.5V8.4"/><path d="M5 14v3M7 14v3" stroke-width="1.4"/><circle cx="4.3" cy="21" r=".8"/><circle cx="7.7" cy="21" r=".8"/></g></svg></button><button id="btnVD" class="view-btn" style="display:none" onclick="setViewMode('descuentos')" title="Atenciones Comerciales&#10;registro y consulta"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/><path d="M10 16l5-5"/></svg></button>
         </div>
         <span id="calNavSlot" class="cal-keep" style="display:flex;align-items:center;gap:8px"></span>
         <select id="filterOp" style="display:none" onchange="renderEquipo()"><option value="">Todos</option></select>
@@ -525,6 +609,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       <div id="equipoBody"><div class="loading">Conectando con Supabase…</div></div>
       <div id="calendarBody" class="hidden"></div>
       <div id="vacBody" class="hidden"></div>
+      <div id="descBody" class="hidden"></div>
     </div>
 
     <!-- ANALISIS -->
@@ -545,6 +630,20 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       </div>
       <div id="regBody"><div class="loading">Cargando registro…</div></div>
     </div>
+  </div>
+</div>
+
+<!-- MODAL PRODUCTOS (admin) -->
+<div id="ovProductos" class="modal-bg hidden">
+  <div class="emodal prd-modal">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><h2 style="margin:0">📦 Productos</h2><span id="prd-cnt" class="prd-mut"></span><span style="flex:1"></span><button onclick="closeProductos()">Cerrar</button></div>
+    <details id="prd-imp"><summary>Importar / actualizar desde el Excel</summary>
+      <p class="prd-mut">En el Excel seleccioná las columnas <b>A a G</b> con los títulos (Productos, Tipo, Clase, Nivel 2, Marca, Nivel 3, Segmento), Ctrl+C y pegá acá. Los nuevos se suman y los existentes se actualizan (se reconocen por <b>Nivel 3</b>); no se borra ninguno.</p>
+      <textarea id="prd-txt" placeholder="Pegá acá las filas del Excel…"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:6px"><span id="prd-imp-msg" class="prd-mut"></span><button class="primary" onclick="prodImportar()">Importar</button></div>
+    </details>
+    <input id="prd-q" placeholder="Buscar por nombre, código, marca, clase, segmento…" oninput="prodLista()" style="width:100%;box-sizing:border-box;margin:8px 0">
+    <div id="prd-lista" class="prd-scroll"></div>
   </div>
 </div>
 
@@ -1284,6 +1383,8 @@ function applyRole(){
   document.getElementById('tabRegistro').style.display=admin?'block':'none';
   document.getElementById('btnPesos').style.display=admin?'inline-block':'none';
   document.getElementById('btnNewNota').style.display=admin?'inline-block':'none';
+  document.getElementById('btnProductos').style.display=admin?'inline-block':'none';
+  {const _bvd=document.getElementById('btnVD');if(_bvd)_bvd.style.display=admin?'':'none';}// Atenciones: por ahora solo admin (10/11/2026)
   document.getElementById('btnPassNav').style.display=admin?'inline-block':'none';
   if(!admin){document.getElementById('filterOp').value='';}
   // Vista por defecto: Workflow para admin y operadores; el gerente (Rubén/watcher) arranca en "Por equipo"
@@ -1359,9 +1460,10 @@ function clearFilters(){
   renderEquipo();
 }
 function setViewMode(mode,render=true){
+  if(mode==='descuentos'&&!isAdmin())mode='workflow';// Atenciones: solo admin por ahora
   document.getElementById('viewMode').value=mode;
-  ['btnVW','btnVO','btnVE','btnVC','btnVV'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
-  const _map={workflow:'btnVW',operador:'btnVO',estado:'btnVE',calendario:'btnVC',vacaciones:'btnVV'};
+  ['btnVW','btnVO','btnVE','btnVC','btnVV','btnVD'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  const _map={workflow:'btnVW',operador:'btnVO',estado:'btnVE',calendario:'btnVC',vacaciones:'btnVV',descuentos:'btnVD'};
   const _ab=document.getElementById(_map[mode]);if(_ab)_ab.classList.add('active');
   if(render)renderEquipo();
 }
@@ -1653,6 +1755,309 @@ function _syncMencBtn(){
   const b=document.getElementById('btnMencA');if(b)b.style.display=isAdmin()?'inline-flex':'none';
   _syncMencBlink();
 }
+// ── Descuentos comerciales (tabla descuentos) ─────────────────
+// Se pega el texto del pedido de laboratorio (Ctrl+A, Ctrl+C en gestion.vitolen.com) y se reconocen los campos.
+// Todos cargan; borra quien lo cargó o el admin; exporta a Excel solo el admin. Al cargar se muestran los antecedentes
+// del cliente (descuentos anteriores de esa CTA) y se avisa si ese pedido (ONLINE) ya estaba cargado.
+let DESC=[],DESC_LOADED=false;
+const DESC_AT=['Dueño','Oftalmólogo','Empleado','Otro'];
+const DESC_COND=[['Sin cargo','Sin cargo'],['Desc 50%','50%'],['Desc 30%','30%']];// + 'Otro' = se escribe a mano
+async function loadDescuentos(){
+  if(!SESSION||SESSION.demo){DESC_LOADED=true;return;}
+  loadProductos();
+  const{data,error}=await _selectTodo('descuentos','*',q=>q.order('fecha',{ascending:false}).order('id',{ascending:false}));
+  if(error){console.error(error);showToast('No se pudieron cargar las atenciones','err');return;}
+  DESC=data||[];DESC_LOADED=true;
+}
+// ── Productos (admin): listado producto → marca, importado pegando el Excel (09/11/2026) ──
+let PRODUCTOS=[],PRODUCTOS_LOADED=false,_PRODUCTOS_IDX=null;
+async function loadProductos(){
+  if(!SESSION||SESSION.demo){PRODUCTOS_LOADED=true;return;}
+  const{data,error}=await _selectTodo('productos','*',q=>q.order('nivel3'));
+  if(error){console.warn('productos:',error.message);PRODUCTOS_LOADED=true;return;}// sin tabla: sigue sin listado
+  PRODUCTOS=data||[];PRODUCTOS_LOADED=true;_PRODUCTOS_IDX=null;
+}
+const _PROD_ABR={bco:'blanco'};// abreviaturas del pedido → como figura en el listado
+const _prodKey=x=>_dNorm(x).replace(/^\d+\s*-?\s*/,'').replace(/\s+/g,' ').split(' ').map(w=>_PROD_ABR[w]||w).join(' ');
+function prodBuscar(nombre){// nombre del pedido (sin código) → fila del listado
+  if(!nombre)return null;
+  if(!_PRODUCTOS_IDX){_PRODUCTOS_IDX=new Map();PRODUCTOS.forEach(p=>{const k=_prodKey(p.nombre||p.nivel3);if(k&&!_PRODUCTOS_IDX.has(k))_PRODUCTOS_IDX.set(k,p);});}
+  const partes=String(nombre).replace(/^OD:\s*/i,'').split(/\s*\/\s*(?:OI:\s*)?/);
+  for(const x of partes){const p=_PRODUCTOS_IDX.get(_prodKey(x));if(p)return p;}
+  return null;
+}
+async function openProductos(){
+  if(!isAdmin())return;
+  document.getElementById('ovProductos').classList.remove('hidden');
+  document.getElementById('prd-lista').innerHTML='<div class="loading">Cargando productos…</div>';
+  await loadProductos();prodLista();
+}
+function closeProductos(){document.getElementById('ovProductos').classList.add('hidden');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=document.getElementById('ovProductos');if(o&&!o.classList.contains('hidden'))closeProductos();}});
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='ovProductos')closeProductos();});
+function prodLista(){
+  const box=document.getElementById('prd-lista');if(!box)return;
+  const q=_dNorm(_dv('prd-q')),l=q?PRODUCTOS.filter(p=>_dNorm([p.nivel3,p.grupo,p.tipo,p.clase,p.marca,p.segmento].join(' ')).includes(q)):PRODUCTOS,max=300;
+  document.getElementById('prd-cnt').textContent=l.length+(l.length!==PRODUCTOS.length?' de '+PRODUCTOS.length:'')+' productos';
+  if(!PRODUCTOS.length){box.innerHTML='<div class="dsc-ant-vacio">Todavía no hay productos. Abrí "Importar / actualizar desde el Excel".</div>';document.getElementById('prd-imp').open=true;return;}
+  box.innerHTML='<table class="dsc-tabla"><thead><tr><th>Código</th><th>Nombre (Nivel 3)</th><th>Marca</th><th>Tipo</th><th>Clase</th><th>Segmento</th><th>Grupo</th></tr></thead><tbody>'+
+    l.slice(0,max).map(p=>`<tr><td>${escH(p.codigo||'')}</td><td class="w">${escH(p.nombre||p.nivel3)}</td><td>${escH(p.marca||'')}</td><td>${escH(p.tipo||'')}</td><td>${escH(p.clase||'')}</td><td>${escH(p.segmento||'')}</td><td>${escH(p.grupo||'')}</td></tr>`).join('')+
+    '</tbody></table>'+(l.length>max?`<div class="dsc-ant-vacio" style="margin-top:6px">Se muestran ${max}; usá el buscador para el resto.</div>`:'');
+}
+function prodParse(txt){// texto pegado del Excel → filas únicas por Nivel 3
+  const COL={'productos':'grupo','tipo':'tipo','clase':'clase','nivel 2':'nivel2','marca':'marca','nivel 3':'nivel3','segmento':'segmento'};
+  let idx=null;const filas=new Map();
+  for(const l of String(txt||'').split(/\r?\n/)){
+    const c=l.split('\t').map(x=>x.trim());if(!c.some(Boolean))continue;
+    if(!idx){if(c.map(_dNorm).includes('nivel 3')){idx={};c.forEach((h,i)=>{const k=COL[_dNorm(h)];if(k)idx[k]=i;});}continue;}
+    const r={};Object.entries(idx).forEach(([k,i])=>r[k]=c[i]||null);
+    if(!r.nivel3)continue;
+    const m=r.nivel3.match(/^(\d+)\s*-?\s*(.*)$/);r.codigo=m?m[1]:null;r.nombre=m?m[2].trim():r.nivel3;
+    filas.set(r.nivel3,r);
+  }
+  return idx?[...filas.values()]:null;
+}
+async function prodImportar(){
+  if(!isAdmin())return;
+  const msg=document.getElementById('prd-imp-msg'),rows=prodParse(_dv('prd-txt'));
+  if(!rows){showToast('No encontré la fila de títulos (tiene que incluir "Nivel 3")','err');return;}
+  if(!rows.length){showToast('No hay filas para importar','err');return;}
+  const ahora=new Date().toISOString();rows.forEach(r=>r.actualizado=ahora);
+  const ya=new Set(PRODUCTOS.map(p=>p.nivel3)),nuevos=rows.filter(r=>!ya.has(r.nivel3)).length;
+  if(!confirm('Importar '+rows.length+' productos ('+nuevos+' nuevos, '+(rows.length-nuevos)+' a actualizar)?'))return;
+  for(let i=0;i<rows.length;i+=500){
+    msg.textContent='Guardando '+Math.min(i+500,rows.length)+' de '+rows.length+'…';
+    const{error}=await _SB.from('productos').upsert(rows.slice(i,i+500),{onConflict:'nivel3'});
+    if(error){console.error(error);msg.textContent='';showToast('No se pudo importar: '+error.message,'err');return;}
+  }
+  msg.textContent='';document.getElementById('prd-txt').value='';document.getElementById('prd-imp').open=false;
+  await loadProductos();prodLista();showToast('Productos importados ✓ ('+nuevos+' nuevos, '+(rows.length-nuevos)+' actualizados)');
+}
+const _dNorm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+// Texto copiado del pedido: líneas "campo<TAB>valor<TAB>campo<TAB>valor"; la receta trae filas OD / OI.
+function _promCorto(n){// como nos nombramos: primer nombre sin acentos; excepciones a mano
+  const k=n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim(),CORTO={'maximiliano gonzalez':'Maxi Go'};
+  return CORTO[k.toLowerCase()]||k.split(' ')[0];
+}
+function parsePedido(txt){
+  const r={},m={},lines=String(txt||'').split(/\r?\n/),art=[];let enArt=false;
+  lines.forEach(l=>{
+    const p=l.split('\t').map(x=>x.trim());
+    // pedidos de stock (letra S): sección 'Artículo / Cantidad' hasta 'Total'
+    if(_dNorm(p[0])==='articulo'){enArt=true;return;}
+    if(enArt){if(_dNorm(p[0])==='total'||!p[0]){enArt=false;return;}art.push(p[0]);return;}
+    if(/^O[DI]$/.test(p[0])){(r.lentes=r.lentes||{})[p[0]]=p.slice(1);return;}
+    for(let i=0;i+1<p.length;i+=2){if(p[i])m[_dNorm(p[i])]=p[i+1];}
+  });
+  const mo=(m['nro de trabajo']||'').match(/(\d{5,}[A-Za-z]?)/);if(mo)r.online=mo[1].toUpperCase();// primer número, con la letra del tipo de pedido
+  const fe=(m['fecha']||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(fe)r.fecha=fe[3]+'-'+fe[2].padStart(2,'0')+'-'+fe[1].padStart(2,'0');
+  const cl=m['cliente']||'',mc=cl.match(/^\s*(\d+)\s*-\s*(.+)$/);if(mc){r.cta=mc[1];r.cliente=mc[2].trim();}else if(cl)r.cliente=cl.trim();
+  const pr=(m['promotor comercial']||'').trim();if(pr)r.promotor=_promCorto(pr);
+  const prod=x=>x?x.replace(/^\s*\d+\s*-\s*/,'').trim():'';
+  if(r.lentes){const od=prod((r.lentes.OD||[])[1]),oi=prod((r.lentes.OI||[])[1]);r.producto=(od&&oi&&od!==oi)?('OD: '+od+' / OI: '+oi):(od||oi);}
+  if(!r.producto&&art.length){const n=[...new Set(art.map(x=>prod(x).replace(/\s+ESF\b.*$/i,'').trim()).filter(Boolean))];r.producto=n.join(' / ');}// stock: nombre sin la graduación
+  (String(txt||'').match(/https?:\/\/[^\s]+/g)||[]).forEach(u=>{if(_esBusqTrab(u))return;if(/\/pedidos_laboratorio\//.test(u)){if(!r.linkPedido)r.linkPedido=u;}else if(!r.link)r.link=u;});
+  return r;
+}
+const _esBusqTrab=u=>/\/ventas\/pedidos\?/.test(u||'');// link de búsqueda por Online (armado por la app)
+function _dscAutoLinkp(){// sin link exacto del pedido → búsqueda por Online
+  const e=document.getElementById('dsc-linkp');if(!e)return;
+  const v=e.value.trim(),on=_dv('dsc-online').trim();
+  if(!v||_esBusqTrab(v))e.value=on?_dscBuscarTrabajo(on):'';
+}
+const _dv=id=>(document.getElementById(id)||{}).value||'';
+function descLeer(){
+  const r=parsePedido(_dv('dsc-txt')+'\n'+_dv('dsc-link')+'\n'+_dv('dsc-linkp'));
+  const set=(id,v)=>{const e=document.getElementById(id);if(e&&v)e.value=v;};
+  set('dsc-fecha',r.fecha);set('dsc-cta',r.cta);set('dsc-cliente',r.cliente);set('dsc-online',r.online);set('dsc-producto',r.producto);set('dsc-promotor',r.promotor);
+  // marca desde el listado de Productos
+  const mm=document.getElementById('dsc-marca-msg'),pr=r.producto?prodBuscar(r.producto):null;
+  if(pr&&pr.marca)set('dsc-marca',pr.marca);
+  if(mm)mm.textContent=(r.producto&&PRODUCTOS.length&&!pr)?'· no está en Productos':'';
+  if(mm)mm.parentElement.title=mm.textContent?'El producto no está en el listado de Productos: revisá la marca':'';
+  // un link pegado en el campo equivocado se mueve a su lugar
+  if(r.linkPedido&&_dv('dsc-link')===r.linkPedido)document.getElementById('dsc-link').value='';
+  if(r.link&&_dv('dsc-linkp')===r.link)document.getElementById('dsc-linkp').value='';
+  if(r.link&&!_dv('dsc-link'))set('dsc-link',r.link);
+  if(r.linkPedido&&(!_dv('dsc-linkp')||_esBusqTrab(_dv('dsc-linkp'))))set('dsc-linkp',r.linkPedido);
+  _dscAutoLinkp();
+  descAntecedentes();
+}
+// celda de la grilla: una línea, tope de ancho, … y tooltip solo si se corta
+const _dcDiv=(v,w)=>`<div class="dsc-ell" style="max-width:${w}" onmouseenter="_dscTip(this)">${escH(v||'')}</div>`;
+const _dc=(v,w)=>`<td>${_dcDiv(v,w)}</td>`;
+const _dscTip=e=>{e.title=e.scrollWidth>e.clientWidth?e.textContent:'';};// tooltip solo si está cortado con …
+const _dFecha=f=>f?f.slice(8,10)+'/'+f.slice(5,7)+'/'+f.slice(2,4):'';
+// Filtro por cliente (09/11/2026): al pegar/cargar un pedido la grilla muestra solo ese cliente, en todos los años.
+// Un cliente puede cambiar de cuenta o de nombre de fantasía: coincide por CTA (cualquiera de una CTA doble) o por nombre,
+// y se amplía una vuelta (las otras CTA / nombres que aparecen en sus registros).
+let _DSC_CLI=null,_DSC_CLI_OFF='';
+const _dNom=s=>_dNorm(s).replace(/[^a-z0-9]/g,'');
+const _ctaPartes=c=>String(c||'').split(/[^0-9]+/).filter(Boolean);
+function _dscCliCalc(cta,cli){
+  if(!cta&&!cli)return null;
+  const C=new Set(_ctaPartes(cta)),N=new Set(cli?[_dNom(cli)]:[]);
+  const hit=d=>_ctaPartes(d.cta).some(x=>C.has(x))||(!!d.cliente&&N.has(_dNom(d.cliente)));
+  DESC.filter(hit).forEach(d=>{_ctaPartes(d.cta).forEach(x=>C.add(x));if(d.cliente)N.add(_dNom(d.cliente));});
+  return{C,N,hit:d=>_ctaPartes(d.cta).some(x=>C.has(x))||(!!d.cliente&&N.has(_dNom(d.cliente))),cta,cli};
+}
+function _dscCliActualizar(){
+  const cta=_dv('dsc-cta').trim(),cli=_dv('dsc-cliente').trim(),k=cta+'|'+cli;
+  if(k!==_DSC_CLI_OFF)_DSC_CLI_OFF='';
+  _DSC_CLI=_DSC_CLI_OFF?null:_dscCliCalc(cta,cli);
+}
+function descCliQuitar(){_DSC_CLI_OFF=_dv('dsc-cta').trim()+'|'+_dv('dsc-cliente').trim();_DSC_CLI=null;descLista();}
+function _onBase(o){return String(o||'').trim().toUpperCase().replace(/[A-Z]$/,'');}// 8438083L ≡ 8438083
+function descAntecedentes(){// (09/11/2026) el cuadro "Antecedentes" se retiró: la grilla filtra al cliente. Queda el aviso de pedido repetido.
+  const on=_dv('dsc-online').trim(),ob=_onBase(on),dups=ob?DESC.filter(d=>_onBase(d.online)===ob&&d.id!==_descEditId):[],dup=dups[0];
+  const box=document.getElementById('dsc-dupmsg');
+  if(box){box.style.display=dup?'':'none';box.innerHTML=dup?`⚠ El pedido ${escH(dup.online)} ya tiene ${dups.length>1?dups.length+' atenciones cargadas':'una atención cargada'} (${_dFecha(dup.fecha)}, ${escH(dup.condicion||'')}, cargó ${escH(nombreOp(dup.creado_por)||dup.creado_por||'')}). Podés guardar igual si es otra atención del mismo trabajo.`:'';}
+  _dscCliActualizar();descLista();
+}
+function descCondCambio(){const s=_dv('dsc-condSel'),i=document.getElementById('dsc-cond');if(!i)return;if(s==='otro'){i.value='';i.style.display='';i.focus();}else{i.value=s;i.style.display='none';}}
+function descLimpiar(){['dsc-txt','dsc-link','dsc-linkp','dsc-fecha','dsc-cta','dsc-cliente','dsc-online','dsc-producto','dsc-promotor','dsc-obs','dsc-cond'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});const a=document.getElementById('dsc-at');if(a){[...a.options].filter(o=>o.dataset.extra).forEach(o=>o.remove());a.value='';}const cs=document.getElementById('dsc-condSel');if(cs)cs.value='';const ci=document.getElementById('dsc-cond');if(ci)ci.style.display='none';const m=document.getElementById('dsc-marca');if(m)m.value='Vitolen';_descModoEdit(null);descAntecedentes();}
+let _descEditId=null;
+function _dscAtOpcion(v){// AT viejo que no está en la lista (historial): se agrega como opción para poder verlo y guardar
+  const s=document.getElementById('dsc-at');if(!s||!v||[...s.options].some(o=>o.value===v))return;
+  const o=document.createElement('option');o.value=o.textContent=v;o.dataset.extra='1';s.appendChild(o);
+}
+function _descModoEdit(id){_descEditId=id;const t=document.getElementById('dsc-form-tit'),b=document.getElementById('dsc-btnG'),f=document.getElementById('dsc-form');if(t)t.textContent=id?'Editar atención':'Cargar atención';if(b)b.textContent=id?'Guardar cambios':'Guardar';if(f)f.classList.toggle('dsc-editando',!!id);descLista();}
+function descFormVer(ver,noGuardar){// ocultar / mostrar el formulario; se recuerda por usuario en este navegador
+  const g=document.querySelector('.dsc-grid');if(!g)return;
+  g.classList.toggle('form-oculto',!ver);
+  if(!noGuardar)localStorage.setItem('dsc_form_oculto',ver?'0':'1');
+  setTimeout(_dscAjustarAlto,0);
+}
+function descEditar(id){
+  descFormVer(true,true);// para editar hace falta el formulario (no cambia la preferencia)
+  const d=DESC.find(x=>x.id===id);if(!d||!(isAdmin()||d.creado_por===SESSION.user))return;
+  descLimpiar();const set=(k,v)=>{const e=document.getElementById(k);if(e)e.value=v||'';};
+  set('dsc-link',d.link);set('dsc-linkp',d.link_pedido);set('dsc-fecha',d.fecha);set('dsc-cta',d.cta);set('dsc-cliente',d.cliente);set('dsc-online',d.online);set('dsc-producto',d.producto);set('dsc-promotor',d.promotor);set('dsc-obs',d.observaciones);set('dsc-marca',d.marca||'Vitolen');_dscAtOpcion(d.at);set('dsc-at',d.at);_dscAutoLinkp();
+  const cs=document.getElementById('dsc-condSel'),ci=document.getElementById('dsc-cond'),std=DESC_COND.some(([v])=>v===d.condicion);
+  if(cs)cs.value=d.condicion?(std?d.condicion:'otro'):'';if(ci){ci.value=d.condicion||'';ci.style.display=(d.condicion&&!std)?'':'none';}
+  _descModoEdit(id);descAntecedentes();const f=document.getElementById('dsc-form');if(f)f.scrollIntoView({behavior:'smooth',block:'start'});showToast('Editando: '+(d.cliente||d.cta)+' — Guardar cambios o Limpiar para cancelar');
+}
+async function descGuardar(){
+  const row={fecha:_dv('dsc-fecha')||null,cta:_dv('dsc-cta').trim(),cliente:_dv('dsc-cliente').trim(),online:_dv('dsc-online').trim(),marca:_dv('dsc-marca').trim()||'Vitolen',producto:_dv('dsc-producto').trim(),at:_dv('dsc-at'),condicion:_dv('dsc-cond').trim(),promotor:_dv('dsc-promotor').trim(),link:_dv('dsc-link').trim(),link_pedido:_esBusqTrab(_dv('dsc-linkp'))?'':_dv('dsc-linkp').trim(),observaciones:_dv('dsc-obs').trim(),creado_por:SESSION.user};
+  const falta=[!row.fecha&&'fecha',!(row.cta||row.cliente)&&'cliente',!row.producto&&'producto',!row.at&&'AT',!row.condicion&&'condición'].filter(Boolean);
+  if(falta.length){showToast('Falta completar: '+falta.join(', '),'err');return;}
+  if(_descEditId){
+    const id=_descEditId,d=DESC.find(x=>x.id===id);if(!d){descLimpiar();return;}
+    delete row.creado_por;if(!row.link_pedido){if(d.link_pedido)row.link_pedido=null;else delete row.link_pedido;}
+    if(!SESSION.demo){const{error}=await _SB.from('descuentos').update(row).eq('id',id);if(error){console.error(error);showToast('No se pudo guardar: '+error.message,'err');return;}}
+    Object.assign(d,row);showToast('Cambios guardados ✓');descLimpiar();return;
+  }
+  if(!row.link_pedido)delete row.link_pedido;// así guarda aunque la base todavía no tenga la columna
+  if(SESSION.demo){DESC.unshift({...row,id:Date.now()});showToast('Guardado ✓');descLimpiar();descLista();return;}
+  const{data,error}=await _SB.from('descuentos').insert(row).select().single();
+  if(error){console.error(error);showToast('No se pudo guardar: '+error.message,'err');return;}
+  DESC.unshift(data);showToast('Atención guardada ✓');descLimpiar();descLista();
+}
+async function descBorrar(id){
+  const d=DESC.find(x=>x.id===id);if(!d)return;
+  if(!isAdmin()&&d.creado_por!==SESSION.user)return;
+  if(!confirm('¿Borrar la atención de '+(d.cliente||d.cta)+' ('+_dFecha(d.fecha)+')?'))return;
+  if(!SESSION.demo){const{error}=await _SB.from('descuentos').delete().eq('id',id);if(error){showToast('No se pudo borrar','err');return;}}
+  DESC=DESC.filter(x=>x.id!==id);if(id===_descEditId)descLimpiar();descLista();descAntecedentes();showToast('Borrado');
+}
+// Filtro por años (09/11/2026): de entrada el año en curso; se suman años con checkboxes
+let _DSC_ANIOS=null;// Set de años tildados (null = todavía no se inicializó)
+const _dscAnio=d=>d.fecha?+String(d.fecha).slice(0,4):null;
+function _dscAniosDisp(){const a=new Set(DESC.map(_dscAnio).filter(Boolean));a.add(new Date().getFullYear());return[...a].sort((x,y)=>y-x);}
+function _dscAniosRender(){
+  const box=document.getElementById('dsc-anios');if(!box)return;
+  const disp=_dscAniosDisp();if(!_DSC_ANIOS)_DSC_ANIOS=new Set([new Date().getFullYear()]);
+  const sel=disp.filter(a=>_DSC_ANIOS.has(a)),todos=sel.length===disp.length;
+  const txt=todos&&disp.length>1?'Todos los años':sel.length?sel.join(', '):'Ningún año';
+  const abierto=box.classList.contains('open');
+  box.innerHTML=`<button type="button" onclick="event.stopPropagation();this.parentElement.classList.toggle('open')">📅 ${txt} ▾</button><div class="dsc-anios-pop" onclick="event.stopPropagation()"><label><input type="checkbox" ${todos?'checked':''} onchange="descAnioTodos(this.checked)"> <b>Todos</b></label>${disp.map(a=>`<label><input type="checkbox" ${_DSC_ANIOS.has(a)?'checked':''} onchange="descAnio(${a},this.checked)"> ${a}</label>`).join('')}</div>`;
+  if(abierto)box.classList.add('open');
+}
+function descAnio(a,on){if(!_DSC_ANIOS)_DSC_ANIOS=new Set();on?_DSC_ANIOS.add(a):_DSC_ANIOS.delete(a);descLista();}
+function descAnioTodos(on){_DSC_ANIOS=new Set(on?_dscAniosDisp():[]);descLista();}
+document.addEventListener('click',()=>{const b=document.getElementById('dsc-anios');if(b)b.classList.remove('open');});
+function _descFiltrados(){
+  if(!_DSC_ANIOS)_DSC_ANIOS=new Set([new Date().getFullYear()]);
+  const disp=_dscAniosDisp(),todos=_DSC_CLI||disp.every(a=>_DSC_ANIOS.has(a));// con cliente: todos los años
+  const q=_dNorm(_dv('dsc-q'));
+  return DESC.filter(d=>(!_DSC_CLI||_DSC_CLI.hit(d))&&(todos||_DSC_ANIOS.has(_dscAnio(d)))&&(!q||_dNorm([d.cta,d.cliente,d.online,d.producto,d.at,d.condicion,d.promotor,d.observaciones].join(' ')).includes(q)));
+}
+const _DSC_LK={link_pedido:['Trabajo','Abrir el trabajo en el sistema','https://gestion.vitolen.com/ventas/pedidos_laboratorio/'],link:['Mensaje','Abrir la solicitud de atención (mensajería)','https://gestion.vitolen.com/mensajes/']};
+const _dscBuscarTrabajo=o=>'https://gestion.vitolen.com/ventas/pedidos?q%5Bnro_o_codigo%5D='+encodeURIComponent(o)+'&q%5Bcargado_en_periodo%5D=all_history&q%5Bvista%5D=lista';
+function _dscLink(d,campo){
+  const[nom,tit]=_DSC_LK[campo],puede=isAdmin()||d.creado_por===SESSION.user;
+  // registros viejos: el link del trabajo quedó guardado en "link"; se muestra en Trabajo según la dirección
+  const esPed=u=>/pedidos_laboratorio/i.test(u||''),url=campo==='link_pedido'?(d.link_pedido||(esPed(d.link)?d.link:'')):(esPed(d.link)?'':d.link);
+  if(url)return `<a href="${escH(url)}" target="_blank" rel="noopener" title="${tit}">↗ ${nom}</a>`;
+  // sin link exacto del trabajo: búsqueda en el sistema por el Online (pedido de Juan 09/11/2026)
+  if(campo==='link_pedido'&&d.online)return `<a href="${_dscBuscarTrabajo(d.online)}" target="_blank" rel="noopener" title="Buscar el trabajo ${escH(d.online)} en el sistema">↗ ${nom}</a>`+(puede?` <span class="dsc-add" onclick="descSetLink(${d.id},'${campo}')" title="Pegar el link exacto del trabajo">+</span>`:'');
+  return puede?`<span class="dsc-add" onclick="descSetLink(${d.id},'${campo}')" title="Pegar el link: ${nom.toLowerCase()}">+ link</span>`:'';
+}
+async function descSetLink(id,campo){
+  const d=DESC.find(x=>x.id===id);if(!d)return;
+  const[nom,,pref]=_DSC_LK[campo];
+  let v=prompt('Pegá el link ('+nom.toLowerCase()+'):',pref);if(v==null)return;v=v.trim();
+  if(!/^https?:\/\//i.test(v)||v===pref){showToast('Link no válido','err');return;}
+  if(!SESSION.demo){const{error}=await _SB.from('descuentos').update({[campo]:v}).eq('id',id);if(error){console.error(error);showToast('No se pudo guardar el link: '+error.message,'err');return;}}
+  d[campo]=v;descLista();showToast('Link guardado ✓');
+}
+function _dscAjustarAlto(){// alto disponible para el form y la grilla (debajo del encabezado fijo)
+  const g=document.querySelector('.dsc-grid'),l=document.getElementById('dsc-lista');if(!g||!l||!g.offsetParent)return;
+  const h=document.querySelector('.eq-header'),hb=Math.max(0,h?h.getBoundingClientRect().bottom:0);
+  const tb=document.getElementById('testBannerBottom'),bot=tb&&tb.offsetHeight?tb.offsetHeight:0;// franja de TEST abajo
+  const top=Math.max(hb+8,g.getBoundingClientRect().top);
+  g.style.setProperty('--dsc-top',hb+8+'px');
+  g.style.setProperty('--dsc-col-h',Math.max(200,innerHeight-top-bot-10)+'px');
+  g.style.setProperty('--dsc-lista-h',Math.max(150,innerHeight-l.getBoundingClientRect().top-bot-16)+'px');
+}
+addEventListener('resize',()=>_dscAjustarAlto());
+function descQLimpiar(){const q=document.getElementById('dsc-q');if(!q)return;q.value='';descLista();q.focus();}
+function descLista(){
+  const box=document.getElementById('dsc-lista');if(!box)return;
+  _dscAniosRender();const ch=document.getElementById('dsc-cli');if(ch){ch.style.display=_DSC_CLI?'':'none';if(_DSC_CLI)ch.innerHTML=`👤 ${escH(_DSC_CLI.cli||'CTA '+_DSC_CLI.cta)}${_DSC_CLI.cta&&_DSC_CLI.cli?' ('+escH(_DSC_CLI.cta)+')':''} · todos los años <span class="dsc-cli-x" onclick="descCliQuitar()" title="Ver toda la grilla">&times;</span>`;}
+  const da=document.getElementById('dsc-anios');if(da)da.style.opacity=_DSC_CLI?'.45':'';const qx=document.getElementById('dsc-qx');if(qx)qx.style.visibility=_dv('dsc-q')?'visible':'hidden';const l=_descFiltrados(),max=300;setTimeout(_dscAjustarAlto,0);
+  const c=document.getElementById('dsc-lista-cnt');if(c)c.textContent=l.length+(l.length!==DESC.length?' de '+DESC.length:'')+' registros';
+  if(!l.length){box.innerHTML='<div class="dsc-ant-vacio">'+(DESC.length?'Ningún registro coincide con los años / la búsqueda.':'Todavía no hay atenciones cargadas.')+'</div>';return;}
+  box.innerHTML='<table class="dsc-tabla"><thead><tr><th>Fecha</th><th>CTA</th><th>Cliente</th><th>Online</th><th>Producto</th><th>Trabajo</th><th>AT</th><th>Condición</th><th>Promotor</th><th>Mensaje</th><th style="width:100%">Obs.</th><th>Cargó</th><th></th></tr></thead><tbody>'+
+    l.slice(0,max).map(d=>`<tr${d.id===_descEditId?' class="dsc-sel"':''}><td>${_dFecha(d.fecha)}</td>${_dc(d.cta,'11ch')}${_dc(d.cliente,'260px')}${_dc(d.online,'11ch')}${_dc(d.producto,'300px')}<td class="dsc-lk">${_dscLink(d,'link_pedido')}</td>${_dc(d.at,'13ch')}${_dc(d.condicion,'16ch')}${_dc(d.promotor,'11ch')}<td class="dsc-lk">${_dscLink(d,'link')}</td><td class="dsc-obs">${_dcDiv(d.observaciones,'260px')}</td><td>${escH(iniOp(d.creado_por)||'')}</td><td>${(isAdmin()||d.creado_por===SESSION.user)?`<span class="dsc-ed" onclick="descEditar(${d.id})" title="Editar">✎</span><span class="dsc-x" onclick="descBorrar(${d.id})" title="Borrar">&times;</span>`:''}</td></tr>`).join('')+
+    '</tbody></table>'+(l.length>max?`<div class="dsc-ant-vacio" style="margin-top:6px">Se muestran los ${max} más recientes; usá el buscador para encontrar el resto.</div>`:'');
+}
+function descExportar(){
+  if(!isAdmin())return;
+  const rows=_descFiltrados().map(d=>({FECHA:_dFecha(d.fecha),CTA:d.cta||'',CLIENTE:d.cliente||'',ONLINE:d.online||'',MARCA:d.marca||'',PRODUCTO:d.producto||'',AT:d.at||'',['CONDICIÓN']:d.condicion||'',PROMOTOR:d.promotor||'',LINK:d.link||'',OBSERVACIONES:d.observaciones||'',['LINK PEDIDO']:d.link_pedido||''}));
+  const ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Atenciones');
+  XLSX.writeFile(wb,'atenciones_'+todayISO()+'.xlsx');
+}
+function renderDescuentos(){
+  const box=document.getElementById('descBody');if(!box)return;
+  if(!document.getElementById('dsc-form')){
+    box.innerHTML=`<div class="dsc-grid${localStorage.getItem('dsc_form_oculto')==='1'?' form-oculto':''}"><button type="button" class="dsc-showbtn" onclick="descFormVer(true)" title="Mostrar el formulario de carga">▸ Cargar atención</button><div class="dsc-col">
+      <div class="dsc-card" id="dsc-form"><div class="dsc-ftit"><h3 id="dsc-form-tit">Cargar atención</h3><button type="button" class="dsc-hidebtn" onclick="descFormVer(false)" title="Ocultar el formulario (se recuerda)">◂ Ocultar</button></div>
+        <div class="dsc-form">
+          <div class="full"><textarea id="dsc-txt" placeholder="Pegá acá el pedido de Vitolen" oninput="descLeer()"></textarea></div>
+          <div class="full"><label>Link del pedido (abre el trabajo desde la lista)</label><textarea id="dsc-linkp" class="dsc-lkfull" rows="2" placeholder="https://gestion.vitolen.com…" oninput="descLeer()"></textarea></div>
+          <div><label>Fecha</label><input id="dsc-fecha" type="date"></div>
+          <div><label>Online (Nro de trabajo)</label><input id="dsc-online" oninput="_dscAutoLinkp();descAntecedentes()"></div>
+          <div><label>CTA</label><input id="dsc-cta" oninput="descAntecedentes()"></div>
+          <div><label>Promotor</label><input id="dsc-promotor"></div>
+          <div class="full"><label>Cliente</label><input id="dsc-cliente" oninput="descAntecedentes()"></div>
+          <div class="full dsc-pm"><div><label>Producto</label><input id="dsc-producto"></div><div><label>Marca <span id="dsc-marca-msg" class="prd-mut"></span></label><input id="dsc-marca" value="Vitolen"></div></div>
+          <div><label>Observaciones</label><input id="dsc-obs"></div>
+          <div><label>Link solicitud de atención</label><input id="dsc-link" placeholder="https://gestion.vitolen.com…" oninput="descLeer()"></div>
+          <div><label>AT</label><select id="dsc-at"><option value="">Elegir…</option>${DESC_AT.map(a=>`<option>${a}</option>`).join('')}</select></div>
+          <div><label>Condición</label><select id="dsc-condSel" onchange="descCondCambio()"><option value="">Elegir…</option>${DESC_COND.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}<option value="otro">Otro</option></select><input id="dsc-cond" placeholder="Escribí la condición" style="display:none;margin-top:4px"></div>
+          <div class="full dsc-dup" id="dsc-dupmsg" style="display:none"></div>
+          <div class="full dsc-acc"><button type="button" onclick="descLimpiar()">Limpiar</button><button type="button" class="primary" id="dsc-btnG" onclick="descGuardar()">Guardar</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="dsc-card"><h3>Atenciones registradas <span class="dsc-cnt" id="dsc-lista-cnt"></span></h3>
+      <div class="dsc-top"><div class="dsc-anios" id="dsc-anios"></div><span class="dsc-cli" id="dsc-cli" style="display:none"></span><span class="dsc-qwrap"><button type="button" class="dsc-qx" id="dsc-qx" onclick="descQLimpiar()" title="Limpiar búsqueda">&times;</button><input id="dsc-q" placeholder="Buscar por cliente, CTA, online, producto, promotor…" oninput="descLista()"></span>${isAdmin()?'<button type="button" onclick="descExportar()">⬇ Exportar a Excel</button>':''}</div>
+      <div class="dsc-scroll" id="dsc-lista"></div>
+    </div></div>`;
+  }
+  descAntecedentes();descLista();
+}
 function renderEquipo(){
   _syncFinHoy();_syncVacAviso();_syncFiltrosActivos();
   fillFilterOp();fillFiltros();
@@ -1662,6 +2067,18 @@ function renderEquipo(){
   const _body=document.getElementById('equipoBody');
   const _calB=document.getElementById('calendarBody');
   const _vacB=document.getElementById('vacBody');
+  const _descB=document.getElementById('descBody');
+  if(mode==='descuentos'){
+    const entering=(_lastView!=='descuentos');_lastView=mode;
+    _tools.classList.add('calmode','vacmode');
+    _body.classList.add('hidden');_calB.classList.add('hidden');_vacB.classList.add('hidden');_descB.classList.remove('hidden');
+    const _sl=document.getElementById('calNavSlot');if(_sl)_sl.innerHTML='<span class="cal-month">Atenciones Comerciales</span>';
+    if(entering){_descB.innerHTML='<div class="loading">Cargando atenciones…</div>';loadDescuentos().then(()=>renderDescuentos());}
+    else renderDescuentos();
+    setupSticky();
+    return;
+  }
+  _descB.classList.add('hidden');
   if(mode==='vacaciones'){
     const entering=(_lastView!=='vacaciones');_lastView=mode;
     _tools.classList.add('calmode','vacmode');
@@ -3548,6 +3965,7 @@ function exportCSV(){
   }
   document.addEventListener('mouseover',e=>{
     const el=e.target.closest&&e.target.closest('[title]');
+    if(el&&el.classList.contains('dsc-ell'))return;// grilla de Descuentos: queda el tooltip del navegador
     if(el&&el!==cur){if(cur)hide();show(el);}
   });
   document.addEventListener('mouseout',e=>{
