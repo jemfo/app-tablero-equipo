@@ -215,6 +215,68 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .card.ovd .ct{padding-right:30px}
 .cvenc{position:absolute;top:8px;right:8px;background:transparent;color:var(--urg);border:1px solid var(--urg);font-size:9px;font-weight:600;min-width:19px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 6px;letter-spacing:.2px}
 .col.drop-hover{outline:1px dashed var(--accent);outline-offset:-2px;background:color-mix(in srgb,var(--accent) 5%,var(--bg2))}
+/* Agenda de vencimientos (Workflow, solo admin; TEST 24/11/2026) */
+.wf-ag .ag-wrap{flex:0 0 calc(65% - 4px);max-width:calc(65% - 4px);min-width:0;display:flex;flex-direction:column;gap:6px}
+.ag-ley{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--txt)}
+.ag-ley i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.ag-hdr{position:sticky;z-index:6;background:var(--bg);padding:4px 0 2px}
+.ag-top{display:flex;align-items:center;gap:10px;margin-bottom:4px;position:relative}
+.ag-tit{font-size:12px;font-weight:700;color:#fb2118}
+.ag-cnt{font-size:11px;font-weight:400;color:var(--muted)}
+.ag-dows,.ag-week{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.ag-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.ag-cell{background:var(--bg2);border:1px solid var(--line);border-radius:8px;min-height:140px;padding:4px 5px;display:flex;flex-direction:column;gap:3px;min-width:0;position:relative}
+/* Separador de meses: línea amarilla por el medio del espacio entre celdas (arriba y/o a la izquierda del primer día del mes) */
+.ag-cell.mt::before{content:'';position:absolute;left:-4px;right:-4px;top:-5px;height:3px;background:#facc15;border-radius:2px;pointer-events:none}
+.ag-cell.ml::after{content:'';position:absolute;top:-5px;bottom:-5px;left:-5px;width:3px;background:#facc15;border-radius:2px;pointer-events:none}
+.ag-cell.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.ag-cell.past{background:color-mix(in srgb,gray 7%,var(--bg2))}
+.ag-cell.past .ag-dn{opacity:.6}
+.ag-cell.fer{background:color-mix(in srgb,#4b5563 14%,var(--bg2))}
+.ag-cell.fer.sug{background:color-mix(in srgb,#22c55e 9%,var(--bg2))}
+.ag-cell.drop-hover{outline:1px dashed var(--accent);outline-offset:-2px;background:color-mix(in srgb,var(--accent) 6%,var(--bg2))}
+.ag-dn{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);line-height:1.2}
+.ag-dn>span:first-child{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-anio{display:inline-flex;align-items:center;gap:6px;position:absolute;left:50%;transform:translateX(-50%)}/* centrado sobre el calendario */
+.ag-anio b{font-size:14px;font-weight:800;min-width:44px;text-align:center;color:var(--txt)}
+.ag-filt{font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:1px 8px}
+.ag-vacio{font-size:13px;color:var(--muted);padding:18px 6px}
+.ag-mes{font-style:normal;font-weight:700;color:#b45309;text-transform:uppercase;font-size:10px;letter-spacing:.3px}
+.ag-add{opacity:0;font-size:10px;font-weight:700;color:var(--accent);transition:opacity .12s}
+.ag-cell[onclick]{cursor:pointer}.ag-cell[onclick]:hover .ag-add{opacity:1}
+#btnVW.agenda.active{background:#fb2118;border-color:#fb2118;color:#fff}
+.ag-cell.today .ag-dn{color:var(--accent)}
+.ag-it{display:flex;flex-direction:column;gap:1px;font-size:11px;line-height:1.35;padding:3px 6px;border-radius:4px;border-left:3px solid var(--blue);background:var(--bg3);cursor:pointer;min-width:0}
+.ag-it:hover{box-shadow:inset 0 0 0 1px var(--muted)}/* sin filter: un filter en la línea corre de lugar el popover de links (position:fixed) */
+.ag-it.drag{opacity:.4}
+.ag-r1{display:flex;align-items:center;gap:4px;min-width:0}
+.ag-tt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt);font-weight:600}
+.ag-ics{display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px;color:var(--muted);font-size:10px;min-width:0}
+.ag-it .ctog{display:inline-flex;align-items:center;justify-content:center;width:16px;height:14px;flex-shrink:0;cursor:pointer;border-radius:3px;color:var(--muted)}
+.ag-it .ctog:hover{background:var(--bg2);color:var(--txt)}
+.ag-it .ctog::after{content:'';width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;transition:transform .15s}
+.ag-it .ctog.open::after{transform:rotate(180deg)}
+.ag-it .ctareas{font-size:11px;line-height:1.4;color:var(--txt);white-space:pre-wrap;word-break:break-word;background:var(--bg2);border:1px solid var(--line);border-radius:4px;padding:4px 6px;max-height:140px;overflow-y:auto;cursor:text}
+.ag-ics .cic{width:11px;height:11px;vertical-align:-1px}
+.ag-btn{cursor:pointer;border-radius:3px;padding:0 1px;display:inline-flex;align-items:center;gap:1px}
+.ag-btn:hover{color:var(--txt);background:var(--bg2)}
+.ag-btn.ag-new{color:#16a34a}
+.ag-ics .cattach-chip{border-color:transparent;padding:0 2px;font-size:10px}
+.ag-ics .cattach-chip:hover{border-color:var(--muted)}
+/* En la agenda, Finalizado queda oculto (más lugar) y aparece flotando a la derecha mientras se arrastra una tarea */
+.wf-ag .col[data-estado="Finalizado"]{display:none}
+/* Solo el calendario hace scroll: las columnas quedan fijas arriba (top y alto máximo los pone setupSticky) */
+.wf-ag{align-items:flex-start}
+.wf-ag>.col:not([data-estado="Finalizado"]){position:sticky}
+.wf-ag>.col:not([data-estado="Finalizado"]) .cards{overflow-y:auto;min-height:0;flex:1 1 auto}
+body.dragging-card .wf-ag .col[data-estado="Finalizado"]{display:flex;position:fixed;right:10px;top:110px;bottom:40px;width:230px;min-width:0;z-index:80;background:var(--bg2);border:2px dashed var(--accent);box-shadow:0 14px 40px rgba(6,44,70,.35)}
+body.dragging-card .wf-ag .col[data-estado="Finalizado"] .cards{overflow-y:auto;flex:1}
+.ag-tag{font-size:9px;font-weight:700;line-height:13px;border-radius:3px;padding:0 3px;border:1px solid var(--line);color:var(--muted)}
+.ag-d{color:var(--urg);font-weight:700}
+.ag-fer{font-size:10px;font-weight:700;color:var(--muted);padding:1px 5px;border-left:3px solid #9ca3af;background:#9ca3af22;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-strip{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.ag-strip h4{margin:0 0 4px;font-size:12px;font-weight:700;color:var(--txt)}
+.ag-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:3px 6px}
 
 /* ── ESTADO COLORES COLUMNA ───────────────────── */
 .col .col-hdr{border-top:3px solid #fb2118}
@@ -587,7 +649,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
       <div id="equipoTools" style="display:flex;gap:10px;margin-bottom:0;align-items:center;flex-wrap:nowrap">
         <input type="hidden" id="viewMode" value="workflow">
         <div id="viewBtns" class="cal-keep" style="display:inline-flex;gap:4px;align-items:center">
-          <button id="btnVW" class="view-btn" onclick="setViewMode('workflow')" title="Workflow&#10;es el flujo del equipo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+          <button id="btnVW" class="view-btn" onclick="wfIcono()" title="Workflow&#10;es el flujo del equipo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
           <button id="btnVE" class="view-btn" onclick="setViewMode('estado')" title="Por equipo&#10;consolidado de tareas"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><path d="M2 16c0-2.2 1.3-3 3-3s3 .8 3 3"/><circle cx="12" cy="6" r="2"/><path d="M9 16c0-2.2 1.3-3 3-3s3 .8 3 3"/><circle cx="19" cy="6" r="2"/><path d="M16 16c0-2.2 1.3-3 3-3s3 .8 3 3"/></svg></button>
           <button id="btnVO" class="view-btn" onclick="setViewMode('operador')" title="Por operador&#10;estas son tus tareas"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
           <button id="btnVC" class="view-btn" onclick="setViewMode('calendario')" title="Calendario&#10;estos son tus finalizados"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
@@ -851,11 +913,11 @@ const factorF=d=>{if(d<0)return 10;if(d===0)return 8;if(d<=2)return 6;if(d<=5)re
 const puntos=t=>{if(t.estado==='Finalizado')return 0;return(P_AREA[t.area]||0)+(P_PRIO[t.prioridad]||0)+(P_FREC[t.frecuencia]||0)+(P_EST[t.estado]||0)+factorF(diasPara(t.finalizacion));};
 
 // ── Toast ─────────────────────────────────────────────────────
-function showToast(msg,tipo='ok'){
+function showToast(msg,tipo='ok',ms){// ms opcional: cuánto queda visible (por defecto 3 s)
   const el=document.getElementById('toastEl');
   el.textContent=msg; el.className='toast'+(tipo==='err'?' terr':'');
   el.classList.remove('hidden');
-  clearTimeout(window._tt); window._tt=setTimeout(()=>el.classList.add('hidden'),3000);
+  clearTimeout(window._tt); window._tt=setTimeout(()=>el.classList.add('hidden'),ms||3000);
 }
 const setSyncSt=msg=>document.getElementById('syncSt').textContent=msg;
 
@@ -983,7 +1045,7 @@ function nextFechaByFrec(iso,frec){
   else if(frec==='Semanal')dt.setDate(dt.getDate()+7);
   else if(frec==='Mensual')dt.setDate(dt.getDate()+30);
   else if((frec||'').startsWith('Personalizada:')){const d=parseInt(frec.split(':')[1],10);if(d>0)dt.setDate(dt.getDate()+d);else return iso;}
-  else if((frec||'').startsWith('Mensual:')){const dia=parseInt(frec.split(':')[1],10);if(dia>0){dt.setMonth(dt.getMonth()+1);dt.setDate(dia);}else return iso;}
+  else if((frec||'').startsWith('Mensual:')){const dia=parseInt(frec.split(':')[1],10);if(dia>0){dt.setDate(1);dt.setMonth(dt.getMonth()+1);dt.setDate(dia);}else return iso;}// setDate(1) primero: si la fecha movida es 29-31, setMonth no salta un mes
   else return iso;
   // Empujar a día laboral: si cae sábado o domingo, pasa al lunes
   const g=dt.getDay();
@@ -2063,6 +2125,7 @@ function renderEquipo(){
   fillFilterOp();fillFiltros();
   const mode=document.getElementById('viewMode').value;
   VIEW_MODE=mode;
+  {const _bw=document.getElementById('btnVW');if(_bw){const _ag=mode==='workflow'&&_agendaOn();_bw.classList.toggle('agenda',_ag);if(isAdmin())_bw.title=_ag?'Workflow · vista especial (calendario)\nclick: vista común':'Workflow\nclick: vista especial (calendario)';}}
   const _tools=document.getElementById('equipoTools');
   const _body=document.getElementById('equipoBody');
   const _calB=document.getElementById('calendarBody');
@@ -2188,10 +2251,15 @@ function setupSticky(){
     tools.style.top=acc+'px';
     acc+=tools.getBoundingClientRect().height;
   }
-  document.querySelectorAll('#equipoBody .col-hdr').forEach(h=>{h.style.top=acc+'px';});
+  document.querySelectorAll('#equipoBody .col-hdr,#equipoBody .ag-hdr').forEach(h=>{h.style.top=acc+'px';});
   // Vacaciones: la barra "Mis vacaciones / Feriado" y los días de la semana quedan fijos debajo de los filtros
   const vt=document.querySelector('#vacBody .vac-top');
   if(vt&&vt.offsetParent!==null){vt.style.top=acc+'px';const a2=acc+vt.getBoundingClientRect().height;document.querySelectorAll('#vacBody .vac-dow').forEach(x=>{x.style.top=a2+'px';});}
+  // Agenda del admin: solo el calendario hace scroll; En curso y Para ver juntos quedan fijas (si no entran, scroll propio)
+  if(document.getElementById('agAnioTxt'))_agAnioSync();// año del selector de la agenda
+  const _ag=document.querySelectorAll('#equipoBody .wf-ag>.col:not([data-estado="Finalizado"])');
+  if(_ag.length){const tb=document.getElementById('testBannerBottom'),bot=tb&&tb.offsetHeight?tb.offsetHeight:0;
+    _ag.forEach(c=>{c.style.top=acc+'px';c.style.maxHeight='calc(100vh - '+Math.round(acc+bot+10)+'px)';});}
 }
 window.addEventListener('resize',setupSticky);
 
@@ -2206,24 +2274,8 @@ const ICO={
   reloj:'<svg class="cic" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'
 };
 // ── CARD con color por operador ───────────────────────────────
-function cardHTML(t){
-  const venc=t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0;
-  const isFinal=t.estado==='Finalizado';
-  const _creator=USERS.find(u=>u.user===t.creado_por);
-  const oc=(_creator&&_creator.canFinalize===false)?opColor(t.creado_por):opColor(t.operador);
-  const ocOp=opColor(t.operador);
-  const dias=t.finalizacion?diasPara(t.finalizacion):null;
-  const prioHtml=t.prioridad==='Urgente'
-    ?`<span class="cpill urg">${t.prioridad}</span>`
-    :t.prioridad==='Alta'
-    ?`<span class="cpill alt">${t.prioridad}</span>`
-    :t.prioridad==='Media'
-    ?`<span class="cpill med">${t.prioridad}</span>`
-    :`<span class="cpill">${t.prioridad}</span>`;
-  const _canInteract=!isFinal||isAdmin();
-  const reacc=_canInteract
-    ?`<span class="creact-wrap${t.reaccion?'':' vacia'}"><span class="creact-face${t.reaccion?' has':''}" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`
-    :(t.reaccion?`<span class="creact-face has" style="pointer-events:none;opacity:.6">${t.reaccion}</span>`:'');
+// Chip 🔗 N de adjuntos con su popover: lo usan la tarjeta y la agenda del admin (extraído de cardHTML, 24/11/2026)
+function _attachIconHTML(t,isFinal){
   // Adjuntos agrupados en un solo chip 📎 N (links + imágenes) con popover. Mantiene altura uniforme.
   const _showAttach=isAdmin()||!t.privado;
   // Cada link con su título opcional (link_titulos[n-1]); se arman juntos antes de filtrar para que no se desalineen
@@ -2248,6 +2300,27 @@ function cardHTML(t){
       }).join('')
       +(_showAttach?(t.imagenes||[]).map((_,i)=>`<span onclick="event.stopPropagation();_closeAttachPops();openTaskImgAt('${t.id}',${i})">${ICO.img} Imagen ${i+1}</span>`).join(''):'')
     }</span></span>`:'';
+  return attachIcon;
+}
+function cardHTML(t){
+  const venc=t.estado!=='Finalizado'&&diasPara(t.finalizacion)<0;
+  const isFinal=t.estado==='Finalizado';
+  const _creator=USERS.find(u=>u.user===t.creado_por);
+  const oc=(_creator&&_creator.canFinalize===false)?opColor(t.creado_por):opColor(t.operador);
+  const ocOp=opColor(t.operador);
+  const dias=t.finalizacion?diasPara(t.finalizacion):null;
+  const prioHtml=t.prioridad==='Urgente'
+    ?`<span class="cpill urg">${t.prioridad}</span>`
+    :t.prioridad==='Alta'
+    ?`<span class="cpill alt">${t.prioridad}</span>`
+    :t.prioridad==='Media'
+    ?`<span class="cpill med">${t.prioridad}</span>`
+    :`<span class="cpill">${t.prioridad}</span>`;
+  const _canInteract=!isFinal||isAdmin();
+  const reacc=_canInteract
+    ?`<span class="creact-wrap${t.reaccion?'':' vacia'}"><span class="creact-face${t.reaccion?' has':''}" onclick="event.stopPropagation();toggleReactPicker(this)">${t.reaccion||ICO.smile}</span><span class="creact-pop">${REACCIONES.map(e=>`<span onclick="event.stopPropagation();setReaccion('${t.id}','${e}')">${e}</span>`).join('')}</span></span>`
+    :(t.reaccion?`<span class="creact-face has" style="pointer-events:none;opacity:.6">${t.reaccion}</span>`:'');
+  const attachIcon=_attachIconHTML(t,isFinal);
   // Fijar: solo el operador dueño de la tarea (o el admin). Los demás ven el pin como referencia.
   const _canPin=!isFinal&&(isAdmin()||t.operador===SESSION.user||t.creado_por===SESSION.user);
   // Fecha de vencimiento editable desde la tarjeta: mismo permiso que Área/Prioridad. Mensual no, porque su
@@ -2556,11 +2629,11 @@ async function aprobarSolicitud(id){
 async function toggleFijar(id){const t=DATA.find(x=>x.id===id);if(!t)return;if(t.estado==='Finalizado'&&!isAdmin())return;if(!isAdmin()&&t.operador!==SESSION.user&&t.creado_por!==SESSION.user)return;const upd=Object.assign({},t,{fijado:!t.fijado,actualizado:nowStamp()});const ok=await upsertTask(upd);if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}}
 // Cambio rápido de Área/Prioridad desde la tarjeta (sin abrir el formulario). Mismo permiso que la chincheta:
 // admin cambia cualquiera; el resto solo si es operador o creador de la tarea, y no si ya está Finalizado.
-async function quickUpdateField(id,field,value){
+async function quickUpdateField(id,field,value,mensualOk){// mensualOk: la agenda del admin puede mover también la fecha de una mensual (solo esa tarjeta)
   const t=DATA.find(x=>x.id===id);if(!t)return;
   if(t.estado==='Finalizado'&&!isAdmin())return;
   if(!isAdmin()&&t.operador!==SESSION.user&&t.creado_por!==SESSION.user)return;
-  if(field==='finalizacion'&&(!value||frecBase(t.frecuencia)==='Mensual'))return;
+  if(field==='finalizacion'&&(!value||(frecBase(t.frecuencia)==='Mensual'&&!mensualOk)))return;
   const upd=Object.assign({},t,{[field]:value,actualizado:nowStamp()});
   const ok=await upsertTask(upd);
   if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}
@@ -2637,7 +2710,11 @@ function kanbanHTML(list){
 // En las de equipo, solo el dueño puede mover su tarjeta.
 const WF_TEAM_COLS=['En curso','Para ver juntos','Finalizado'];
 function workflowHTML(list){
-  return '<div class="kanban fit5">'+ESTADOS.map(est=>{
+  if(_agendaOn())return workflowAgendaHTML(list);// admin: agenda de vencimientos en lugar de Programado/Pendiente/En curso
+  return '<div class="kanban fit5">'+ESTADOS.map(est=>_wfCol(est,list)).join('')+'</div>';
+}
+function _wfCol(est,list){
+  {
     const dir=COL_SORT[est]||'asc';
     const _team=WF_TEAM_COLS.includes(est);
     const _scope=_team?list:list.filter(t=>t.operador===SESSION.user);
@@ -2661,7 +2738,131 @@ function workflowHTML(list){
       </div>
       <div class="cards">${items.map(cardHTML).join('')}</div>
     </div>`;
-  }).join('')+'</div>';
+  }
+}
+// ── Agenda de vencimientos (Workflow, solo admin; TEST 24/11/2026) ──
+// En el Workflow del admin, las columnas Programado y Pendiente se reemplazan SIEMPRE por un calendario de lunes a viernes
+// (semanas hacia abajo) que ocupa el 65 % del ancho; En curso, Para ver juntos y Finalizado siguen igual a la derecha.
+// Mismos trabajos que esas dos columnas (los propios en Programado y Pendiente), una línea por trabajo con sus íconos,
+// color según estado. Arrastrar una línea a otro día cambia el vencimiento (quickUpdateField); a una columna, el estado.
+let _AG_ON=true,_agExtra=0,_agMasT=false,_agFiltrando=false;// la vista especial arranca encendida; _agExtra = semanas agregadas al bajar
+const _agendaOn=()=>!!SESSION&&isAdmin()&&_AG_ON;
+// Ícono Workflow (admin): si ya estás en Workflow alterna entre la vista especial (ícono rojo) y la común (azul)
+function wfIcono(){if(isAdmin()&&VIEW_MODE==='workflow'){_AG_ON=!_AG_ON;scrollTo({top:0});}setViewMode('workflow');}
+// Click en un día (hoy o después, fuera de una tarea): nueva tarea con esa fecha de vencimiento
+function agNueva(e,iso){if(e.target.closest('.ag-it,.cattach-wrap')||iso<todayISO())return;openTaskForm();const f=document.getElementById('f_finalizacion');if(f)f.value=iso;}
+// Al llegar abajo se agregan 26 semanas más: se puede bajar a los años siguientes
+window.addEventListener('scroll',()=>{if(_agMasT||_agFiltrando||VIEW_MODE!=='workflow'||!_agendaOn()||!document.querySelector('#equipoBody .wf-ag'))return;
+  if(innerHeight+scrollY>=document.documentElement.scrollHeight-700){_agMasT=true;_agExtra+=26;renderCurrent();setTimeout(()=>{_agMasT=false;},250);}});
+const _agISO=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const _agLunes=iso=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);return d;};
+const _agA=s=>escH(String(s==null?'':s)).replace(/"/g,'&quot;');
+let _agVacPedido=false;
+function _agItem(t,extra){
+  const oc=opColor(t.operador),own=t.operador===SESSION.user,f=t.frecuencia||'';
+  const fm=f==='Por Etapas'?'E':frecBase(f)==='Mensual'?'M':f.startsWith('Personalizada:')?f.split(':')[1]:frecBase(f)==='Personalizada'?'P':'';
+  const cl=t.checklist&&t.checklist.length?t.checklist:null;
+  const ec=EST_COLOR[t.estado]||oc;// la línea va con el color del estado (Programado celeste, Pendiente gris)
+  // Cada ícono responde como en la tarjeta: ✉ abre la tarea, ☑ la lista, 🔗 los links e imágenes, 📌 fija/suelta;
+  // los informativos (⟳, 🔧, días) no hacen nada. Click en el resto de la línea: abre la tarea.
+  const _no='onclick="event.stopPropagation()"';
+  const ics=(extra?`<span ${_no}>${extra}</span>`:'')
+    +(own?'':`<span class="ag-tag" ${_no} style="border-color:${oc};color:${oc}" title="${_agA(nombreOp(t.operador)||t.operador)}">${escH(iniOp(t.operador))}</span>`)
+    +(frecBase(f)!=='Unica'?`<span ${_no} title="Recurrente">⟳${fm?`<b>${escH(fm)}</b>`:''}</span>`:'')
+    +(t.comentario?`<span class="ag-btn${t.comentario_ok?'':' ag-new'}" onclick="event.stopPropagation();openTaskForm('${t.id}')" title="${_agA((nombreOp(t.comentario_por)||'')+': '+t.comentario)}">${ICO.mail}</span>`:'')
+    +(cl?`<span class="ag-btn" onclick="event.stopPropagation();toggleChkTip(this,'${t.id}')" title="Ver la lista de comprobación">☑${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'')
+    +_attachIconHTML(t,false)
+    +(t.desarrollo?`<span ${_no} title="Desarrollo" style="filter:grayscale(1)">🔧</span>`:'')
+    +(t.fijado?`<span class="ag-btn" onclick="event.stopPropagation();toggleFijar('${t.id}')" title="Fijada (click para soltarla)">${ICO.pin}</span>`:'');
+  const tip=(t.tema||'')+' · '+t.estado+(t.finalizacion?' · vence '+fmtDate(t.finalizacion):'')+(own?'':' · '+(nombreOp(t.operador)||t.operador));
+  // Dos renglones: 1) tema + desplegable de "Tareas a realizar" (como en la tarjeta); 2) el resto de los íconos
+  const abierta=!!t.tareas&&_tareasAbiertas.has(t.id);
+  return `<div class="ag-it" draggable="true" data-id="${t.id}" ondragstart="dragStart(event)" ondragend="dragEnd(event)" onclick="openTaskForm('${t.id}')" style="border-left-color:${ec};background:${ec}26">`
+    +`<div class="ag-r1"><span class="ag-tt" title="${_agA(tip)}">${escH(t.tema||'(sin título)')}</span>${t.tareas?`<span class="ctog${abierta?' open':''}" title="Ver las tareas a realizar" onclick="event.stopPropagation();toggleCardTareas('${t.id}')"></span>`:''}</div>`
+    +(abierta?`<div class="ctareas" onclick="event.stopPropagation()" title="">${escH(t.tareas)}</div>`:'')
+    +(ics?`<div class="ag-ics">${ics}</div>`:'')+'</div>';
+}
+function workflowAgendaHTML(list){
+  if(!VAC_LOADED&&!_agVacPedido){_agVacPedido=true;loadVacaciones().then(()=>{if(VIEW_MODE==='workflow'&&_agendaOn())renderCurrent();});}
+  const hoy=todayISO();
+  const its=list.filter(t=>(t.estado==='Programado'||t.estado==='Pendiente')&&t.frecuencia!=='Nota'&&t.operador===SESSION.user);
+  const sinF=sortCards(its.filter(t=>!t.finalizacion));
+  // Cada trabajo en el día que vence, también los atrasados (con los días de atraso en rojo); el calendario arranca en la
+  // semana del más atrasado. Lo que vence sábado o domingo se muestra el viernes, con la fecha real.
+  const byDay={},tags=new Map();let minIso=hoy,maxIso=hoy;
+  its.forEach(t=>{const f=t.finalizacion;if(!f)return;
+    const d=new Date(f+'T12:00:00'),w=d.getDay();let k=f,tg='';
+    if(f<hoy)tg+=`<span class="ag-d" title="Días de atraso">${-diasPara(f)}d</span>`;
+    if(w===6||w===0){d.setDate(d.getDate()-(w===6?1:2));k=_agISO(d);tg+=`<span class="ag-tag" title="Vence el ${w===6?'sábado':'domingo'}">${w===6?'sáb':'dom'} ${fmtDate(f)}</span>`;}
+    if(tg)tags.set(t.id,tg);
+    (byDay[k]=byDay[k]||[]).push(t);if(f<minIso)minIso=f;if(f>maxIso)maxIso=f;});
+  const lun=_agLunes(minIso),_sem=7*86400000;
+  const nSem=Math.min(Math.max(Math.round((_agLunes(maxIso)-lun)/_sem)+1,Math.round((_agLunes(hoy)-lun)/_sem)+26)+_agExtra,1040);
+  const vOps=(typeof _vacOps==='function'?_vacOps():[]).filter(u=>!HIDDEN_OPS.has(u.user));
+  // Con búsqueda o filtros activos se muestran solo las semanas que tienen resultados (como el filtro de Vacaciones)
+  const _filt=['filterTxt','filterID','filterArea','filterPrio','filterOp'].some(x=>{const e=document.getElementById(x);return e&&String(e.value||'').trim();});
+  _agFiltrando=_filt;let _nw=0;
+  let w='';
+  for(let s=0;s<nSem;s++){
+    if(_filt){let n=0;for(let i=0;i<5;i++){const d=new Date(lun);d.setDate(lun.getDate()+s*7+i);n+=(byDay[_agISO(d)]||[]).length;}if(!n)continue;}
+    _nw++;
+    w+='<div class="ag-week">';
+    for(let i=0;i<5;i++){
+      const d=new Date(lun);d.setDate(lun.getDate()+s*7+i);const iso=_agISO(d);
+      const arr=sortCards(byDay[iso]||[]);
+      const fer=VAC.find(v=>v.usuario==='feriado'&&v.fecha===iso);// feriados del calendario de Vacaciones (tabla vacaciones), mismos colores
+      const ferSug=!!fer&&!!fer.nombre&&!fer.confirmado;// verde = cargado sin confirmar; gris = confirmado o marcado a mano
+      const vac=vOps.filter(u=>VAC.some(v=>v.usuario===u.user&&v.fecha===iso));
+      // Línea amarilla entre meses: arriba si el día de la semana anterior es de otro mes; a la izquierda si el día anterior lo es
+      const _d7=new Date(d);_d7.setDate(d.getDate()-7);const _d1=new Date(d);_d1.setDate(d.getDate()-1);
+      const mt=!_filt&&s>0&&_d7.getMonth()!==d.getMonth(),ml=i>0&&_d1.getMonth()!==d.getMonth();
+      // Rótulo "mes año" solo en el primer día hábil del mes que se ve (el lunes mira el viernes anterior)
+      const _dp=new Date(d);_dp.setDate(d.getDate()-(i===0?3:1));const _mes1=(s===0&&i===0)||(_filt&&i===0)||_dp.getMonth()!==d.getMonth();
+      w+=`<div class="ag-cell${iso===hoy?' today':''}${iso<hoy?' past':''}${fer?' fer':''}${ferSug?' sug':''}${mt?' mt':''}${ml?' ml':''}" style="min-height:${140+17*((fer?1:0)+vac.length)}px" data-dia="${iso}" ondragover="agDragOver(event)" ondragleave="agDragLeave(event)" ondrop="agDrop(event,'${iso}')"${iso>=hoy?` onclick="agNueva(event,'${iso}')"`:''}>`
+        +`<div class="ag-dn"><span>${fmtDate(iso)}${_mes1?` <i class="ag-mes">${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()]} ${d.getFullYear()}</i>`:''}</span>${iso>=hoy?'<span class="ag-add" title="Nueva tarea que vence este día">+ nueva</span>':''}${arr.length?`<span>${arr.length}</span>`:''}</div>`
+        +(fer?`<div class="ag-fer" style="${ferSug?'border-left-color:#22c55e;background:#22c55e22':''}" title="${_agA((ferSug?'Feriado cargado, sin confirmar en Vacaciones — ':'Feriado — ')+(fer.nombre||''))}">${escH(fer.nombre||'Feriado')}</div>`:'')
+        +vac.map(u=>`<div class="ag-fer" style="border-left-color:${opColor(u.user)};background:${opColor(u.user)}22">Vacaciones ${escH(u.nombre)}</div>`).join('')
+        +arr.map(t=>_agItem(t,tags.get(t.id))).join('')+'</div>';
+    }
+    w+='</div>';
+  }
+  if(_filt&&!_nw)w='<div class="ag-vacio">No hay trabajos de Programado o Pendiente que coincidan con la búsqueda o los filtros.</div>';
+  const strip=(cls,tit,arr,extra)=>arr.length?`<div class="ag-strip ${cls}"><h4>${tit} <span class="ag-cnt">${arr.length}</span></h4><div class="ag-list">${arr.map(t=>_agItem(t,extra?extra(t):'')).join('')}</div></div>`:'';
+  const top=strip('','Sin fecha de vencimiento',sinF);
+  const ley=['Programado','Pendiente'].map(e=>`<span class="ag-ley"><i style="background:${EST_COLOR[e]}"></i>${e} ${its.filter(t=>t.estado===e).length}</span>`).join('');
+  const hdr=`<div class="ag-hdr"><div class="ag-top"><span class="ag-tit">Programado y Pendiente</span>${ley}${_filt?'<span class="ag-filt">Filtrado: solo las semanas con resultados</span>':''}<span style="flex:1"></span><span class="ag-anio" title="Elegí el año"><button type="button" class="cal-nav" onclick="agAnio(-1)" title="Año anterior">‹</button><b id="agAnioTxt" title="Año que estás viendo">${new Date().getFullYear()}</b><button type="button" class="cal-nav" onclick="agAnio(1)" title="Año siguiente">›</button></span><button type="button" class="cal-today" onclick="agHoy()">Hoy</button></div>`
+    +`<div class="ag-dows">${['Lun','Mar','Mié','Jue','Vie'].map(x=>`<div class="ag-dow">${x}</div>`).join('')}</div></div>`;
+  return `<div class="kanban fit5 wf-ag"><div class="ag-wrap">${top}${hdr}${w}</div>${['En curso','Para ver juntos','Finalizado'].map(e=>_wfCol(e,list)).join('')}</div>`;
+}
+// Lleva una celda justo debajo del encabezado fijo del calendario
+function _agScrollA(c){const h=document.querySelector('#equipoBody .ag-hdr');const y=c.getBoundingClientRect().top+scrollY-(h?parseFloat(h.style.top||0)+h.offsetHeight:0)-8;scrollTo({top:Math.max(0,y),behavior:'smooth'});}
+function agHoy(){const c=document.querySelector('#equipoBody .ag-cell.today')||document.querySelector('#equipoBody .ag-week');if(c)_agScrollA(c);}
+// Selector de año (‹ 2026 ›): va a la primera semana de ese año; si todavía no está dibujada, agrega las semanas que falten
+function agAnio(dir){const t=document.getElementById('agAnioTxt');agIrAnio((parseInt(t&&t.textContent,10)||new Date().getFullYear())+dir);}
+function agIrAnio(y){
+  const first=document.querySelector('#equipoBody .ag-cell');if(!first)return;
+  const y0=+first.dataset.dia.slice(0,4);if(y<y0)y=y0;// antes del comienzo del calendario: va al principio
+  // que haya al menos 8 semanas después del 1/1 de ese año, así la semana puede quedar arriba de todo
+  if(!_agFiltrando){const need=Math.ceil((new Date(y,0,1)-_agLunes(first.dataset.dia))/(7*86400000))+8,have=document.querySelectorAll('#equipoBody .ag-week').length;
+    if(need>have){_agExtra+=need-have;renderCurrent();}}
+  const c=document.querySelector(`#equipoBody .ag-cell[data-dia^="${y}-"]`);
+  if(!c){showToast('No hay resultados en '+y,'err');return;}
+  const t=document.getElementById('agAnioTxt');if(t)t.textContent=y;_agScrollA(c);
+}
+// El año del selector sigue al scroll: muestra el año de la primera semana visible debajo del encabezado
+let _agAnioRaf=0;
+function _agAnioSync(){const t=document.getElementById('agAnioTxt'),h=document.querySelector('#equipoBody .ag-hdr');if(!t||!h)return;const lim=h.getBoundingClientRect().bottom;
+  const w=[...document.querySelectorAll('#equipoBody .ag-week')].find(x=>x.getBoundingClientRect().bottom>lim+30);if(w){const c=w.querySelector('.ag-cell:last-child');if(c)t.textContent=c.dataset.dia.slice(0,4);}}// el viernes manda: la semana del 1/1 ya cuenta como año nuevo
+window.addEventListener('scroll',()=>{if(VIEW_MODE!=='workflow'||!document.getElementById('agAnioTxt'))return;cancelAnimationFrame(_agAnioRaf);_agAnioRaf=requestAnimationFrame(_agAnioSync);});
+function agDragOver(e){e.preventDefault();e.currentTarget.classList.add('drop-hover');}
+function agDragLeave(e){e.currentTarget.classList.remove('drop-hover');}
+async function agDrop(e,iso){
+  e.preventDefault();e.currentTarget.classList.remove('drop-hover');
+  const t=DATA.find(x=>x.id===dragId);if(!t||t.estado==='Finalizado'||t.finalizacion===iso)return;
+  // Solo cambia la fecha de vencimiento de esta tarjeta (estado y todo lo demás quedan igual). En las mensuales la
+  // próxima tarjeta se sigue generando el día del mes que tiene cargado.
+  await quickUpdateField(t.id,'finalizacion',iso,true);
+  showToast('Vence el '+fmtDate(iso)+': '+(t.tema||'').slice(0,40));
 }
 
 function byOpHTML(list){
@@ -2732,6 +2933,14 @@ async function drop(e){
     return;
   }
   if(t.frecuencia==='Nota'&&est==='Finalizado'){showToast('Las notas no se pueden finalizar','err');renderEquipo();return;}
+  // Regla para todos (24/11/2026): toda tarea pasa por En curso antes de finalizar. Si se arrastra de Programado o
+  // Pendiente a Finalizado, no se finaliza: se avisa y la tarjeta queda en En curso.
+  if(est==='Finalizado'&&(t.estado==='Programado'||t.estado==='Pendiente')){
+    t.estado='En curso';t.actualizado=nowStamp();t.fecha_estado=todayISO();
+    await upsertTask(t);renderEquipo();// el aviso va después: si no, lo tapa el "Guardado ✓"
+    showToast('Antes de finalizar, la tarea tiene que pasar por En curso. La pasé a En curso.','err',5000);
+    return;
+  }
   if(est==='Finalizado'){await finalizarTarea(t);return;}
   t.estado=est;t.actualizado=nowStamp();t.fecha_estado=todayISO();upsertTask(t);renderEquipo();
 }
