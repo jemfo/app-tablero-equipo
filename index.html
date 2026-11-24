@@ -273,6 +273,7 @@ body.dragging-card .wf-ag .col[data-estado="Finalizado"]{display:flex;position:f
 body.dragging-card .wf-ag .col[data-estado="Finalizado"] .cards{overflow-y:auto;flex:1}
 .ag-tag{font-size:9px;font-weight:700;line-height:13px;border-radius:3px;padding:0 3px;border:1px solid var(--line);color:var(--muted)}
 .ag-d{color:var(--urg);font-weight:700}
+.ag-fer.ag-vac{color:#fff}
 .ag-fer{font-size:10px;font-weight:700;color:var(--muted);padding:1px 5px;border-left:3px solid #9ca3af;background:#9ca3af22;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ag-strip{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
 .ag-strip h4{margin:0 0 4px;font-size:12px;font-weight:700;color:var(--txt)}
@@ -578,7 +579,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
 .cal-cell.today .cal-daynum{color:var(--accent)}
 .cal-tasks{display:flex;flex-direction:column;gap:3px;overflow:auto;max-height:260px}
 .cal-task{font-size:10px;line-height:1.3;padding:2px 5px;border-radius:4px;border-left:3px solid var(--blue);background:var(--bg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default}
-.cal-task.cal-task-vac{font-weight:700}
+.cal-task.cal-task-vac{font-weight:700;color:#fff}/* vacaciones con el color de la persona, fuerte (24/11/2026) */
 .cal-cell.fer{background:color-mix(in srgb,#4b5563 14%,var(--bg2))}
 .cal-empty-day{font-size:10px;color:var(--muted);opacity:.5;margin-top:2px}
 .view-btn{box-sizing:border-box;width:32px;padding:6px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--txt);transition:background .15s,color .15s,border-color .15s}
@@ -2821,7 +2822,7 @@ function workflowAgendaHTML(list){
       w+=`<div class="ag-cell${iso===hoy?' today':''}${iso<hoy?' past':''}${fer?' fer':''}${ferSug?' sug':''}${mt?' mt':''}${ml?' ml':''}" style="min-height:${140+17*((fer?1:0)+vac.length)}px" data-dia="${iso}" ondragover="agDragOver(event)" ondragleave="agDragLeave(event)" ondrop="agDrop(event,'${iso}')"${iso>=hoy?` onclick="agNueva(event,'${iso}')"`:''}>`
         +`<div class="ag-dn"><span>${fmtDate(iso)}${_mes1?` <i class="ag-mes">${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()]} ${d.getFullYear()}</i>`:''}</span>${iso>=hoy?'<span class="ag-add" title="Nueva tarea que vence este día">+ nueva</span>':''}${arr.length?`<span>${arr.length}</span>`:''}</div>`
         +(fer?`<div class="ag-fer" style="${ferSug?'border-left-color:#22c55e;background:#22c55e22':''}" title="${_agA((ferSug?'Feriado cargado, sin confirmar en Vacaciones — ':'Feriado — ')+(fer.nombre||''))}">${escH(fer.nombre||'Feriado')}</div>`:'')
-        +vac.map(u=>`<div class="ag-fer" style="border-left-color:${opColor(u.user)};background:${opColor(u.user)}22">Vacaciones ${escH(u.nombre)}</div>`).join('')
+        +vac.map(u=>`<div class="ag-fer ag-vac" style="border-left-color:${opColor(u.user)};background:${opColor(u.user)}" title="Vacaciones — ${_agA(u.nombre)}">Vacaciones ${escH(u.nombre)}</div>`).join('')
         +arr.map(t=>_agItem(t,tags.get(t.id))).join('')+'</div>';
     }
     w+='</div>';
@@ -4089,7 +4090,7 @@ function renderCalendar(){
     if(items.length||_fer||_vac.length){
       cell+='<div class="cal-tasks">';
       if(_fer){const _fn=(VAC.find(v=>v.usuario==='feriado'&&v.fecha===iso)||{}).nombre||'Feriado';cell+='<div class="cal-task cal-task-vac" style="border-left-color:'+(_ferSug?'#22c55e;background:#22c55e22':'#9ca3af;background:#9ca3af22')+'" title="Feriado — '+escH(_fn)+'">'+escH(_fn)+'</div>';}
-      _vac.forEach(u=>{const oc=opColor(u.user);cell+='<div class="cal-task cal-task-vac" style="border-left-color:'+oc+';background:'+oc+'33" title="Vacaciones — '+escH(u.nombre)+'">Vacaciones</div>';});
+      _vac.forEach(u=>{const oc=opColor(u.user);cell+='<div class="cal-task cal-task-vac" style="border-left-color:'+oc+';background:'+oc+'" title="Vacaciones — '+escH(u.nombre)+'">Vacaciones</div>';});
       items.forEach(r=>{
         const oc=opColor(r.operador||r.completado_por);
         const tt=(r.tema||'')+' — '+nombreOp(r.operador||r.completado_por);
