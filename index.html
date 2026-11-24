@@ -2260,7 +2260,7 @@ function setupSticky(){
   if(document.getElementById('agAnioTxt'))_agAnioSync();// año del selector de la agenda
   const _ag=document.querySelectorAll('#equipoBody .wf-ag>.col:not([data-estado="Finalizado"])');
   if(_ag.length){const tb=document.getElementById('testBannerBottom'),bot=tb&&tb.offsetHeight?tb.offsetHeight:0;
-    _ag.forEach(c=>{c.style.top=acc+'px';c.style.maxHeight='calc(100vh - '+Math.round(acc+bot+10)+'px)';});}
+    _ag.forEach(c=>{c.style.top=acc+'px';c.style.height=c.style.maxHeight='calc(100vh - '+Math.round(acc+bot+10)+'px)';});}// alto completo de pantalla (24/11/2026)
 }
 window.addEventListener('resize',setupSticky);
 
@@ -2753,7 +2753,7 @@ function wfIcono(){if(isAdmin()&&VIEW_MODE==='workflow'){_AG_ON=!_AG_ON;scrollTo
 // Click en un día (hoy o después, fuera de una tarea): nueva tarea con esa fecha de vencimiento
 function agNueva(e,iso){if(e.target.closest('.ag-it,.cattach-wrap')||iso<todayISO())return;openTaskForm();const f=document.getElementById('f_finalizacion');if(f)f.value=iso;}
 // Al llegar abajo se agregan 26 semanas más: se puede bajar a los años siguientes
-window.addEventListener('scroll',()=>{if(_agMasT||_agFiltrando||VIEW_MODE!=='workflow'||!_agendaOn()||!document.querySelector('#equipoBody .wf-ag'))return;
+window.addEventListener('scroll',()=>{if(_agMasT||_agFiltrando||document.body.classList.contains('dragging-card')||VIEW_MODE!=='workflow'||!_agendaOn()||!document.querySelector('#equipoBody .wf-ag'))return;
   if(innerHeight+scrollY>=document.documentElement.scrollHeight-700){_agMasT=true;_agExtra+=26;renderCurrent();setTimeout(()=>{_agMasT=false;},250);}});
 const _agISO=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const _agLunes=iso=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);return d;};
@@ -2798,7 +2798,7 @@ function workflowAgendaHTML(list){
     if(tg)tags.set(t.id,tg);
     (byDay[k]=byDay[k]||[]).push(t);if(f<minIso)minIso=f;if(f>maxIso)maxIso=f;});
   const lun=_agLunes(minIso),_sem=7*86400000;
-  const nSem=Math.min(Math.max(Math.round((_agLunes(maxIso)-lun)/_sem)+1,Math.round((_agLunes(hoy)-lun)/_sem)+26)+_agExtra,1040);
+  const nSem=Math.min(Math.max(Math.round((_agLunes(maxIso)-lun)/_sem)+1,Math.round((_agLunes(hoy)-lun)/_sem)+52)+_agExtra,1040);
   const vOps=(typeof _vacOps==='function'?_vacOps():[]).filter(u=>!HIDDEN_OPS.has(u.user));
   // Con búsqueda o filtros activos se muestran solo las semanas que tienen resultados (como el filtro de Vacaciones)
   const _filt=['filterTxt','filterID','filterArea','filterPrio','filterOp'].some(x=>{const e=document.getElementById(x);return e&&String(e.value||'').trim();});
@@ -2857,9 +2857,21 @@ function _agAnioSync(){const t=document.getElementById('agAnioTxt'),h=document.q
 window.addEventListener('scroll',()=>{if(VIEW_MODE!=='workflow'||!document.getElementById('agAnioTxt'))return;cancelAnimationFrame(_agAnioRaf);_agAnioRaf=requestAnimationFrame(_agAnioSync);});
 function agDragOver(e){e.preventDefault();e.currentTarget.classList.add('drop-hover');}
 function agDragLeave(e){e.currentTarget.classList.remove('drop-hover');}
+// Arrastrando una tarea en la agenda: cerca del borde de abajo (o del encabezado fijo) la página se mueve sola
+document.addEventListener('dragover',e=>{if(!document.body.classList.contains('dragging-card')||VIEW_MODE!=='workflow'||!document.querySelector('#equipoBody .wf-ag'))return;
+  const m=80,y=e.clientY,tb=document.getElementById('testBannerBottom'),bot=tb&&tb.offsetHeight?tb.offsetHeight:0,h=document.querySelector('#equipoBody .ag-hdr'),top=h?h.getBoundingClientRect().bottom:0;
+  if(y>innerHeight-bot-m)scrollBy(0,Math.ceil((y-(innerHeight-bot-m))/3)+6);else if(y<top+m)scrollBy(0,-(Math.ceil((top+m-y)/3)+6));});
 async function agDrop(e,iso){
   e.preventDefault();e.currentTarget.classList.remove('drop-hover');
-  const t=DATA.find(x=>x.id===dragId);if(!t||t.estado==='Finalizado'||t.finalizacion===iso)return;
+  const t=DATA.find(x=>x.id===dragId);if(!t||t.estado==='Finalizado')return;
+  // De En curso o Para ver juntos al calendario (24/11/2026): vuelve a su estado de origen con ese vencimiento. Solo tareas propias.
+  // No se guarda el estado anterior: se usa la misma regla que al crearla (recurrentes Personalizada/Por Etapas/Mensual → Programado; el resto → Pendiente).
+  if(t.estado==='En curso'||t.estado==='Para ver juntos'){
+    if(t.operador!==SESSION.user){showToast('Solo el operador de la tarea puede moverla','err');return;}
+    const f=t.frecuencia||'';t.estado=(f==='Personalizada'||f==='Por Etapas'||f.startsWith('Personalizada:')||f.startsWith('Mensual:'))?'Programado':'Pendiente';t.finalizacion=iso;t.fecha_estado=todayISO();t.actualizado=nowStamp();
+    await upsertTask(t);renderEquipo();showToast('Volvió a '+t.estado+', vence el '+fmtDate(iso)+': '+(t.tema||'').slice(0,40));return;
+  }
+  if(t.finalizacion===iso)return;
   // Solo cambia la fecha de vencimiento de esta tarjeta (estado y todo lo demás quedan igual). En las mensuales la
   // próxima tarjeta se sigue generando el día del mes que tiene cargado.
   await quickUpdateField(t.id,'finalizacion',iso,true);
