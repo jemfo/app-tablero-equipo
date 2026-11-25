@@ -246,7 +246,9 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .ag-cell[onclick]{cursor:pointer}.ag-cell[onclick]:hover .ag-add{opacity:1}
 #btnVW.agenda.active{background:#fb2118;border-color:#fb2118;color:#fff}
 .ag-cell.today .ag-dn{color:var(--accent)}
-.ag-it{display:flex;flex-direction:column;gap:1px;font-size:11px;line-height:1.35;padding:3px 6px;border-radius:4px;border-left:3px solid var(--blue);background:var(--bg3);cursor:pointer;min-width:0}
+.ag-it{display:flex;flex-direction:column;gap:1px;font-size:11px;line-height:1.35;padding:3px 6px;border-radius:4px;border-left:3px solid var(--blue);background:var(--bg3);cursor:grab;min-width:0}
+.ag-abrir{width:11px;height:11px;border-radius:50%;flex-shrink:0;cursor:pointer;box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(0,0,0,.25)}
+.ag-abrir:hover{transform:scale(1.3);box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(0,0,0,.5)}
 .ag-it:hover{box-shadow:inset 0 0 0 1px var(--muted)}/* sin filter: un filter en la línea corre de lugar el popover de links (position:fixed) */
 .ag-it.drag{opacity:.4}
 .ag-r1{display:flex;align-items:center;gap:4px;min-width:0}
@@ -2138,7 +2140,7 @@ function renderEquipo(){
   fillFilterOp();fillFiltros();
   const mode=document.getElementById('viewMode').value;
   VIEW_MODE=mode;
-  {const _bw=document.getElementById('btnVW');if(_bw){const _ag=mode==='workflow'&&_agendaOn();_bw.classList.toggle('agenda',_ag);if(isAdmin())_bw.title=_ag?'Workflow · vista especial (calendario)\nclick: vista común':'Workflow\nclick: vista especial (calendario)';}}
+  {const _bw=document.getElementById('btnVW');if(_bw){const _ag=mode==='workflow'&&_agendaOn();_bw.classList.toggle('agenda',_ag);if(isAdmin())_bw.title=_ag?'Agenda\nclick: Workflow (vista común)':'Workflow\nclick: Agenda';}}
   const _tools=document.getElementById('equipoTools');
   const _body=document.getElementById('equipoBody');
   const _calB=document.getElementById('calendarBody');
@@ -2777,7 +2779,7 @@ function _agItem(t,extra){
   const cl=t.checklist&&t.checklist.length?t.checklist:null;
   const ec=EST_COLOR[t.estado]||oc;// la línea va con el color del estado (Programado celeste, Pendiente gris)
   // Cada ícono responde como en la tarjeta: ✉ abre la tarea, ☑ la lista, 🔗 los links e imágenes, 📌 fija/suelta;
-  // los informativos (⟳, 🔧, días) no hacen nada. Click en el resto de la línea: abre la tarea.
+  // los informativos (⟳, 🔧, días) no hacen nada. La tarea se abre solo con la viñeta ● (el resto de la línea sirve para arrastrar).
   const _no='onclick="event.stopPropagation()"';
   const ics=(extra?`<span ${_no}>${extra}</span>`:'')
     +(own?'':`<span class="ag-tag" ${_no} style="border-color:${oc};color:${oc}" title="${_agA(nombreOp(t.operador)||t.operador)}">${escH(iniOp(t.operador))}</span>`)
@@ -2790,8 +2792,9 @@ function _agItem(t,extra){
   const tip=(t.tema||'')+' · '+t.estado+(t.finalizacion?' · vence '+fmtDate(t.finalizacion):'')+(own?'':' · '+(nombreOp(t.operador)||t.operador));
   // Dos renglones: 1) tema + desplegable de "Tareas a realizar" (como en la tarjeta); 2) el resto de los íconos
   const abierta=!!t.tareas&&_tareasAbiertas.has(t.id);
-  return `<div class="ag-it" draggable="true" data-id="${t.id}" ondragstart="dragStart(event)" ondragend="dragEnd(event)" onclick="openTaskForm('${t.id}')" style="border-left-color:${ec};background:${ec}26">`
-    +`<div class="ag-r1"><span class="ag-tt" title="${_agA(tip)}">${escH(t.tema||'(sin título)')}</span>${t.tareas?`<span class="ctog${abierta?' open':''}" title="Ver las tareas a realizar" onclick="event.stopPropagation();toggleCardTareas('${t.id}')"></span>`:''}</div>`
+  // Solo la viñeta (●) abre la tarea: así al arrastrar no se abre por un click en cualquier lado
+  return `<div class="ag-it" draggable="true" data-id="${t.id}" ondragstart="dragStart(event)" ondragend="dragEnd(event)" style="border-left-color:${ec};background:${ec}26">`
+    +`<div class="ag-r1"><span class="ag-tt" title="${_agA(tip)}">${escH(t.tema||'(sin título)')}</span>${t.tareas?`<span class="ctog${abierta?' open':''}" title="Ver las tareas a realizar" onclick="event.stopPropagation();toggleCardTareas('${t.id}')"></span>`:''}<span class="ag-abrir" style="background:${ec}" title="Abrir la tarea" onclick="event.stopPropagation();openTaskForm('${t.id}')"></span></div>`
     +(abierta?`<div class="ctareas" onclick="event.stopPropagation()" title="">${escH(t.tareas)}</div>`:'')
     +(ics?`<div class="ag-ics">${ics}</div>`:'')+'</div>';
 }
@@ -2843,7 +2846,7 @@ function workflowAgendaHTML(list){
   const strip=(cls,tit,arr,extra)=>arr.length?`<div class="ag-strip ${cls}"><h4>${tit} <span class="ag-cnt">${arr.length}</span></h4><div class="ag-list">${arr.map(t=>_agItem(t,extra?extra(t):'')).join('')}</div></div>`:'';
   const top=strip('','Sin fecha de vencimiento',sinF);
   const ley=['Programado','Pendiente'].map(e=>`<span class="ag-ley"><i style="background:${EST_COLOR[e]}"></i>${e} ${its.filter(t=>t.estado===e).length}</span>`).join('');
-  const hdr=`<div class="ag-hdr"><div class="ag-top"><span class="ag-tit">Programado y Pendiente</span>${ley}${_filt?'<span class="ag-filt">Filtrado: solo las semanas con resultados</span>':''}<span style="flex:1"></span><span class="ag-anio" title="Elegí el año"><button type="button" class="cal-nav" onclick="agAnio(-1)" title="Año anterior">‹</button><b id="agAnioTxt" title="Año que estás viendo">${new Date().getFullYear()}</b><button type="button" class="cal-nav" onclick="agAnio(1)" title="Año siguiente">›</button></span><button type="button" class="cal-today" onclick="agHoy()">Hoy</button></div>`
+  const hdr=`<div class="ag-hdr"><div class="ag-top"><span class="ag-tit">Programado y Pendiente</span>${ley}${_filt?'<span class="ag-filt">Filtrado: solo las semanas con resultados</span>':''}<span style="flex:1"></span><span class="ag-anio"><button type="button" class="cal-nav" onclick="agAnio(-1)" title="Año anterior">‹</button><b id="agAnioTxt" title="Año que estás viendo">${new Date().getFullYear()}</b><button type="button" class="cal-nav" onclick="agAnio(1)" title="Año siguiente">›</button></span><button type="button" class="cal-today" onclick="agHoy()">Hoy</button></div>`
     +`<div class="ag-dows">${['Lun','Mar','Mié','Jue','Vie'].map(x=>`<div class="ag-dow">${x}</div>`).join('')}</div></div>`;
   return `<div class="kanban fit5 wf-ag"><div class="ag-wrap">${top}${hdr}${w}</div>${['En curso','Para ver juntos','Finalizado'].map(e=>_wfCol(e,list)).join('')}</div>`;
 }
@@ -4189,24 +4192,37 @@ function exportCSV(){
     position(el);
     requestAnimationFrame(()=>{box.style.opacity='1';});
   }
+  function hideBox(){box.style.opacity='0';box.style.display='none';}
+  // El title se devuelve recién cuando el mouse sale del elemento: si se devolvía con el mouse encima
+  // (al hacer click o scroll), el navegador mostraba además su propio tooltip (doble tooltip, 25/11/2026)
   function hide(){
-    box.style.opacity='0';box.style.display='none';
+    hideBox();
     if(cur){
       const t=cur.getAttribute('data-tip-saved');
-      if(t!=null){cur.setAttribute('title',t);cur.removeAttribute('data-tip-saved');}
+      if(t!=null){if(!cur.hasAttribute('title'))cur.setAttribute('title',t);cur.removeAttribute('data-tip-saved');}
       cur=null;
     }
   }
   document.addEventListener('mouseover',e=>{
-    const el=e.target.closest&&e.target.closest('[title]');
+    if(cur&&!cur.isConnected){hideBox();cur=null;}// el elemento se redibujó mientras estaba el mouse encima
+    // [data-tip-saved] = el elemento actual (ya sin title): sin esto, al pasar por un ícono de adentro se
+    // devolvía su title y saltaba el tooltip del navegador junto con el de la app
+    const el=e.target.closest&&e.target.closest('[title],[data-tip-saved]');
     if(el&&el.classList.contains('dsc-ell'))return;// grilla de Descuentos: queda el tooltip del navegador
     if(el&&el!==cur){if(cur)hide();show(el);}
   });
   document.addEventListener('mouseout',e=>{
     if(cur&&(!e.relatedTarget||!cur.contains(e.relatedTarget)))hide();
   });
-  document.addEventListener('scroll',hide,true);
-  document.addEventListener('click',hide,true);
+  document.addEventListener('scroll',hideBox,true);
+  document.addEventListener('click',hideBox,true);
+  // Si el código le pone un title nuevo al elemento que tiene el mouse encima (ej.: ícono Workflow/Agenda al
+  // hacer click), se guarda igual que los demás para que no aparezca el tooltip del navegador
+  new MutationObserver(ms=>{ms.forEach(m=>{const el=m.target;
+    if(el===cur&&el.hasAttribute('title')){const t=el.getAttribute('title');el.removeAttribute('title');
+      if(t){el.setAttribute('data-tip-saved',t);if(box.style.display==='block'){box.textContent=t;position(el);}}
+      else{el.removeAttribute('data-tip-saved');hideBox();cur=null;}}});
+  }).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['title']});
 })();
 
 // ── Init ──────────────────────────────────────────────────────
