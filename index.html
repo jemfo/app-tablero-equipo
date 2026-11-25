@@ -597,7 +597,7 @@ table.grid tr:nth-child(even){background:var(--bg2)}
          y ofrece guardarlo. Enter y el botón hacen submit (reemplaza los onkeydown/onclick que llamaban a doLogin directo). -->
     <form id="loginForm" onsubmit="event.preventDefault();doLogin()">
     <label>Usuario</label>
-    <input type="text" id="loginUser" name="username" placeholder="usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+    <input type="text" id="loginUser" name="username" placeholder="usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="_loginLimpiarMail(true)" onchange="_loginLimpiarMail(true)" onblur="_loginLimpiarMail(true)">
     <label>Contraseña</label>
     <input type="password" id="loginPass" name="password" placeholder="••••••••" autocomplete="current-password">
     <button type="submit" class="primary">Ingresar</button>
@@ -1191,11 +1191,12 @@ function initLogin(){
   // El usuario escribe su nombre a mano; ya no hay desplegable que poblar.
 }
 async function doLogin(){
+  _loginLimpiarMail(false);// el usuario nunca lleva mail (25/11/2026)
   const raw=document.getElementById('loginUser').value.trim().toLowerCase();
   const p=document.getElementById('loginPass').value;
   const errEl=document.getElementById('loginErr');
-  // Acepta el usuario (ej. "juan") o el email completo
-  const meta=USERS.find(x=>x.login===raw||x.user===raw||x.email.toLowerCase()===raw);
+  // Acepta el usuario (ej. "juan.olguin" o "juan"); si llegó un mail ya se convirtió en usuario
+  const meta=USERS.find(x=>x.login===raw||x.user===raw);
   errEl.textContent='';
   if(!meta){errEl.textContent='Usuario o contraseña incorrectos.';return;}
   const btn=document.querySelector('.login button.primary');
@@ -1203,16 +1204,27 @@ async function doLogin(){
   const{error}=await _SB.auth.signInWithPassword({email:meta.email,password:p});
   if(btn){btn.disabled=false;btn.textContent='Ingresar';}
   if(error){errEl.textContent='Usuario o contraseña incorrectos.';return;}
-  try{localStorage.setItem('lastUser',raw);}catch(e){}
+  try{localStorage.setItem('lastUser',meta.login);}catch(e){}
   // Le pide al navegador que ofrezca guardar usuario/contraseña (Chrome/Edge). Firefox lo toma del submit del <form>.
   // Va antes de enterApp porque enterApp vacía los campos.
-  if(window.PasswordCredential&&navigator.credentials){try{navigator.credentials.store(new PasswordCredential({id:raw,password:p,name:meta.nombre}));}catch(e){}}
+  if(window.PasswordCredential&&navigator.credentials){try{navigator.credentials.store(new PasswordCredential({id:meta.login,password:p,name:meta.nombre}));}catch(e){}}
   enterApp(meta);
 }
 // Precarga el último usuario que entró (solo el nombre, nunca la contraseña). Sirve para el input de PROD y el select de TEST.
 function _prefillLastUser(){
   const lu=document.getElementById('loginUser');if(!lu)return;
   const last=localStorage.getItem('lastUser');if(last)lu.value=last;
+  _loginLimpiarMail(false);
+  // el autocompletado del navegador llega después de cargar: se revisa un par de veces
+  [300,1000,2500].forEach(ms=>setTimeout(()=>_loginLimpiarMail(true),ms));
+}
+// Usuario sin mail (25/11/2026): si en Usuario aparece un mail (escrito o autocompletado por el navegador) se cambia por el usuario
+// (el login del equipo con ese mail, o lo que va antes de la @) y se avisa. Así el navegador guarda solo el usuario.
+function _loginLimpiarMail(avisar){
+  const lu=document.getElementById('loginUser');if(!lu||lu.tagName!=='INPUT'||!lu.value.includes('@'))return;
+  const v=lu.value.trim().toLowerCase(),m=USERS.find(x=>(x.email||'').toLowerCase()===v);
+  lu.value=m?m.login:v.split('@')[0];
+  if(avisar){const e=document.getElementById('loginErr');if(e)e.textContent='Ingresá solo el usuario, sin el mail.';}
 }
 // Muestra la app una vez autenticado (reutilizado por login y por restoreSession)
 function enterApp(found){
