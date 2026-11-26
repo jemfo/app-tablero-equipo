@@ -4225,6 +4225,18 @@ function exportCSV(){
   }).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['title']});
 })();
 
+// Viñeta ● y flechita de las tarjetas arrastrables: al apretar ahí, la tarjeta deja de ser arrastrable
+// hasta soltar el mouse. Si el mouse se movía un pelito, el navegador lo tomaba como arrastre y el click
+// no llegaba ("a veces va y a veces no", 26/11/2026)
+document.addEventListener('mousedown',e=>{
+  if(e.button!==0||!e.target.closest)return;
+  const b=e.target.closest('.ag-abrir,.ctog');if(!b)return;
+  const d=b.closest('[draggable="true"]');if(!d)return;
+  d.setAttribute('draggable','false');
+  const back=()=>{if(d.isConnected)d.setAttribute('draggable','true');};
+  document.addEventListener('mouseup',()=>setTimeout(back,0),{once:true,capture:true});
+},true);
+
 // ── Init ──────────────────────────────────────────────────────
 initLogin();
 applyTheme(localStorage.getItem('oe_theme')||'light');
