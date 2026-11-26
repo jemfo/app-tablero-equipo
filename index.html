@@ -253,7 +253,11 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .ag-it.drag{opacity:.4}
 .ag-r1{display:flex;align-items:center;gap:4px;min-width:0}
 .ag-tt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt);font-weight:600}
-.ag-ics{display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px;color:var(--muted);font-size:10px;min-width:0}
+.ag-ics{display:flex;align-items:center;flex-wrap:nowrap;gap:3px 6px;color:var(--muted);font-size:10px;min-width:0;white-space:nowrap}
+.ag-ics > *{flex-shrink:0}
+.ag-ics.sin-ing .ag-fing{display:none}
+.ag-ics.sin-des .ag-des{display:none}
+.ag-ics.clip{overflow:hidden}
 .ag-fechas{display:inline-flex;align-items:center;gap:5px;color:var(--txt);cursor:default}
 .ag-fvto.ovd{color:var(--urg)}
 .ag-fwrap{position:relative;display:inline-flex;cursor:pointer}
@@ -285,12 +289,19 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .ag-btn:hover{color:var(--txt);background:var(--bg2)}
 .ag-btn.ag-new{color:#16a34a}
 .ag-pin{margin-left:auto;display:inline-flex;opacity:.55}.ag-pin.on{opacity:1;color:var(--accent)}
+/* Zonas de click más grandes que el dibujo (viñeta, flechita, chinche, vencimiento): se ven igual pero se aciertan fácil */
+.ag-abrir,.ag-it .ctog,.ag-pin,.ag-fwrap,.ag-btn{position:relative}
+.ag-abrir::before{content:'';position:absolute;inset:-6px}
+.ag-it .ctog::before{content:'';position:absolute;inset:-4px -3px}
+.ag-pin::before,.ag-btn::before{content:'';position:absolute;inset:-4px -3px}
+.ag-fwrap::before{content:'';position:absolute;inset:-4px -3px}
+.ag-pin:hover{opacity:1;color:var(--txt)}
 .ag-ics .cattach-chip{border-color:transparent;padding:0 2px;font-size:10px}
 .ag-ics .cattach-chip:hover{border-color:var(--muted)}
 /* En la agenda, Finalizado queda oculto (más lugar) y aparece flotando a la derecha mientras se arrastra una tarea */
 .wf-ag .col[data-estado="Finalizado"]{display:none}
 /* Solo el calendario hace scroll: las columnas quedan fijas arriba (top y alto máximo los pone setupSticky) */
-.wf-ag{align-items:flex-start}
+.wf-ag{align-items:flex-start;min-width:1600px}/* pantalla angosta: no se aprieta, aparece el scroll lateral (como se ve en PROD con pantalla grande) */
 .wf-ag>.col:not([data-estado="Finalizado"]){position:sticky}
 .wf-ag>.col:not([data-estado="Finalizado"]) .cards{overflow-y:auto;min-height:0;flex:1 1 auto}
 body.dragging-card .wf-ag .col[data-estado="Finalizado"]{display:flex;position:fixed;right:10px;top:110px;bottom:40px;width:230px;min-width:0;z-index:80;background:var(--bg2);border:2px dashed var(--accent);box-shadow:0 14px 40px rgba(6,44,70,.35)}
@@ -2265,6 +2276,11 @@ function _fitCardFeet(){
   const over=f=>f.scrollWidth>f.clientWidth+1;
   let l=feet.filter(over);
   for(const p of _PIE_PASOS){if(!l.length)break;l.forEach(f=>f.classList.add(p));l=l.filter(over);}
+  // Agenda: el renglón de íconos también va en una sola línea; si no entra, primero sin la fecha de carga, después recorta
+  const ags=[...document.querySelectorAll('#equipoBody .ag-ics')];
+  ags.forEach(f=>f.classList.remove('sin-ing','sin-des','clip'));
+  let la=ags.filter(over);
+  for(const p of ['sin-ing','sin-des','clip']){if(!la.length)break;la.forEach(f=>f.classList.add(p));la=la.filter(over);}
 }
 let _fitRaf=0;
 window.addEventListener('resize',()=>{cancelAnimationFrame(_fitRaf);_fitRaf=requestAnimationFrame(_fitCardFeet);});
@@ -2859,7 +2875,7 @@ function _agItem(t,extra){
     +(t.comentario?`<span class="ag-btn${t.comentario_ok?'':' ag-new'}" onclick="event.stopPropagation();openTaskForm('${t.id}')" title="${_agA((nombreOp(t.comentario_por)||'')+': '+t.comentario)}">${ICO.mail}</span>`:'')
     +(cl?`<span class="ag-btn" onclick="event.stopPropagation();toggleChkTip(this,'${t.id}')" title="Ver la lista de comprobación">☑${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'')
     +_attachIconHTML(t,false)
-    +(t.desarrollo?`<span ${_no} title="Desarrollo" style="filter:grayscale(1)">🔧</span>`:'')
+    +(t.desarrollo?`<span class="ag-des" ${_no} title="Desarrollo" style="filter:grayscale(1)">🔧</span>`:'')
     // Chinche a la derecha, debajo de la viñeta: como en la tarjeta, la puede fijar/soltar el dueño, el creador o el admin
     +((t.estado!=='Finalizado'&&(isAdmin()||own||t.creado_por===SESSION.user))
       ?`<span class="ag-btn ag-pin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')" title="${t.fijado?'Fijada (click para soltarla)':'Fijar'}">${ICO.pin}</span>`
