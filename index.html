@@ -254,6 +254,12 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .ag-r1{display:flex;align-items:center;gap:4px;min-width:0}
 .ag-tt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt);font-weight:600}
 .ag-ics{display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px;color:var(--muted);font-size:10px;min-width:0}
+.ag-fechas{display:inline-flex;align-items:center;gap:5px;color:var(--txt);cursor:default}
+.ag-fvto.ovd{color:var(--urg)}
+.ag-fwrap{position:relative;display:inline-flex;cursor:pointer}
+.ag-fwrap:hover .ag-fvto{opacity:.75}
+.ag-fwrap .cdate-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+.ag-fechas .cdate-car{display:inline-block;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid currentColor;margin-left:3px;vertical-align:middle;opacity:.7}
 .ag-it .ctog{display:inline-flex;align-items:center;justify-content:center;width:16px;height:14px;flex-shrink:0;cursor:pointer;border-radius:3px;color:var(--muted)}
 .ag-it .ctog:hover{background:var(--bg2);color:var(--txt)}
 .ag-it .ctog::after{content:'';width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;transition:transform .15s}
@@ -263,6 +269,7 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .ag-btn{cursor:pointer;border-radius:3px;padding:0 1px;display:inline-flex;align-items:center;gap:1px}
 .ag-btn:hover{color:var(--txt);background:var(--bg2)}
 .ag-btn.ag-new{color:#16a34a}
+.ag-pin{margin-left:auto;display:inline-flex;opacity:.55}.ag-pin.on{opacity:1;color:var(--accent)}
 .ag-ics .cattach-chip{border-color:transparent;padding:0 2px;font-size:10px}
 .ag-ics .cattach-chip:hover{border-color:var(--muted)}
 /* En la agenda, Finalizado queda oculto (más lugar) y aparece flotando a la derecha mientras se arrastra una tarea */
@@ -2773,6 +2780,19 @@ const _agISO=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+S
 const _agLunes=iso=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);return d;};
 const _agA=s=>escH(String(s==null?'':s)).replace(/"/g,'&quot;');
 let _agVacPedido=false;
+// Fechas como en la tarjeta: ingreso (fijo) y vencimiento con ▾ para cambiarlo sin abrir la tarea.
+// Mismo permiso que en la tarjeta (dueño, creador o admin; Mensual no, su fecha sale del día del mes).
+function _agFechas(t){
+  const isFinal=t.estado==='Finalizado';
+  const venc=!isFinal&&t.finalizacion&&diasPara(t.finalizacion)<0;
+  const can=!isFinal&&(isAdmin()||t.operador===SESSION.user||t.creado_por===SESSION.user)&&frecBase(t.frecuencia)!=='Mensual';
+  const ing=`<span class="ag-fing" title="Ingreso">${t.ingreso?fmtDate(t.ingreso):'—'}</span>`;
+  const fx=t.finalizacion?fmtDate(t.finalizacion):'—';
+  const fin=can
+    ?`<span class="ag-fwrap" title="Cambiar el vencimiento"><span class="ag-fvto${venc?' ovd':''}">${fx}<i class="cdate-car"></i></span><input type="date" class="cdate-inp" value="${t.finalizacion||''}" onclick="event.stopPropagation();try{this.showPicker()}catch(e){}" onchange="if(this.value)quickUpdateField('${t.id}','finalizacion',this.value)"></span>`
+    :`<span class="ag-fvto${venc?' ovd':''}" title="Vencimiento">${fx}</span>`;
+  return `<span class="ag-fechas" onclick="event.stopPropagation()">${ing}${fin}</span>`;
+}
 function _agItem(t,extra){
   const oc=opColor(t.operador),own=t.operador===SESSION.user,f=t.frecuencia||'';
   const fm=f==='Por Etapas'?'E':frecBase(f)==='Mensual'?'M':f.startsWith('Personalizada:')?f.split(':')[1]:frecBase(f)==='Personalizada'?'P':'';
@@ -2784,11 +2804,15 @@ function _agItem(t,extra){
   const ics=(extra?`<span ${_no}>${extra}</span>`:'')
     +(own?'':`<span class="ag-tag" ${_no} style="border-color:${oc};color:${oc}" title="${_agA(nombreOp(t.operador)||t.operador)}">${escH(iniOp(t.operador))}</span>`)
     +(frecBase(f)!=='Unica'?`<span ${_no} title="Recurrente">⟳${fm?`<b>${escH(fm)}</b>`:''}</span>`:'')
+    +_agFechas(t)
     +(t.comentario?`<span class="ag-btn${t.comentario_ok?'':' ag-new'}" onclick="event.stopPropagation();openTaskForm('${t.id}')" title="${_agA((nombreOp(t.comentario_por)||'')+': '+t.comentario)}">${ICO.mail}</span>`:'')
     +(cl?`<span class="ag-btn" onclick="event.stopPropagation();toggleChkTip(this,'${t.id}')" title="Ver la lista de comprobación">☑${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'')
     +_attachIconHTML(t,false)
     +(t.desarrollo?`<span ${_no} title="Desarrollo" style="filter:grayscale(1)">🔧</span>`:'')
-    +(t.fijado?`<span class="ag-btn" onclick="event.stopPropagation();toggleFijar('${t.id}')" title="Fijada (click para soltarla)">${ICO.pin}</span>`:'');
+    // Chinche a la derecha, debajo de la viñeta: como en la tarjeta, la puede fijar/soltar el dueño, el creador o el admin
+    +((t.estado!=='Finalizado'&&(isAdmin()||own||t.creado_por===SESSION.user))
+      ?`<span class="ag-btn ag-pin${t.fijado?' on':''}" onclick="event.stopPropagation();toggleFijar('${t.id}')" title="${t.fijado?'Fijada (click para soltarla)':'Fijar'}">${ICO.pin}</span>`
+      :(t.fijado?`<span class="ag-pin on" ${_no} title="Fijada">${ICO.pin}</span>`:''));
   const tip=(t.tema||'')+' · '+t.estado+(t.finalizacion?' · vence '+fmtDate(t.finalizacion):'')+(own?'':' · '+(nombreOp(t.operador)||t.operador));
   // Dos renglones: 1) tema + desplegable de "Tareas a realizar" (como en la tarjeta); 2) el resto de los íconos
   const abierta=!!t.tareas&&_tareasAbiertas.has(t.id);
@@ -4230,7 +4254,7 @@ function exportCSV(){
 // no llegaba ("a veces va y a veces no", 26/11/2026)
 document.addEventListener('mousedown',e=>{
   if(e.button!==0||!e.target.closest)return;
-  const b=e.target.closest('.ag-abrir,.ctog');if(!b)return;
+  const b=e.target.closest('.ag-abrir,.ctog,.ag-fwrap,.cdate-wrap,.ag-pin');if(!b)return;
   const d=b.closest('[draggable="true"]');if(!d)return;
   d.setAttribute('draggable','false');
   const back=()=>{if(d.isConnected)d.setAttribute('draggable','true');};
