@@ -302,6 +302,12 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .wf-ag .col[data-estado="Finalizado"]{display:none}
 /* Solo el calendario hace scroll: las columnas quedan fijas arriba (top y alto máximo los pone setupSticky) */
 .wf-ag{align-items:flex-start;min-width:1600px}/* pantalla angosta: no se aprieta, aparece el scroll lateral (como se ve en PROD con pantalla grande) */
+/* Con el scroll lateral de la agenda, el encabezado y los filtros quedan fijos a la izquierda (si no, se iban de pantalla) */
+body:has(.wf-ag){min-width:1632px}/* 1600 de la agenda + 16+16 de margen */
+/* --sbw = ancho de la barra de scroll vertical (lo mide setupSticky): 100vw la incluye y el encabezado se corría al final */
+#appView:has(.wf-ag) .eq-header{left:0;width:calc(100vw - var(--sbw,0px));box-sizing:border-box}
+#appView:has(.wf-ag) #equipoTools{left:16px;width:calc(100vw - var(--sbw,0px) - 32px);box-sizing:border-box}
+body:has(.wf-ag) #testBannerTop{position:sticky;left:0;width:calc(100vw - var(--sbw,0px));box-sizing:border-box}
 .wf-ag>.col:not([data-estado="Finalizado"]){position:sticky}
 .wf-ag>.col:not([data-estado="Finalizado"]) .cards{overflow-y:auto;min-height:0;flex:1 1 auto}
 body.dragging-card .wf-ag .col[data-estado="Finalizado"]{display:flex;position:fixed;right:10px;top:110px;bottom:40px;width:230px;min-width:0;z-index:80;background:var(--bg2);border:2px dashed var(--accent);box-shadow:0 14px 40px rgba(6,44,70,.35)}
@@ -2309,6 +2315,7 @@ function setupSticky(){
   const vt=document.querySelector('#vacBody .vac-top');
   if(vt&&vt.offsetParent!==null){vt.style.top=acc+'px';const a2=acc+vt.getBoundingClientRect().height;document.querySelectorAll('#vacBody .vac-dow').forEach(x=>{x.style.top=a2+'px';});}
   // Agenda del admin: solo el calendario hace scroll; En curso y Para ver juntos quedan fijas (si no entran, scroll propio)
+  document.documentElement.style.setProperty('--sbw',Math.max(0,innerWidth-document.documentElement.clientWidth)+'px');
   if(document.getElementById('agAnioTxt'))_agAnioSync();// año del selector de la agenda
   const _ag=document.querySelectorAll('#equipoBody .wf-ag>.col:not([data-estado="Finalizado"])');
   if(_ag.length){const tb=document.getElementById('testBannerBottom'),bot=tb&&tb.offsetHeight?tb.offsetHeight:0;
