@@ -258,7 +258,22 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .ag-fvto.ovd{color:var(--urg)}
 .ag-fwrap{position:relative;display:inline-flex;cursor:pointer}
 .ag-fwrap:hover .ag-fvto{opacity:.75}
-.ag-fwrap .cdate-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+#agCalPop{position:fixed;z-index:100000;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);padding:8px;width:246px;font-size:12px}
+#agCalPop button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.agc-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.agc-h b{text-transform:capitalize}.agc-h button{font-size:16px;width:26px;height:24px;border-radius:5px}#agCalPop .agc-h button:hover{background:var(--bg3)}
+.agc-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+#agCalPop .agc-d{padding:0;min-width:0;width:100%}
+.agc-w{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:2px 0}
+.agc-d{position:relative;height:30px;border-radius:5px;font-size:12px}
+#agCalPop .agc-d:hover{background:var(--bg3)}.agc-d.fuera{opacity:.4}.agc-d.fin{color:var(--muted)}
+#agCalPop .agc-d.hoy{font-weight:700;color:#fb2118;box-shadow:inset 0 0 0 1px #fb2118}
+#agCalPop .agc-d.sel{background:#fb2118;color:#fff;font-weight:700}
+.agc-n{position:absolute;top:1px;right:1px;min-width:12px;height:12px;border-radius:6px;background:#38bdf8;color:#fff;font-size:8.5px;font-style:normal;font-weight:700;line-height:12px;padding:0 2px;box-sizing:border-box}
+.agc-n.muchas{background:#f97316}
+.agc-f{display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+.agc-f button{color:#fb2118!important;font-weight:600}
+.agc-ley{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}.agc-ley .agc-n{position:static}
 .ag-fechas .cdate-car{display:inline-block;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid currentColor;margin-left:3px;vertical-align:middle;opacity:.7}
 .ag-it .ctog{display:inline-flex;align-items:center;justify-content:center;width:16px;height:14px;flex-shrink:0;cursor:pointer;border-radius:3px;color:var(--muted)}
 .ag-it .ctog:hover{background:var(--bg2);color:var(--txt)}
@@ -2789,10 +2804,46 @@ function _agFechas(t){
   const ing=`<span class="ag-fing" title="Ingreso">${t.ingreso?fmtDate(t.ingreso):'—'}</span>`;
   const fx=t.finalizacion?fmtDate(t.finalizacion):'—';
   const fin=can
-    ?`<span class="ag-fwrap" title="Cambiar el vencimiento"><span class="ag-fvto${venc?' ovd':''}">${fx}<i class="cdate-car"></i></span><input type="date" class="cdate-inp" value="${t.finalizacion||''}" onclick="event.stopPropagation();try{this.showPicker()}catch(e){}" onchange="if(this.value)quickUpdateField('${t.id}','finalizacion',this.value)"></span>`
+    ?`<span class="ag-fwrap" title="Cambiar el vencimiento" onclick="event.stopPropagation();agCalAbrir(this,'${t.id}')"><span class="ag-fvto${venc?' ovd':''}">${fx}<i class="cdate-car"></i></span></span>`
     :`<span class="ag-fvto${venc?' ovd':''}" title="Vencimiento">${fx}</span>`;
   return `<span class="ag-fechas" onclick="event.stopPropagation()">${ing}${fin}</span>`;
 }
+// Calendario chico propio para cambiar el vencimiento (el del navegador no deja marcar días):
+// cada día muestra cuántas tareas de la agenda vencen ahí, para ver qué días ya están cargados.
+let _agCalList=[],_agCal=null;// _agCal: {id, el, y, m}
+function agCalCerrar(){const p=document.getElementById('agCalPop');if(p)p.remove();_agCal=null;}
+function agCalAbrir(el,id){
+  if(_agCal&&_agCal.id===id){agCalCerrar();return;}
+  const t=(_agCalList.find(x=>x.id===id))||{};const base=new Date((t.finalizacion||todayISO())+'T12:00:00');
+  _agCal={id,el,y:base.getFullYear(),m:base.getMonth()};agCalPintar();
+}
+function agCalMes(d){if(!_agCal)return;_agCal.m+=d;if(_agCal.m<0){_agCal.m=11;_agCal.y--;}if(_agCal.m>11){_agCal.m=0;_agCal.y++;}agCalPintar();}
+function agCalElegir(iso){const id=_agCal&&_agCal.id;agCalCerrar();if(id)quickUpdateField(id,'finalizacion',iso);}
+function agCalPintar(){
+  const c=_agCal;if(!c)return;
+  const t=_agCalList.find(x=>x.id===c.id)||{},sel=t.finalizacion||'',hoy=todayISO();
+  const cnt={};_agCalList.forEach(x=>{if(x.finalizacion&&x.id!==c.id)cnt[x.finalizacion]=(cnt[x.finalizacion]||0)+1;});
+  const ini=new Date(c.y,c.m,1,12);ini.setDate(1-(ini.getDay()+6)%7);// arranca el lunes
+  let cel='';
+  for(let i=0;i<42;i++){const d=new Date(ini);d.setDate(ini.getDate()+i);const iso=_agISO(d),n=cnt[iso]||0;
+    const cls=['agc-d',d.getMonth()!==c.m?'fuera':'',iso===sel?'sel':'',iso===hoy?'hoy':'',(d.getDay()===0||d.getDay()===6)?'fin':''].filter(Boolean).join(' ');
+    cel+=`<button type="button" class="${cls}" onclick="event.stopPropagation();agCalElegir('${iso}')" title="${fmtDate(iso)}${n?' · '+n+(n>1?' tareas':' tarea'):''}">${d.getDate()}${n?`<i class="agc-n${n>2?' muchas':''}">${n}</i>`:''}</button>`;}
+  const mes=new Date(c.y,c.m,1).toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+  let p=document.getElementById('agCalPop');
+  if(!p){p=document.createElement('div');p.id='agCalPop';p.onclick=e=>e.stopPropagation();p.onmousedown=e=>e.stopPropagation();
+    // Ruedita del mouse sobre el calendario: cambia de mes (y no scrollea la página, que lo cerraría)
+    p.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();if(Math.abs(e.deltaY)<4)return;const ah=Date.now();if(ah-(p._w||0)<180)return;p._w=ah;agCalMes(e.deltaY>0?1:-1);},{passive:false});
+    document.body.appendChild(p);}
+  p.innerHTML=`<div class="agc-h"><button type="button" onclick="agCalMes(-1)" title="Mes anterior">‹</button><b>${mes}</b><button type="button" onclick="agCalMes(1)" title="Mes siguiente">›</button></div>`
+    +`<div class="agc-g">${['LU','MA','MI','JU','VI','SA','DO'].map(x=>`<span class="agc-w">${x}</span>`).join('')}${cel}</div>`
+    +`<div class="agc-f"><span class="agc-ley"><i class="agc-n">n</i> tareas que ya vencen ese día</span><button type="button" onclick="agCalElegir('${hoy}')">Hoy</button></div>`;
+  const r=c.el.getBoundingClientRect(),pw=p.offsetWidth,ph=p.offsetHeight;
+  let top=r.bottom+4;if(top+ph>innerHeight-4)top=Math.max(4,r.top-ph-4);
+  p.style.left=Math.max(4,Math.min(r.left,innerWidth-pw-4))+'px';p.style.top=top+'px';
+}
+document.addEventListener('mousedown',e=>{if(_agCal&&!e.target.closest('#agCalPop,.ag-fwrap'))agCalCerrar();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&_agCal)agCalCerrar();});
+window.addEventListener('scroll',()=>{if(_agCal)agCalCerrar();},true);
 function _agItem(t,extra){
   const oc=opColor(t.operador),own=t.operador===SESSION.user,f=t.frecuencia||'';
   const fm=f==='Por Etapas'?'E':frecBase(f)==='Mensual'?'M':f.startsWith('Personalizada:')?f.split(':')[1]:frecBase(f)==='Personalizada'?'P':'';
@@ -2826,6 +2877,7 @@ function workflowAgendaHTML(list){
   if(!VAC_LOADED&&!_agVacPedido){_agVacPedido=true;loadVacaciones().then(()=>{if(VIEW_MODE==='workflow'&&_agendaOn())renderCurrent();});}
   const hoy=todayISO();
   const its=list.filter(t=>(t.estado==='Programado'||t.estado==='Pendiente')&&t.frecuencia!=='Nota'&&t.operador===SESSION.user);
+  _agCalList=its;// el calendario chico (cambiar vencimiento) cuenta las tareas de cada día con esta misma lista
   const sinF=sortCards(its.filter(t=>!t.finalizacion));
   // Cada trabajo en el día que vence, también los atrasados (con los días de atraso en rojo); el calendario arranca en la
   // semana del más atrasado. Lo que vence sábado o domingo se muestra el viernes, con la fecha real.
