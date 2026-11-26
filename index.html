@@ -257,6 +257,7 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .ag-ics > *{flex-shrink:0}
 .ag-ics.sin-ing .ag-fing{display:none}
 .ag-ics.sin-des .ag-des{display:none}
+.ag-ics .ag-m{background:#facc15;color:#000;border-radius:3px;padding:0 3px;margin-left:1px}/* Mensual: M con fondo amarillo */
 .ag-ics.clip{overflow:hidden}
 .ag-fechas{display:inline-flex;align-items:center;gap:5px;color:var(--txt);cursor:default}
 .ag-fvto.ovd{color:var(--urg)}
@@ -298,18 +299,22 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .ag-pin:hover{opacity:1;color:var(--txt)}
 .ag-ics .cattach-chip{border-color:transparent;padding:0 2px;font-size:10px}
 .ag-ics .cattach-chip:hover{border-color:var(--muted)}
-/* En la agenda, Finalizado queda oculto (más lugar) y aparece flotando a la derecha mientras se arrastra una tarea */
-.wf-ag .col[data-estado="Finalizado"]{display:none}
-/* Solo el calendario hace scroll: las columnas quedan fijas arriba (top y alto máximo los pone setupSticky) */
-.wf-ag{align-items:flex-start;min-width:1600px}/* pantalla angosta: no se aprieta, aparece el scroll lateral (como se ve en PROD con pantalla grande) */
+/* En la agenda, Finalizado va a la derecha de Para ver juntos (300px), fuera de la pantalla: se llega con el scroll lateral.
+   Al arrastrar una tarea aparece flotando a la derecha. Agenda / En curso / Para ver juntos tienen ancho propio (65 % y 17,5 %
+   + 17,5 % de lo que queda sin Finalizado), así no cambian de tamaño cuando Finalizado sale a flotar (26/11/2026). */
+.kanban.fit5.wf-ag>.ag-wrap{flex:0 0 calc((100% - 324px)*.65);max-width:calc((100% - 324px)*.65)}
+.kanban.fit5.wf-ag>.col{flex:0 0 calc((100% - 324px)*.175);min-width:0}
+.kanban.fit5.wf-ag>.col[data-estado="Finalizado"]{flex:0 0 300px;display:flex}/* gana a la regla que lo oculta en pantallas < 1100px */
+/* Solo la agenda hace scroll: las columnas quedan fijas arriba (top y alto máximo los pone setupSticky) */
+.wf-ag{align-items:flex-start;min-width:1924px}/* pantalla angosta: no se aprieta, aparece el scroll lateral (1600 + Finalizado 300 + separación) */
 /* Con el scroll lateral de la agenda, el encabezado y los filtros quedan fijos a la izquierda (si no, se iban de pantalla) */
-body:has(.wf-ag){min-width:1632px}/* 1600 de la agenda + 16+16 de margen */
+body:has(.wf-ag){min-width:1956px}/* agenda + 16+16 de margen */
 /* --sbw = ancho de la barra de scroll vertical (lo mide setupSticky): 100vw la incluye y el encabezado se corría al final */
 #appView:has(.wf-ag) .eq-header{left:0;width:calc(100vw - var(--sbw,0px));box-sizing:border-box}
 #appView:has(.wf-ag) #equipoTools{left:16px;width:calc(100vw - var(--sbw,0px) - 32px);box-sizing:border-box}
 body:has(.wf-ag) #testBannerTop{position:sticky;left:0;width:calc(100vw - var(--sbw,0px));box-sizing:border-box}
-.wf-ag>.col:not([data-estado="Finalizado"]){position:sticky}
-.wf-ag>.col:not([data-estado="Finalizado"]) .cards{overflow-y:auto;min-height:0;flex:1 1 auto}
+.wf-ag>.col{position:sticky}
+.wf-ag>.col .cards{overflow-y:auto;min-height:0;flex:1 1 auto}
 body.dragging-card .wf-ag .col[data-estado="Finalizado"]{display:flex;position:fixed;right:10px;top:110px;bottom:40px;width:230px;min-width:0;z-index:80;background:var(--bg2);border:2px dashed var(--accent);box-shadow:0 14px 40px rgba(6,44,70,.35)}
 body.dragging-card .wf-ag .col[data-estado="Finalizado"] .cards{overflow-y:auto;flex:1}
 .ag-tag{font-size:9px;font-weight:700;line-height:13px;border-radius:3px;padding:0 3px;border:1px solid var(--line);color:var(--muted)}
@@ -965,6 +970,17 @@ const setSyncSt=msg=>document.getElementById('syncSt').textContent=msg;
 
 // ── Supabase CRUD ─────────────────────────────────────────────
 // Consulta el MAX(numero) directamente en BD para evitar race condition entre usuarios simultáneos.
+// Número de ID en el título del formulario (Nueva / Editar tarea). provisorio = alta nueva: se confirma al guardar.
+let _formIdTk=0;
+function _formIdTxt(n,txt,provisorio){
+  const h=document.getElementById('modalTitle');if(!h)return;
+  let s=document.getElementById('modalIdTag');
+  if(n==null&&!txt){if(s)s.remove();return;}
+  if(!s){s=document.createElement('span');s.id='modalIdTag';s.style.cssText='margin-left:10px;font-size:13px;font-weight:700;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:2px 8px;vertical-align:middle';}
+  s.textContent=txt||('ID '+n);
+  s.title=provisorio?'Número que se asigna al guardar (si otro guarda antes, toma el siguiente)':'Número de la tarea';
+  h.appendChild(s);
+}
 async function getNextNumero(){
   // .not('numero','is',null): evita que un row con numero NULL (demo) quede primero en el orden desc y devuelva 1
   const{data}=await _SB.from('trabajos').select('numero').not('numero','is',null).order('numero',{ascending:false}).limit(1).maybeSingle();
@@ -1142,6 +1158,11 @@ async function finalizarTarea(t){
       ?'¿Confirmás que esta tarea se realizó?\n\nQueda registrada y se genera una nueva tarjeta con la próxima fecha.'
       :'¿Confirmás que esta tarea está finalizada?\n\nQueda registrada y no se puede revertir.';
   if(!confirm(msg))return;
+  // Copia de la tarea tal como está: si la base rechaza el guardado, se vuelve a esto (no queda en pantalla algo que no se guardó)
+  const _orig=Object.assign({},t);
+  const _cerrar=async()=>{t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
+    if(await upsertTask(t))return true;
+    for(const k of Object.keys(t))if(!(k in _orig))delete t[k];Object.assign(t,_orig);renderCurrent();return false;};
   // Derivada a tercero: comentario de cierre obligatorio para avisar a quien la derivó (ver globo verde)
   if(t.derivado_tercero){
     const _c=prompt('Esta tarea fue derivada por '+nombreOp(t.creado_por)+'. Dejá un comentario de cierre para avisarle que la terminaste:','');
@@ -1166,8 +1187,7 @@ async function finalizarTarea(t){
       // "Cerrar proyecto" (admin, operador o creador; el watcher ya quedó afuera al inicio de esta función).
       const _clCompleta=Array.isArray(t.checklist)&&t.checklist.length>0&&t.checklist.every(x=>x.ok);
       cerroProy=_clCompleta&&(t.derivado_tercero?t.operador===SESSION.user:(isAdmin()||t.creado_por===SESSION.user||t.operador===SESSION.user))&&confirm('La lista de comprobación está completa.\n\n¿Cerrás el proyecto?\n\nAceptar = se finaliza sin crear otra etapa.\nCancelar = se crea la etapa siguiente.');
-      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
-      await upsertTask(t);
+      if(!await _cerrar())return;// no se guardó: no se crea la etapa siguiente
       if(!cerroProy&&!_yaTieneProxima(t)){
         const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
         // Por Etapas: la lista es el avance del proyecto, así que la etapa nueva conserva lo tildado
@@ -1178,8 +1198,7 @@ async function finalizarTarea(t){
     }else if(esPersonalizada||esMensual){
       const next=nextFechaByFrec(t.finalizacion||todayISO(),t.frecuencia);
       const eraFijado=t.fijado;
-      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
-      await upsertTask(t);
+      if(!await _cerrar())return;// no se guardó: no se crea la próxima
       if(!_yaTieneProxima(t)){
         const nextNum=SESSION.demo?_nextDemoNumero():await getNextNumero();
         const nueva=Object.assign({},t,{id:uid(),numero:nextNum,estado:'Programado',ingreso:t.ingreso||todayISO(),finalizacion:next,fecha_estado:todayISO(),actualizado:nowStamp(),reaccion:'',comentario:null,comentario_por:null,comentario_ok:false,fijado:eraFijado,checklist:Array.isArray(t.checklist)?t.checklist.map(x=>({...x,ok:false})):t.checklist});
@@ -1187,8 +1206,7 @@ async function finalizarTarea(t){
         extra=' · próxima: '+fmtDate(next);
       }
     }else{
-      t.estado='Finalizado';t.fijado=false;t.fecha_estado=todayISO();t.actualizado=nowStamp();t.finalizacion=todayISO();
-      await upsertTask(t);
+      if(!await _cerrar())return;
     }
     if(_nuevaId)_resaltar={id:_nuevaId,hasta:Date.now()+4500};
     renderCurrent();
@@ -2317,7 +2335,7 @@ function setupSticky(){
   // Agenda del admin: solo el calendario hace scroll; En curso y Para ver juntos quedan fijas (si no entran, scroll propio)
   document.documentElement.style.setProperty('--sbw',Math.max(0,innerWidth-document.documentElement.clientWidth)+'px');
   if(document.getElementById('agAnioTxt'))_agAnioSync();// año del selector de la agenda
-  const _ag=document.querySelectorAll('#equipoBody .wf-ag>.col:not([data-estado="Finalizado"])');
+  const _ag=document.querySelectorAll('#equipoBody .wf-ag>.col');
   if(_ag.length){const tb=document.getElementById('testBannerBottom'),bot=tb&&tb.offsetHeight?tb.offsetHeight:0;
     _ag.forEach(c=>{c.style.top=acc+'px';c.style.height=c.style.maxHeight='calc(100vh - '+Math.round(acc+bot+10)+'px)';});}// alto completo de pantalla (24/11/2026)
 }
@@ -2697,6 +2715,7 @@ async function quickUpdateField(id,field,value,mensualOk){// mensualOk: la agend
   const upd=Object.assign({},t,{[field]:value,actualizado:nowStamp()});
   const ok=await upsertTask(upd);
   if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=upd;renderCurrent();}
+  return ok;
 }
 // Resaltado rojo manual por tarjeta atrasada (persistente, por usuario, en localStorage — no expira solo)
 function _atrasadaRojaKey(){return 'atrasadas_rojas_'+SESSION.user;}
@@ -2841,7 +2860,7 @@ function agCalAbrir(el,id){
   _agCal={id,el,y:base.getFullYear(),m:base.getMonth()};agCalPintar();
 }
 function agCalMes(d){if(!_agCal)return;_agCal.m+=d;if(_agCal.m<0){_agCal.m=11;_agCal.y--;}if(_agCal.m>11){_agCal.m=0;_agCal.y++;}agCalPintar();}
-function agCalElegir(iso){const id=_agCal&&_agCal.id;agCalCerrar();if(id)quickUpdateField(id,'finalizacion',iso);}
+function agCalElegir(iso){const id=_agCal&&_agCal.id;agCalCerrar();if(id&&_agAvisoDia(iso))quickUpdateField(id,'finalizacion',iso);}
 function agCalPintar(){
   const c=_agCal;if(!c)return;
   const t=_agCalList.find(x=>x.id===c.id)||{},sel=t.finalizacion||'',hoy=todayISO();
@@ -2877,7 +2896,7 @@ function _agItem(t,extra){
   const _no='onclick="event.stopPropagation()"';
   const ics=(extra?`<span ${_no}>${extra}</span>`:'')
     +(own?'':`<span class="ag-tag" ${_no} style="border-color:${oc};color:${oc}" title="${_agA(nombreOp(t.operador)||t.operador)}">${escH(iniOp(t.operador))}</span>`)
-    +(frecBase(f)!=='Unica'?`<span ${_no} title="Recurrente">⟳${fm?`<b>${escH(fm)}</b>`:''}</span>`:'')
+    +(frecBase(f)!=='Unica'?`<span ${_no} title="${fm==='M'?'Mensual':'Recurrente'}">⟳${fm?`<b${fm==='M'?' class="ag-m"':''}>${escH(fm)}</b>`:''}</span>`:'')
     +_agFechas(t)
     +(t.comentario?`<span class="ag-btn${t.comentario_ok?'':' ag-new'}" onclick="event.stopPropagation();openTaskForm('${t.id}')" title="${_agA((nombreOp(t.comentario_por)||'')+': '+t.comentario)}">${ICO.mail}</span>`:'')
     +(cl?`<span class="ag-btn" onclick="event.stopPropagation();toggleChkTip(this,'${t.id}')" title="Ver la lista de comprobación">☑${cl.filter(x=>x.ok).length}/${cl.length}</span>`:'')
@@ -2975,21 +2994,40 @@ function agDragLeave(e){e.currentTarget.classList.remove('drop-hover');}
 document.addEventListener('dragover',e=>{if(!document.body.classList.contains('dragging-card')||VIEW_MODE!=='workflow'||!document.querySelector('#equipoBody .wf-ag'))return;
   const m=80,y=e.clientY,tb=document.getElementById('testBannerBottom'),bot=tb&&tb.offsetHeight?tb.offsetHeight:0,h=document.querySelector('#equipoBody .ag-hdr'),top=h?h.getBoundingClientRect().bottom:0;
   if(y>innerHeight-bot-m)scrollBy(0,Math.ceil((y-(innerHeight-bot-m))/3)+6);else if(y<top+m)scrollBy(0,-(Math.ceil((top+m-y)/3)+6));});
+// Guarda cambios de una tarea y recién si la base los acepta los aplica en pantalla. Si la base da error (cartel rojo),
+// la tarea queda como estaba: antes se cambiaba primero en pantalla y, si fallaba, se veía un cambio que no existía (26/11/2026).
+async function _guardarCambio(t,cambios){
+  const upd=Object.assign({},t,cambios,{actualizado:nowStamp()});
+  const ok=await upsertTask(upd);
+  if(ok){const i=DATA.findIndex(x=>x.id===t.id);if(i>=0)DATA[i]=upd;}
+  renderEquipo();
+  return ok;
+}
+// Avisos al mover a un día de la agenda: día pasado, feriado o día de tus vacaciones (se puede confirmar igual)
+function _agAvisoDia(iso){
+  const av=[];
+  if(iso<todayISO())av.push('es un día que ya pasó (la tarea queda atrasada)');
+  const fer=VAC.find(v=>v.usuario==='feriado'&&v.fecha===iso);if(fer)av.push('es feriado'+(fer.nombre?' ('+fer.nombre+')':''));
+  if(VAC.some(v=>v.usuario===SESSION.user&&v.fecha===iso))av.push('estás de vacaciones');
+  return !av.length||confirm('El '+fmtDate(iso)+' '+av.join(' y ')+'.\n\n¿Mover la tarea a ese día igual?');
+}
 async function agDrop(e,iso){
   e.preventDefault();e.currentTarget.classList.remove('drop-hover');
   const t=DATA.find(x=>x.id===dragId);if(!t||t.estado==='Finalizado')return;
-  // De En curso o Para ver juntos al calendario (24/11/2026): vuelve a su estado de origen con ese vencimiento. Solo tareas propias.
+  // De En curso o Para ver juntos a la agenda (24/11/2026): vuelve a su estado de origen con ese vencimiento. Solo tareas propias.
   // No se guarda el estado anterior: se usa la misma regla que al crearla (recurrentes Personalizada/Por Etapas/Mensual → Programado; el resto → Pendiente).
   if(t.estado==='En curso'||t.estado==='Para ver juntos'){
     if(t.operador!==SESSION.user){showToast('Solo el operador de la tarea puede moverla','err');return;}
-    const f=t.frecuencia||'';t.estado=(f==='Personalizada'||f==='Por Etapas'||f.startsWith('Personalizada:')||f.startsWith('Mensual:'))?'Programado':'Pendiente';t.finalizacion=iso;t.fecha_estado=todayISO();t.actualizado=nowStamp();
-    await upsertTask(t);renderEquipo();showToast('Volvió a '+t.estado+', vence el '+fmtDate(iso)+': '+(t.tema||'').slice(0,40));return;
+    if(!_agAvisoDia(iso))return;
+    const f=t.frecuencia||'',est=(f==='Personalizada'||f==='Por Etapas'||f.startsWith('Personalizada:')||f.startsWith('Mensual:'))?'Programado':'Pendiente';
+    if(await _guardarCambio(t,{estado:est,finalizacion:iso,fecha_estado:todayISO()}))showToast('Volvió a '+est+', vence el '+fmtDate(iso)+': '+(t.tema||'').slice(0,40));
+    return;
   }
   if(t.finalizacion===iso)return;
+  if(!_agAvisoDia(iso))return;
   // Solo cambia la fecha de vencimiento de esta tarjeta (estado y todo lo demás quedan igual). En las mensuales la
   // próxima tarjeta se sigue generando el día del mes que tiene cargado.
-  await quickUpdateField(t.id,'finalizacion',iso,true);
-  showToast('Vence el '+fmtDate(iso)+': '+(t.tema||'').slice(0,40));
+  if(await quickUpdateField(t.id,'finalizacion',iso,true))showToast('Vence el '+fmtDate(iso)+': '+(t.tema||'').slice(0,40));
 }
 
 function byOpHTML(list){
@@ -3063,13 +3101,12 @@ async function drop(e){
   // Regla para todos (24/11/2026): toda tarea pasa por En curso antes de finalizar. Si se arrastra de Programado o
   // Pendiente a Finalizado, no se finaliza: se avisa y la tarjeta queda en En curso.
   if(est==='Finalizado'&&(t.estado==='Programado'||t.estado==='Pendiente')){
-    t.estado='En curso';t.actualizado=nowStamp();t.fecha_estado=todayISO();
-    await upsertTask(t);renderEquipo();// el aviso va después: si no, lo tapa el "Guardado ✓"
-    showToast('Antes de finalizar, la tarea tiene que pasar por En curso. La pasé a En curso.','err',5000);
+    // el aviso va después del guardado: si no, lo tapa el "Guardado ✓"
+    if(await _guardarCambio(t,{estado:'En curso',fecha_estado:todayISO()}))showToast('Antes de finalizar, la tarea tiene que pasar por En curso. La pasé a En curso.','err',5000);
     return;
   }
   if(est==='Finalizado'){await finalizarTarea(t);return;}
-  t.estado=est;t.actualizado=nowStamp();t.fecha_estado=todayISO();upsertTask(t);renderEquipo();
+  await _guardarCambio(t,{estado:est,fecha_estado:todayISO()});
 }
 
 // ── Formulario tarea equipo ───────────────────────────────────
@@ -3263,7 +3300,7 @@ function openTaskForm(id){
       const _updV=Object.assign({},t,{incluir_ruben_visto:true});
       upsertTask(_updV,{sinDeshacer:true}).then(ok=>{if(ok){const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA[i]=_updV;updateEnvBadge();}});
     }
-    document.getElementById('modalTitle').textContent='Editar tarea';
+    document.getElementById('modalTitle').textContent='Editar tarea';_formIdTxt(t.numero);
     document.getElementById('f_tema').value=t.tema||'';document.getElementById('f_tareas').value=t.tareas||'';
     const _fop=document.getElementById('f_operador');
     if(t.operador&&!Array.from(_fop.options).some(o=>o.value===t.operador))_fop.insertAdjacentHTML('beforeend',`<option value="${t.operador}">${nombreOp(t.operador)||t.operador}</option>`);
@@ -3304,6 +3341,9 @@ function openTaskForm(id){
     }
   }else{
     document.getElementById('modalTitle').textContent='Nueva tarea';
+    // ID que va a tener: el siguiente número libre (se confirma al guardar; si otro guarda antes, toma el siguiente)
+    if(!_notaMode&&!(SESSION&&SESSION.demo)){const _tk=_formIdTk=(_formIdTk||0)+1;_formIdTxt(null,'…');
+      getNextNumero().then(n=>{if(_tk===_formIdTk&&!editingId&&!_notaMode&&n)_formIdTxt(n,null,true);}).catch(()=>{});}
     ['f_tema','f_tareas','f_finalizacion','f_link1','f_link2','f_link3','f_link4','f_link5','f_ltit1','f_ltit2','f_ltit3','f_ltit4','f_ltit5'].forEach(x=>{const el=document.getElementById(x);el.value='';el.readOnly=false;el.style.background='';});
     syncLinkRows(true);
     const _fder0=document.getElementById('f_derivado');if(_fder0)_fder0.checked=false;
@@ -3389,7 +3429,7 @@ function openTaskForm(id){
     document.querySelectorAll('#wrapChecklist button').forEach(e=>e.disabled=true);
     document.querySelectorAll('#wrapLink1 button,#wrapLinksExtra button').forEach(e=>e.disabled=true);
     ['btnDelete','btnGuardarTarea','btnCerrarProyecto','btnFinalizarPersonalizada','btnAprobar'].forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
-    document.getElementById('modalTitle').textContent='Tarea finalizada — Solo lectura';
+    document.getElementById('modalTitle').textContent='Tarea finalizada — Solo lectura';_formIdTxt(_tFin.numero);
     renderChecklist();
   }
   document.getElementById('modalBg').classList.remove('hidden');
