@@ -300,7 +300,7 @@ nav .spacer{margin-left:auto;display:flex;gap:8px;align-items:center}
 .ag-ics .cattach-chip{border-color:transparent;padding:0 2px;font-size:10px}
 .ag-ics .cattach-chip:hover{border-color:var(--muted)}
 /* En la agenda, Finalizado va a la derecha de Para ver juntos (300px), fuera de la pantalla: se llega con el scroll lateral.
-   Al arrastrar una tarea aparece flotando a la derecha. Agenda / En curso / Para ver juntos tienen ancho propio (65 % y 17,5 %
+   Al arrastrar NO sale flotando (se llega con scroll lateral). Agenda / En curso / Para ver juntos tienen ancho propio (65 % y 17,5 %
    + 17,5 % de lo que queda sin Finalizado), así no cambian de tamaño cuando Finalizado sale a flotar (26/11/2026). */
 .kanban.fit5.wf-ag>.ag-wrap{flex:0 0 calc((100% - 324px)*.65);max-width:calc((100% - 324px)*.65)}
 .kanban.fit5.wf-ag>.col{flex:0 0 calc((100% - 324px)*.175);min-width:0}
@@ -315,8 +315,9 @@ body:has(.wf-ag){min-width:1956px}/* agenda + 16+16 de margen */
 body:has(.wf-ag) #testBannerTop{position:sticky;left:0;width:calc(100vw - var(--sbw,0px));box-sizing:border-box}
 .wf-ag>.col{position:sticky}
 .wf-ag>.col .cards{overflow-y:auto;min-height:0;flex:1 1 auto}
-body.dragging-card .wf-ag .col[data-estado="Finalizado"]{display:flex;position:fixed;right:10px;top:110px;bottom:40px;width:230px;min-width:0;z-index:80;background:var(--bg2);border:2px dashed var(--accent);box-shadow:0 14px 40px rgba(6,44,70,.35)}
-body.dragging-card .wf-ag .col[data-estado="Finalizado"] .cards{overflow-y:auto;flex:1}
+/* Agenda (27/11/2026, pedido de Juan): al arrastrar, Finalizado NO sale flotando; queda en su lugar a la derecha y se llega con
+   el scroll lateral (al acercar la tarea al borde derecho/izquierdo la página se corre sola). Gana a la regla general del flotante. */
+body.dragging-card .kanban.fit5.wf-ag>.col[data-estado="Finalizado"]{display:flex;position:sticky;right:auto;bottom:auto;width:auto;z-index:auto;box-shadow:none;border:2px dashed var(--accent)}
 .ag-tag{font-size:9px;font-weight:700;line-height:13px;border-radius:3px;padding:0 3px;border:1px solid var(--line);color:var(--muted)}
 .ag-d{color:var(--urg);font-weight:700}
 .ag-fer.ag-vac{color:#fff}
@@ -2996,7 +2997,10 @@ function agDragLeave(e){e.currentTarget.classList.remove('drop-hover');}
 // Arrastrando una tarea en la agenda: cerca del borde de abajo (o del encabezado fijo) la página se mueve sola
 document.addEventListener('dragover',e=>{if(!document.body.classList.contains('dragging-card')||VIEW_MODE!=='workflow'||!document.querySelector('#equipoBody .wf-ag'))return;
   const m=80,y=e.clientY,tb=document.getElementById('testBannerBottom'),bot=tb&&tb.offsetHeight?tb.offsetHeight:0,h=document.querySelector('#equipoBody .ag-hdr'),top=h?h.getBoundingClientRect().bottom:0;
-  if(y>innerHeight-bot-m)scrollBy(0,Math.ceil((y-(innerHeight-bot-m))/3)+6);else if(y<top+m)scrollBy(0,-(Math.ceil((top+m-y)/3)+6));});
+  if(y>innerHeight-bot-m)scrollBy(0,Math.ceil((y-(innerHeight-bot-m))/3)+6);else if(y<top+m)scrollBy(0,-(Math.ceil((top+m-y)/3)+6));
+  // Scroll lateral: cerca del borde derecho o izquierdo la página se corre sola (para llegar a Finalizado y volver)
+  const x=e.clientX,cw=document.documentElement.clientWidth;
+  if(x>cw-m)scrollBy(Math.ceil((x-(cw-m))/3)+6,0);else if(x<m&&scrollX>0)scrollBy(-(Math.ceil((m-x)/3)+6),0);});
 // Guarda cambios de una tarea y recién si la base los acepta los aplica en pantalla. Si la base da error (cartel rojo),
 // la tarea queda como estaba: antes se cambiaba primero en pantalla y, si fallaba, se veía un cambio que no existía (26/11/2026).
 async function _guardarCambio(t,cambios){
