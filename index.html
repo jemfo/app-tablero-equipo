@@ -854,9 +854,9 @@ table.grid tr:nth-child(even){background:var(--bg2)}
     <h2>Cambiar contraseña</h2>
     <p style="color:var(--muted);font-size:12px;margin:0 0 14px">Tu nueva contraseña es privada: el administrador no la ve.</p>
     <label style="display:block;color:var(--muted);font-size:11px;margin-bottom:3px">Nueva contraseña</label>
-    <input type="password" id="np1" placeholder="mínimo 6 caracteres" style="width:100%;margin-bottom:10px" onkeydown="if(event.key==='Enter')savePass()">
+    <input type="password" id="np1" autocomplete="new-password" placeholder="mínimo 6 caracteres" style="width:100%;margin-bottom:10px" onkeydown="if(event.key==='Enter')savePass()">
     <label style="display:block;color:var(--muted);font-size:11px;margin-bottom:3px">Repetir contraseña</label>
-    <input type="password" id="np2" placeholder="repetí la contraseña" style="width:100%" onkeydown="if(event.key==='Enter')savePass()">
+    <input type="password" id="np2" autocomplete="new-password" placeholder="repetí la contraseña" style="width:100%" onkeydown="if(event.key==='Enter')savePass()">
     <div class="err" id="passErr" style="margin-top:8px"></div>
     <div class="modal-actions">
       <button onclick="closePassModal()">Cancelar</button>
