@@ -316,8 +316,8 @@ body:has(.wf-ag) #testBannerTop{position:sticky;left:0;width:calc(100vw - var(--
 .wf-ag>.col{position:sticky}
 .wf-ag>.col .cards{overflow-y:auto;min-height:0;flex:1 1 auto}
 /* Agenda (27/11/2026, pedido de Juan): al arrastrar, Finalizado NO sale flotando; queda en su lugar a la derecha y se llega con
-   el scroll lateral (al acercar la tarea al borde derecho/izquierdo la página se corre sola). Gana a la regla general del flotante. */
-body.dragging-card .kanban.fit5.wf-ag>.col[data-estado="Finalizado"]{display:flex;position:sticky;right:auto;bottom:auto;width:auto;z-index:auto;box-shadow:none;border:2px dashed var(--accent)}
+   el scroll lateral (al acercar la tarea al borde derecho/izquierdo la página se corre sola). Se ve igual que siempre (sin punteado). */
+body.dragging-card .kanban.fit5.wf-ag>.col[data-estado="Finalizado"]{display:flex;position:sticky;right:auto;bottom:auto;width:auto;z-index:auto;box-shadow:0 10px 30px rgba(6,44,70,.06);border:1px solid var(--line)}/* igual que sin arrastrar: sin borde punteado */
 .ag-tag{font-size:9px;font-weight:700;line-height:13px;border-radius:3px;padding:0 3px;border:1px solid var(--line);color:var(--muted)}
 .ag-d{color:var(--urg);font-weight:700}
 .ag-fer.ag-vac{color:#fff}
