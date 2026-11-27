@@ -1415,6 +1415,9 @@ async function doLogout(){
   if(_cierreTimer){clearInterval(_cierreTimer);_cierreTimer=null;}
   await _SB.auth.signOut();
   SESSION=null;
+  // Se recarga la página (27/11/2026): Edge solo ofrece el usuario/contraseña guardados si el formulario de ingreso está
+  // visible al cargar; mostrándolo sin recargar ofrecía los mails de "Información guardada" en vez de juan.olguin.
+  location.reload();return;
   document.getElementById('appView').classList.add('hidden');
   document.getElementById('loginView').classList.remove('hidden');
   document.getElementById('loginPass').value='';document.getElementById('loginUser').value='';
