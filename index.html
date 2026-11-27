@@ -1264,9 +1264,8 @@ async function doLogin(){
   if(btn){btn.disabled=false;btn.textContent='Ingresar';}
   if(error){errEl.textContent='Usuario o contraseña incorrectos.';return;}
   try{localStorage.setItem('lastUser',meta.login);}catch(e){}
-  // Le pide al navegador que ofrezca guardar usuario/contraseña (Chrome/Edge). Firefox lo toma del submit del <form>.
-  // Va antes de enterApp porque enterApp vacía los campos.
-  if(window.PasswordCredential&&navigator.credentials){try{navigator.credentials.store(new PasswordCredential({id:meta.login,password:p,name:meta.nombre}));}catch(e){}}
+  // Ya no se llama a navigator.credentials.store: hacía que Edge preguntara "¿Guardar/Actualizar la contraseña?" en
+  // cada ingreso aunque ya estuviera guardada (27/11/2026). El navegador la ofrece guardar solo, desde el formulario.
   enterApp(meta);
 }
 // Precarga el último usuario que entró (solo el nombre, nunca la contraseña). Sirve para el input de PROD y el select de TEST.
