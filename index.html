@@ -1268,10 +1268,11 @@ async function doLogin(){
   // cada ingreso aunque ya estuviera guardada (27/11/2026). El navegador la ofrece guardar solo, desde el formulario.
   enterApp(meta);
 }
-// Precarga el último usuario que entró (solo el nombre, nunca la contraseña). Sirve para el input de PROD y el select de TEST.
+// El usuario ya NO se precarga desde localStorage en el input de PROD (27/11/2026): si la página escribe el usuario, Edge
+// no autocompleta la contraseña guardada. El autocompletado del navegador completa usuario y contraseña. (El select de TEST sí.)
 function _prefillLastUser(){
   const lu=document.getElementById('loginUser');if(!lu)return;
-  const last=localStorage.getItem('lastUser');if(last)lu.value=last;
+  const last=localStorage.getItem('lastUser');if(last&&lu.tagName==='SELECT')lu.value=last;
   _loginLimpiarMail(false);
   // el autocompletado del navegador llega después de cargar: se revisa un par de veces
   [300,1000,2500].forEach(ms=>setTimeout(()=>_loginLimpiarMail(true),ms));
